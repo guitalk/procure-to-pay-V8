@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — Unit of Measure Master</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      z-index: 100; display: none; align-items: center; justify-content: center; padding: var(--s-5);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--r-xl); width: 100%; max-width: 480px;
+      max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: var(--s-5) var(--s-6); border-bottom: 1px solid var(--border); gap: var(--s-3);
+    }
+    .modal-header-icon {
+      width: 36px; height: 36px; border-radius: var(--r-md);
+      background: var(--accent-soft); color: var(--accent);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .modal-title { font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+    .modal-sub   { font-size: var(--fs-sm); color: var(--fg-muted); margin-top: 2px; }
+    .modal-close {
+      width: 28px; height: 28px; border-radius: var(--r-sm);
+      background: none; border: 1px solid var(--border);
+      color: var(--fg-muted); cursor: pointer; display: grid; place-items: center; flex-shrink: 0; margin-top: 4px;
+    }
+    .modal-close:hover { background: var(--bg-elevated); color: var(--fg); }
+    .modal-body   { padding: var(--s-5) var(--s-6); }
+    .modal-footer {
+      display: flex; align-items: center; justify-content: flex-end; gap: var(--s-2);
+      padding: var(--s-4) var(--s-6); border-top: 1px solid var(--border); background: var(--bg-elevated);
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--s-4); }
+    .field:last-child { margin-bottom: 0; }
+    .field-label { font-size: var(--fs-xs); font-weight: var(--fw-medium); text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-muted); }
+    .field-input {
+      width: 100%; padding: 9px var(--s-3); box-sizing: border-box;
+      background: var(--bg-base); border: 1px solid var(--border);
+      border-radius: var(--r-md); color: var(--fg);
+      font-size: var(--fs-md); font-family: var(--font-sans); transition: border-color 0.12s;
+    }
+    .field-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+    .field-input::placeholder { color: var(--fg-subtle); }
+
+    /* Excel toast */
+    .excel-toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(16px);
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: var(--s-3) var(--s-5);
+      display: flex; align-items: center; gap: var(--s-3);
+      font-size: var(--fs-sm); color: var(--fg-muted);
+      opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; z-index: 200;
+    }
+    .excel-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="nav">
+    <div class="nav-brand">
+      <button class="hamburger-btn" onclick="toggleNav()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
+      <div class="nav-brand-text">
+        <div class="nav-brand-name">Procure</div>
+        <div class="nav-brand-sub">Procurement</div>
+      </div>
+    </div>
+    <div class="nav-items">
+      <a class="nav-item" href="dashboard.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded has-active" href="clients.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V7l6-4 6 4v7zM6 14V9h4v5"/></svg>
+          <span>Master Data</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="clients.html">Clients</a>
+          <a class="nav-item nav-sub-item" href="projects.html">Projects</a>
+          <a class="nav-item nav-sub-item" href="vendor-categories.html">Categories</a>
+          <a class="nav-item nav-sub-item" href="terms-conditions.html">Terms &amp; Conditions</a>
+          <a class="nav-item nav-sub-item" href="payment-terms.html">Payment Terms</a>
+          <a class="nav-item nav-sub-item" href="inco-terms.html">Inco Terms</a>
+          <a class="nav-item nav-sub-item active" href="uom.html">Unit of Measure</a>
+          <a class="nav-item nav-sub-item" href="additional-costs.html">Additional Costs</a>
+          <a class="nav-item nav-sub-item" href="vendors.html">Vendors</a>
+        </div>
+      </div>
+      <a class="nav-item" href="purchase-requisitions.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Purchase Requisitions</span>
+      </a>
+      <div class="nav-group">
+        <a class="nav-item nav-group-header" href="#">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+          <span>RFQs</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="rfq-list.html">All RFQs</a>
+          <a class="nav-item nav-sub-item" href="rfq-create.html">New RFQ</a>
+        </div>
+      </div>
+      <a class="nav-item" href="purchase-orders.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l1.5 8.5a1 1 0 0 0 1 .85h7a1 1 0 0 0 1-.85L14 4"/><path d="M2 4h12M6 7v3M10 7v3"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+    </div>
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">AD</div>
+        <div>
+          <div class="user-name">Admin User</div>
+          <div class="user-email">admin@aker.com</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div>
+    <main class="main">
+
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-end">
+        <div>
+          <div class="page-title">Unit of Measure</div>
+          <div class="page-subtitle">Standard UOM codes used across PR line items, RFQs, and POs — vendors select from this list when bidding.</div>
+        </div>
+        <div style="display:flex;gap:var(--s-2);">
+          <button class="btn btn-secondary" onclick="downloadTemplate()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v8M5 8l3 3 3-3"/><path d="M2 13h12"/></svg>
+            Download Template
+          </button>
+          <button class="btn btn-secondary" onclick="openModal('modal-import')">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 11V3M5 6l3-3 3 3"/><path d="M2 13h12"/></svg>
+            Import Excel
+          </button>
+          <button class="btn btn-primary" onclick="openModal('modal-new-uom')">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+            New UOM
+          </button>
+        </div>
+      </div>
+
+      <div class="stat-strip">
+        <div class="stat">
+          <div class="stat-value">24</div>
+          <div class="stat-label">UOM codes · 22 active</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">Nos.</div>
+          <div class="stat-label">Most used · appears in 68% of line items</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">6</div>
+          <div class="stat-label">Categories covered</div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="md-toolbar">
+          <div class="search-wrap-inline">
+            <span class="search-icon-inline"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5l3 3"/></svg></span>
+            <input class="search-input" type="text" placeholder="Search UOM codes" />
+          </div>
+          <div class="filter-chips-inline">
+            <span class="chip active">All · 24</span>
+            <span class="chip">Count · 6</span>
+            <span class="chip">Weight · 5</span>
+            <span class="chip">Volume · 4</span>
+            <span class="chip">Length · 4</span>
+          </div>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>UOM Code</th>
+              <th>Full Name</th>
+              <th>Category</th>
+              <th style="text-align:right">Used in PRs</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="id-cell">Nos.</span></td>
+              <td>Numbers / Pieces</td>
+              <td><span style="font-size:var(--fs-xs);padding:2px 7px;border-radius:999px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--fg-muted);">Count</span></td>
+              <td class="num-cell">312</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr>
+              <td><span class="id-cell">Sets</span></td>
+              <td>Sets</td>
+              <td><span style="font-size:var(--fs-xs);padding:2px 7px;border-radius:999px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--fg-muted);">Count</span></td>
+              <td class="num-cell">48</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr>
+              <td><span class="id-cell">Lots</span></td>
+              <td>Lot</td>
+              <td><span style="font-size:var(--fs-xs);padding:2px 7px;border-radius:999px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--fg-muted);">Count</span></td>
+              <td class="num-cell">22</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr>
+              <td><span class="id-cell">MT</span></td>
+              <td>Metric Tonne</td>
+              <td><span style="font-size:var(--fs-xs);padding:2px 7px;border-radius:999px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--fg-muted);">Weight</span></td>
+              <td class="num-cell">67</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr>
+              <td><span class="id-cell">KG</span></td>
+              <td>Kilogram</td>
+              <td><span style="font-size:var(--fs-xs);padding:2px 7px;border-radius:999px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--fg-muted);">Weight</span></td>
+              <td class="num-cell">41</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr>
+              <td><span class="id-cell">KL</span></td>
+              <td>Kilolitre</td>
+              <td><span style="font-size:var(--fs-xs);padding:2px 7px;border-radius:999px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--fg-muted);">Volume</span></td>
+              <td class="num-cell">29</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr>
+              <td><span class="id-cell">LTR</span></td>
+              <td>Litre</td>
+              <td><span style="font-size:var(--fs-xs);padding:2px 7px;border-radius:999px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--fg-muted);">Volume</span></td>
+              <td class="num-cell">18</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr>
+              <td><span class="id-cell">MTR</span></td>
+              <td>Metre</td>
+              <td><span style="font-size:var(--fs-xs);padding:2px 7px;border-radius:999px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--fg-muted);">Length</span></td>
+              <td class="num-cell">55</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr>
+              <td><span class="id-cell">SQM</span></td>
+              <td>Square Metre</td>
+              <td><span style="font-size:var(--fs-xs);padding:2px 7px;border-radius:999px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--fg-muted);">Area</span></td>
+              <td class="num-cell">9</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr>
+              <td><span class="id-cell">PKT</span></td>
+              <td>Packet</td>
+              <td><span style="font-size:var(--fs-xs);padding:2px 7px;border-radius:999px;background:var(--bg-subtle);border:1px solid var(--border);color:var(--fg-muted);">Count</span></td>
+              <td class="num-cell">0</td>
+              <td><span class="badge muted">Archived</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="md-table-footer">
+          <div>Showing 10 of 24 UOM codes</div>
+          <div class="pager">
+            <button class="icon-btn" disabled><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 4l-4 4 4 4"/></svg></button>
+            <span style="padding:0 var(--s-2)">1 / 3</span>
+            <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+
+<!-- Modal: New UOM -->
+<div class="modal-overlay" id="modal-new-uom">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="display:flex;gap:var(--s-3);align-items:flex-start;flex:1;min-width:0;">
+        <div class="modal-header-icon">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 8h8M8 4v8"/><rect x="2" y="2" width="12" height="12" rx="2"/></svg>
+        </div>
+        <div>
+          <div class="modal-title">New Unit of Measure</div>
+          <div class="modal-sub">Adds a UOM code that vendors can select when building their line-item bids</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-new-uom')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">UOM Code <span style="color:var(--danger);">*</span></label>
+        <input class="field-input" placeholder="e.g. Nos., MT, KG, MTR" style="font-family:var(--font-mono);" />
+      </div>
+      <div class="field">
+        <label class="field-label">Full Name <span style="color:var(--danger);">*</span></label>
+        <input class="field-input" placeholder="e.g. Numbers / Pieces" />
+      </div>
+      <div class="field">
+        <label class="field-label">Category</label>
+        <select class="field-input">
+          <option value="">Select a category</option>
+          <option>Count</option>
+          <option>Weight</option>
+          <option>Volume</option>
+          <option>Length</option>
+          <option>Area</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-new-uom')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-new-uom')">Save UOM</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Import Excel -->
+<div class="modal-overlay" id="modal-import">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="display:flex;gap:var(--s-3);align-items:flex-start;flex:1;min-width:0;">
+        <div class="modal-header-icon">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 11V3M5 6l3-3 3 3"/><path d="M2 13h12"/></svg>
+        </div>
+        <div>
+          <div class="modal-title">Bulk Import — UOM</div>
+          <div class="modal-sub">Upload a filled Excel template to add multiple UOM codes at once</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-import')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div style="border:2px dashed var(--border);border-radius:var(--r-lg);padding:var(--s-6);text-align:center;background:var(--bg-subtle);cursor:pointer;margin-bottom:var(--s-4);">
+        <svg width="32" height="32" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1" style="color:var(--fg-subtle);margin-bottom:var(--s-3);"><path d="M8 11V3M5 6l3-3 3 3"/><path d="M2 13h12"/></svg>
+        <div style="font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--fg);margin-bottom:4px;">Drop Excel file here</div>
+        <div style="font-size:var(--fs-xs);color:var(--fg-subtle);">.xlsx or .csv · max 5 MB</div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:var(--s-3);">Browse files</button>
+      </div>
+      <div style="font-size:var(--fs-xs);color:var(--fg-subtle);">
+        Don't have the template? <a href="#" onclick="downloadTemplate()" style="color:var(--info);text-decoration:none;">Download it here →</a>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-import')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-import')">Upload &amp; Validate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Excel toast -->
+<div class="excel-toast" id="excel-toast">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#10B981" stroke-width="2"><path d="M2.5 8.5l3.5 3.5 7-7"/></svg>
+  <span><strong>UOM_Master_Template.xlsx</strong> — ready to download</span>
+</div>
+
+<div class="nav-backdrop" id="nav-backdrop" onclick="closeNav()"></div>
+
+<script>
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
+  });
+  function downloadTemplate() {
+    var toast = document.getElementById('excel-toast');
+    toast.classList.add('show');
+    setTimeout(function() { toast.classList.remove('show'); }, 3000);
+  }
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+      this.closest('.filter-chips-inline').querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+  function toggleNav() {
+    const nav = document.querySelector('.nav');
+    const backdrop = document.getElementById('nav-backdrop');
+    const isOpen = nav.classList.toggle('open');
+    backdrop.classList.toggle('visible', isOpen);
+  }
+  function closeNav() {
+    document.querySelector('.nav').classList.remove('open');
+    document.getElementById('nav-backdrop').classList.remove('visible');
+  }
+  window.addEventListener('resize', function() { if (window.innerWidth > 700) closeNav(); });
+</script>
+</body>
+</html>

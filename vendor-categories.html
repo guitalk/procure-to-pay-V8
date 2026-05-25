@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — Categories</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Shared modal chrome ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      z-index: 100; display: none; align-items: center; justify-content: center; padding: var(--s-5);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--r-xl); width: 100%; max-width: 480px;
+      max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: var(--s-5) var(--s-6); border-bottom: 1px solid var(--border); gap: var(--s-3);
+    }
+    .modal-header-icon {
+      width: 36px; height: 36px; border-radius: var(--r-md);
+      background: var(--accent-soft); color: var(--accent);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .modal-title { font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+    .modal-sub   { font-size: var(--fs-sm); color: var(--fg-muted); margin-top: 2px; line-height: 1.4; }
+    .modal-close {
+      width: 28px; height: 28px; border-radius: var(--r-sm);
+      background: none; border: 1px solid var(--border);
+      color: var(--fg-muted); cursor: pointer; display: grid; place-items: center; flex-shrink: 0; margin-top: 4px;
+    }
+    .modal-close:hover { background: var(--bg-elevated); color: var(--fg); }
+    .modal-body   { padding: var(--s-5) var(--s-6); }
+    .modal-footer {
+      display: flex; align-items: center; justify-content: flex-end; gap: var(--s-2);
+      padding: var(--s-4) var(--s-6); border-top: 1px solid var(--border); background: var(--bg-elevated);
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--s-4); }
+    .field:last-child { margin-bottom: 0; }
+    .field-label {
+      font-size: var(--fs-xs); font-weight: var(--fw-medium);
+      text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-muted);
+    }
+    .field-input {
+      width: 100%; padding: 9px var(--s-3);
+      background: var(--bg-base); border: 1px solid var(--border);
+      border-radius: var(--r-md); color: var(--fg);
+      font-size: var(--fs-md); font-family: var(--font-sans); transition: border-color 0.12s;
+    }
+    .field-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+    .field-input::placeholder { color: var(--fg-subtle); }
+    select.field-input { cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 16 16' fill='none' stroke='%2371717a' stroke-width='1.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+    textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
+    /* ── end modal chrome ── */
+  </style>
+  <style>
+    /* ── Hierarchy tree table ──────────────────────────────── */
+    .tree-toggle {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px;
+      border-radius: var(--r-sm);
+      color: var(--fg-subtle);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.1s, color 0.1s;
+    }
+    .tree-toggle:hover { background: var(--bg-hover); color: var(--fg); }
+    .tree-toggle svg { transition: transform 0.15s; }
+    .tree-toggle.open svg { transform: rotate(90deg); }
+    .tree-toggle.leaf { cursor: default; color: transparent; }
+    .tree-toggle.leaf:hover { background: none; }
+
+    /* Parent row */
+    .row-parent td { background: var(--bg-surface); }
+    .row-parent:hover td { background: var(--bg-hover); }
+    .row-parent td:first-child { padding-left: var(--s-3); }
+
+    /* Child rows */
+    .row-child td {
+      background: var(--bg-base);
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: var(--fs-sm);
+    }
+    .row-child:hover td { background: var(--bg-hover); }
+    .row-child td:first-child { padding-left: 44px; } /* indented */
+    .row-child .cat-name { color: var(--fg-muted); font-weight: var(--fw-regular); }
+    .row-child .id-cell { font-size: var(--fs-xs); }
+
+    /* Child rows hidden by default */
+    .row-child { display: none; }
+    .row-child.visible { display: table-row; }
+
+    /* Name cell layout */
+    .name-cell {
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+    }
+    .cat-icon {
+      width: 24px; height: 24px;
+      border-radius: var(--r-sm);
+      display: grid; place-items: center;
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-semibold);
+      flex-shrink: 0;
+    }
+    .child-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--border-strong);
+      flex-shrink: 0;
+    }
+
+    /* Sub-category count chip on parent */
+    .sub-chip {
+      display: inline-flex; align-items: center;
+      padding: 1px 7px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 10px;
+      color: var(--fg-subtle);
+      font-family: var(--font-mono);
+      margin-left: var(--s-2);
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── NAV ──────────────────────────────────────────────── -->
+  <aside class="nav">
+        <div class="nav-brand">
+      <button class="hamburger-btn" onclick="toggleNav()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
+      <div class="nav-brand-text">
+        <div class="nav-brand-name">Procure</div>
+        <div class="nav-brand-sub">Procurement</div>
+      </div>
+    </div>
+    <div class="nav-items">
+      <a class="nav-item" href="index.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded has-active" href="clients.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V7l6-4 6 4v7zM6 14V9h4v5"/></svg>
+          <span>Master Data</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="clients.html">Clients</a>
+          <a class="nav-item nav-sub-item" href="projects.html">Projects</a>
+          <a class="nav-item nav-sub-item active" href="vendor-categories.html">Categories</a>
+          <a class="nav-item nav-sub-item" href="terms-conditions.html">Terms &amp; Conditions</a>
+          <a class="nav-item nav-sub-item" href="payment-terms.html">Payment Terms</a>
+          <a class="nav-item nav-sub-item" href="inco-terms.html">Inco Terms</a>
+          <a class="nav-item nav-sub-item" href="vendors.html">Vendors</a>
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-requisitions.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Purchase Requisitions</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header" href="rfq-list.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+          <span>RFQs</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="rfq-create.html">New RFQ</a>
+          <a class="nav-item nav-sub-item" href="bid-matrix.html">Bids</a>
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-orders.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l1.5 8.5a1 1 0 0 0 1 .85h7a1 1 0 0 0 1-.85L14 4"/><path d="M2 4h12M6 7v3M10 7v3"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+    </div>
+
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">AD</div>
+        <div>
+          <div class="user-name">Admin User</div>
+          <div class="user-email">admin@aker.com</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ──────────────────────────────────────────────── -->
+  <div>
+    <main class="main">
+
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-end;">
+        <div>
+          <div class="page-title">Categories</div>
+          <div class="page-subtitle">Hierarchical taxonomy — parent categories contain sub-specializations used to shortlist vendors for RFQs.</div>
+        </div>
+        <div style="display:flex; gap:var(--s-2);">
+          <button class="btn btn-secondary" onclick="showExcelToast()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v8M5 8l3 3 3-3"/><path d="M2 13h12"/></svg>
+            Download Template
+          </button>
+          <button class="btn btn-secondary" onclick="showExcelToast()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 11V3M5 6l3-3 3 3"/><path d="M2 13h12"/></svg>
+            Import Excel
+          </button>
+          <button class="btn btn-secondary" onclick="openModal('modal-add-sub')">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/></svg>
+            Add Sub-category
+          </button>
+          <button class="btn btn-primary" onclick="openModal('modal-new-category')">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/></svg>
+            New Category
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI strip -->
+      <div class="stat-strip" style="grid-template-columns: repeat(3, 1fr); margin-bottom:var(--s-5);">
+        <div class="stat">
+          <div class="stat-value">5</div>
+          <div class="stat-label">Parent categories</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">14</div>
+          <div class="stat-label">Sub-categories · 11 in use</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">47</div>
+          <div class="stat-label">Vendors mapped</div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="md-toolbar">
+          <div class="search-wrap-inline">
+            <span class="search-icon-inline"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5l3 3"/></svg></span>
+            <input class="search-input" type="text" placeholder="Search categories…" />
+          </div>
+          <div class="filter-chips-inline">
+            <span class="chip active">All</span>
+            <span class="chip">In Use</span>
+            <span class="chip">Unused</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto;" onclick="expandAll()">Expand All</button>
+        </div>
+
+        <table class="table" id="cat-table">
+          <thead>
+            <tr>
+              <th style="width:36px;"></th>
+              <th>Category</th>
+              <th>Description</th>
+              <th style="text-align:right;">Vendors</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- ── PARENT: Instrumentation & Control ──────── -->
+            <tr class="row-parent" data-parent="cat-01">
+              <td>
+                <span class="tree-toggle open" onclick="toggleGroup('cat-01', this)">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+                </span>
+              </td>
+              <td>
+                <div class="name-cell">
+                  <div class="cat-icon" style="background:rgba(59,130,246,0.12); color:var(--accent);">I</div>
+                  <div>
+                    <span style="font-weight:var(--fw-semibold);">Instrumentation &amp; Control</span>
+                    <span class="sub-chip">4 sub</span>
+                  </div>
+                </div>
+              </td>
+              <td class="muted">Sensors, transmitters, control valves, analyzers</td>
+              <td class="num-cell">24</td>
+              <td><span class="badge success">In Use</span></td>
+              <td>
+                <button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button>
+              </td>
+            </tr>
+            <!-- children -->
+            <tr class="row-child visible" data-group="cat-01">
+              <td></td>
+              <td><div class="name-cell"><div class="child-dot"></div><span class="cat-name">Pressure &amp; Differential Instruments</span></div></td>
+              <td class="muted" style="font-size:var(--fs-xs);">Pressure transmitters, gauges, differential pressure switches</td>
+              <td class="num-cell">9</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr class="row-child visible" data-group="cat-01">
+              <td></td>
+              <td><div class="name-cell"><div class="child-dot"></div><span class="cat-name">Temperature Instruments</span></div></td>
+              <td class="muted" style="font-size:var(--fs-xs);">RTD, thermocouple, temperature transmitters</td>
+              <td class="num-cell">6</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr class="row-child visible" data-group="cat-01">
+              <td></td>
+              <td><div class="name-cell"><div class="child-dot"></div><span class="cat-name">Flow Instruments</span></div></td>
+              <td class="muted" style="font-size:var(--fs-xs);">Coriolis, magnetic, vortex flow meters</td>
+              <td class="num-cell">7</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr class="row-child visible" data-group="cat-01">
+              <td></td>
+              <td><div class="name-cell"><div class="child-dot"></div><span class="cat-name">Control Valves &amp; Actuators</span></div></td>
+              <td class="muted" style="font-size:var(--fs-xs);">Globe, butterfly, ball control valves with positioners</td>
+              <td class="num-cell">5</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+
+            <!-- ── PARENT: Mechanical — Piping ─────────────── -->
+            <tr class="row-parent" data-parent="cat-02">
+              <td>
+                <span class="tree-toggle" onclick="toggleGroup('cat-02', this)">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+                </span>
+              </td>
+              <td>
+                <div class="name-cell">
+                  <div class="cat-icon" style="background:rgba(16,185,129,0.12); color:var(--success);">M</div>
+                  <div>
+                    <span style="font-weight:var(--fw-semibold);">Mechanical — Piping</span>
+                    <span class="sub-chip">3 sub</span>
+                  </div>
+                </div>
+              </td>
+              <td class="muted">Valves, fittings, flanges, piping spools, gaskets</td>
+              <td class="num-cell">15</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr class="row-child" data-group="cat-02">
+              <td></td>
+              <td><div class="name-cell"><div class="child-dot"></div><span class="cat-name">Valves &amp; Fittings</span></div></td>
+              <td class="muted" style="font-size:var(--fs-xs);">Gate, globe, check, ball valves — API 600 / 602</td>
+              <td class="num-cell">12</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr class="row-child" data-group="cat-02">
+              <td></td>
+              <td><div class="name-cell"><div class="child-dot"></div><span class="cat-name">Piping Spools &amp; Flanges</span></div></td>
+              <td class="muted" style="font-size:var(--fs-xs);">Fabricated pipe spools, weld-neck flanges, reducers</td>
+              <td class="num-cell">5</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr class="row-child" data-group="cat-02">
+              <td></td>
+              <td><div class="name-cell"><div class="child-dot"></div><span class="cat-name">Gaskets &amp; Sealing</span></div></td>
+              <td class="muted" style="font-size:var(--fs-xs);">Spiral wound, ring joint, PTFE sheet gaskets</td>
+              <td class="num-cell">3</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+
+            <!-- ── PARENT: Electrical ───────────────────────── -->
+            <tr class="row-parent" data-parent="cat-03">
+              <td>
+                <span class="tree-toggle" onclick="toggleGroup('cat-03', this)">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+                </span>
+              </td>
+              <td>
+                <div class="name-cell">
+                  <div class="cat-icon" style="background:rgba(245,158,11,0.12); color:var(--warning);">E</div>
+                  <div>
+                    <span style="font-weight:var(--fw-semibold);">Electrical</span>
+                    <span class="sub-chip">3 sub</span>
+                  </div>
+                </div>
+              </td>
+              <td class="muted">LV/MV panels, motors, drives, cable &amp; conduit</td>
+              <td class="num-cell">11</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr class="row-child" data-group="cat-03">
+              <td></td>
+              <td><div class="name-cell"><div class="child-dot"></div><span class="cat-name">LV Panels &amp; Switchgear</span></div></td>
+              <td class="muted" style="font-size:var(--fs-xs);">MCC panels, distribution boards, MCBs, contactors</td>
+              <td class="num-cell">6</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr class="row-child" data-group="cat-03">
+              <td></td>
+              <td><div class="name-cell"><div class="child-dot"></div><span class="cat-name">Motors &amp; Drives</span></div></td>
+              <td class="muted" style="font-size:var(--fs-xs);">ATEX motors, VFDs, soft starters</td>
+              <td class="num-cell">5</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr class="row-child" data-group="cat-03">
+              <td></td>
+              <td><div class="name-cell"><div class="child-dot"></div><span class="cat-name">Cable, Tray &amp; Conduit</span></div></td>
+              <td class="muted" style="font-size:var(--fs-xs);">Armoured cable, SS cable tray, GI conduit</td>
+              <td class="num-cell">4</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+
+            <!-- ── PARENT: Civil & Structural ─────────────── -->
+            <tr class="row-parent" data-parent="cat-04">
+              <td>
+                <span class="tree-toggle" onclick="toggleGroup('cat-04', this)">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+                </span>
+              </td>
+              <td>
+                <div class="name-cell">
+                  <div class="cat-icon" style="background:rgba(6,182,212,0.12); color:var(--info);">C</div>
+                  <div>
+                    <span style="font-weight:var(--fw-semibold);">Civil &amp; Structural</span>
+                    <span class="sub-chip">2 sub</span>
+                  </div>
+                </div>
+              </td>
+              <td class="muted">Structural steel, grating, handrails, fabrication</td>
+              <td class="num-cell">8</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr class="row-child" data-group="cat-04">
+              <td></td>
+              <td><div class="name-cell"><div class="child-dot"></div><span class="cat-name">Structural Steel &amp; Grating</span></div></td>
+              <td class="muted" style="font-size:var(--fs-xs);">Platform grating, handrails, structural beams</td>
+              <td class="num-cell">5</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+            <tr class="row-child" data-group="cat-04">
+              <td></td>
+              <td><div class="name-cell"><div class="child-dot"></div><span class="cat-name">Fabrication &amp; Welding</span></div></td>
+              <td class="muted" style="font-size:var(--fs-xs);">Welded assemblies, custom fabrication shops</td>
+              <td class="num-cell">3</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+
+            <!-- ── PARENT: Fire & Gas Systems (leaf — no children) -->
+            <tr class="row-parent" data-parent="cat-05">
+              <td>
+                <span class="tree-toggle leaf">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+                </span>
+              </td>
+              <td>
+                <div class="name-cell">
+                  <div class="cat-icon" style="background:rgba(239,68,68,0.12); color:var(--danger);">F</div>
+                  <span style="font-weight:var(--fw-semibold);">Fire &amp; Gas Systems</span>
+                </div>
+              </td>
+              <td class="muted">Gas detectors, smoke heads, flame scanners, F&amp;G panels</td>
+              <td class="num-cell">6</td>
+              <td><span class="badge success">In Use</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+
+          </tbody>
+        </table>
+
+        <div class="md-table-footer">
+          <span>5 parent categories · 14 sub-categories</span>
+          <div style="display:flex; align-items:center; gap:var(--s-3);">
+            <button class="btn btn-ghost btn-sm" onclick="collapseAll()">Collapse All</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── Modal: New Category ───────────────────────────── -->
+<div class="modal-overlay" id="modal-new-category">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="display:flex;gap:var(--s-3);align-items:flex-start;flex:1;min-width:0;">
+        <div class="modal-header-icon">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        </div>
+        <div>
+          <div class="modal-title">New Category</div>
+          <div class="modal-sub">Creates a top-level category. Sub-categories can be added under it.</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-new-category')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">Category Name</label>
+        <input class="field-input" placeholder="e.g. Rotating Equipment" />
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label">Description</label>
+        <textarea class="field-input" placeholder="Short description of what this category covers…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-new-category')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-new-category')">Save Category</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Add Sub-category ──────────────────────── -->
+<div class="modal-overlay" id="modal-add-sub">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="display:flex;gap:var(--s-3);align-items:flex-start;flex:1;min-width:0;">
+        <div class="modal-header-icon">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h4M8 4v8M8 4l3 3M8 4L5 7"/></svg>
+        </div>
+        <div>
+          <div class="modal-title">Add Sub-category</div>
+          <div class="modal-sub">Adds a child node under a parent category</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-add-sub')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">Parent Category</label>
+        <select class="field-input" id="sub-parent-select">
+          <option value="">Select parent…</option>
+          <option>Instrumentation &amp; Control</option>
+          <option>Mechanical — Piping</option>
+          <option>Electrical</option>
+          <option>Civil &amp; Structural</option>
+          <option>Fire &amp; Gas Systems</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Sub-category Name</label>
+        <input class="field-input" placeholder="e.g. Ultrasonic Flow Meters" />
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label">Description</label>
+        <textarea class="field-input" placeholder="Short description of what this sub-category covers…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-sub')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-add-sub')">Save Sub-category</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function showExcelToast() {
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px 20px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--fg-muted);z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.3);';
+    t.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#10B981" stroke-width="2"><path d="M2.5 8.5l3.5 3.5 7-7"/></svg><span><strong>VendorCategories_Template.xlsx</strong> — ready to download</span>';
+    document.body.appendChild(t);
+    setTimeout(function() { t.remove(); }, 3000);
+  }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.modal-overlay').forEach(o => {
+      o.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
+    });
+  });
+</script>
+
+<script>
+  function toggleGroup(groupId, toggle) {
+    const isOpen = toggle.classList.contains('open');
+    toggle.classList.toggle('open', !isOpen);
+    document.querySelectorAll(`[data-group="${groupId}"]`).forEach(row => {
+      row.classList.toggle('visible', !isOpen);
+    });
+  }
+
+  function expandAll() {
+    document.querySelectorAll('.tree-toggle:not(.leaf)').forEach(t => t.classList.add('open'));
+    document.querySelectorAll('.row-child').forEach(r => r.classList.add('visible'));
+  }
+
+  function collapseAll() {
+    document.querySelectorAll('.tree-toggle:not(.leaf)').forEach(t => t.classList.remove('open'));
+    document.querySelectorAll('.row-child').forEach(r => r.classList.remove('visible'));
+  }
+
+  // Chip filter toggle
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+</script>
+
+
+<div class="nav-backdrop" id="nav-backdrop" onclick="closeNav()"></div>
+
+<script>
+  function toggleNav() {
+    const nav = document.querySelector('.nav');
+    const backdrop = document.getElementById('nav-backdrop');
+    const isOpen = nav.classList.toggle('open');
+    backdrop.classList.toggle('visible', isOpen);
+  }
+  function closeNav() {
+    document.querySelector('.nav').classList.remove('open');
+    document.getElementById('nav-backdrop').classList.remove('visible');
+  }
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 700) closeNav();
+  });
+</script>
+</body>
+</html>

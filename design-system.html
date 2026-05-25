@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — Design System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .ds-page { max-width: 1100px; margin: 0 auto; padding: var(--s-10) var(--s-8); }
+    .ds-section { margin-bottom: var(--s-12); }
+    .ds-section-head { margin-bottom: var(--s-5); padding-bottom: var(--s-3); border-bottom: 1px solid var(--border); }
+    .ds-grid { display: grid; gap: var(--s-3); }
+    .ds-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .ds-grid.cols-6 { grid-template-columns: repeat(6, 1fr); }
+    .swatch { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--s-3); }
+    .swatch-chip { height: 56px; border-radius: var(--r-sm); margin-bottom: var(--s-2); }
+    .swatch-name { font-size: var(--fs-sm); font-weight: var(--fw-medium); }
+    .swatch-token { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .ds-row { display: flex; flex-wrap: wrap; gap: var(--s-3); align-items: center; padding: var(--s-4); background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-md); }
+    .code { font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--fg-muted); background: var(--bg-elevated); padding: 2px 6px; border-radius: var(--r-sm); }
+    .ds-callout {
+      background: var(--accent-soft);
+      border-left: 3px solid var(--accent);
+      padding: var(--s-4);
+      border-radius: var(--r-md);
+      margin-bottom: var(--s-6);
+      color: var(--fg);
+    }
+    .ds-callout strong { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<div class="ds-page">
+
+  <div class="page-header">
+    <div class="label" style="margin-bottom:var(--s-2)">For Sohan &amp; Shreyash · Aker Procurement Phase 1</div>
+    <div class="h1">Design System Reference</div>
+    <div class="page-subtitle">Source-of-truth tokens, type, and components for the demo + production scaffold.</div>
+  </div>
+
+  <div class="ds-callout">
+    <strong>How to use this</strong> — Every token below maps 1:1 to a CSS variable in <span class="code">styles.css</span>.
+    When you scaffold the Tailwind config in the Next.js app, copy these values exactly. The dashboard at <span class="code">index.html</span> is the live reference for how they compose. Shadcn primitives are the target component layer.
+  </div>
+
+  <!-- ============================================================
+       1. STACK & FOUNDATIONS
+       ============================================================ -->
+  <section class="ds-section">
+    <div class="ds-section-head">
+      <div class="h3">1 · Stack &amp; foundations</div>
+    </div>
+    <div class="ds-row" style="flex-direction:column;align-items:flex-start;gap:var(--s-3)">
+      <div><span class="label" style="display:inline-block;width:140px">Frontend</span> Next.js (App Router) + TypeScript + Tailwind + Shadcn UI</div>
+      <div><span class="label" style="display:inline-block;width:140px">Typeface</span> IBM Plex Sans (UI) · IBM Plex Mono (IDs, numbers, tabular)</div>
+      <div><span class="label" style="display:inline-block;width:140px">Theme</span> Dark, locked. Light theme out of scope for Phase 1 demo.</div>
+      <div><span class="label" style="display:inline-block;width:140px">Density</span> Comfortable. Optimized for data-heavy tables but not cramped.</div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       2. COLOR TOKENS
+       ============================================================ -->
+  <section class="ds-section">
+    <div class="ds-section-head">
+      <div class="h3">2 · Color tokens</div>
+      <div class="muted" style="margin-top:var(--s-1);font-size:var(--fs-md)">Shadcn zinc family, tuned. Token names match CSS variables.</div>
+    </div>
+
+    <div class="label" style="margin-bottom:var(--s-2)">Surfaces</div>
+    <div class="ds-grid cols-4" style="margin-bottom:var(--s-5)">
+      <div class="swatch"><div class="swatch-chip" style="background:#09090b;border:1px solid var(--border)"></div><div class="swatch-name">Base</div><div class="swatch-token">--bg-base · #09090b</div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:#111113"></div><div class="swatch-name">Surface</div><div class="swatch-token">--bg-surface · #111113</div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:#18181b"></div><div class="swatch-name">Elevated</div><div class="swatch-token">--bg-elevated · #18181b</div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:#1f1f23"></div><div class="swatch-name">Hover</div><div class="swatch-token">--bg-hover · #1f1f23</div></div>
+    </div>
+
+    <div class="label" style="margin-bottom:var(--s-2)">Borders</div>
+    <div class="ds-grid cols-4" style="margin-bottom:var(--s-5)">
+      <div class="swatch"><div class="swatch-chip" style="background:#27272a"></div><div class="swatch-name">Default</div><div class="swatch-token">--border · #27272a</div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:#3f3f46"></div><div class="swatch-name">Strong</div><div class="swatch-token">--border-strong · #3f3f46</div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:#1a1a1d"></div><div class="swatch-name">Subtle</div><div class="swatch-token">--border-subtle · #1a1a1d</div></div>
+    </div>
+
+    <div class="label" style="margin-bottom:var(--s-2)">Foreground</div>
+    <div class="ds-grid cols-4" style="margin-bottom:var(--s-5)">
+      <div class="swatch"><div class="swatch-chip" style="background:#fafafa"></div><div class="swatch-name">Default</div><div class="swatch-token">--fg · #fafafa</div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:#a1a1aa"></div><div class="swatch-name">Muted</div><div class="swatch-token">--fg-muted · #a1a1aa</div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:#71717a"></div><div class="swatch-name">Subtle</div><div class="swatch-token">--fg-subtle · #71717a</div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:#52525b"></div><div class="swatch-name">Disabled</div><div class="swatch-token">--fg-disabled · #52525b</div></div>
+    </div>
+
+    <div class="label" style="margin-bottom:var(--s-2)">Semantic</div>
+    <div class="ds-grid cols-6">
+      <div class="swatch"><div class="swatch-chip" style="background:#3b82f6"></div><div class="swatch-name">Accent</div><div class="swatch-token">--accent</div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:#10b981"></div><div class="swatch-name">Success</div><div class="swatch-token">--success</div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:#f59e0b"></div><div class="swatch-name">Warning</div><div class="swatch-token">--warning</div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:#ef4444"></div><div class="swatch-name">Danger</div><div class="swatch-token">--danger</div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:#06b6d4"></div><div class="swatch-name">Info / Normalized</div><div class="swatch-token">--info · --normalized</div></div>
+      <div class="swatch"><div class="swatch-chip" style="background:#f59e0b"></div><div class="swatch-name">Deviation</div><div class="swatch-token">--deviation</div></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       3. TYPE
+       ============================================================ -->
+  <section class="ds-section">
+    <div class="ds-section-head">
+      <div class="h3">3 · Typography</div>
+      <div class="muted" style="margin-top:var(--s-1);font-size:var(--fs-md)">IBM Plex Sans for everything. IBM Plex Mono only for: IDs (PR-2026-105), tabular numerics, code.</div>
+    </div>
+
+    <div class="ds-row" style="flex-direction:column;align-items:flex-start;gap:var(--s-4)">
+      <div><div class="h1">H1 · 32px / 600</div><div class="swatch-token">.h1 · --fs-3xl · --fw-semibold · -0.02em tracking</div></div>
+      <div><div class="h2">H2 · 24px / 600</div><div class="swatch-token">.h2 · --fs-2xl · --fw-semibold</div></div>
+      <div><div class="h3">H3 · 20px / 600</div><div class="swatch-token">.h3 · --fs-xl</div></div>
+      <div><div class="h4">H4 · 16px / 600</div><div class="swatch-token">.h4 · --fs-lg</div></div>
+      <div><div style="font-size:var(--fs-md)">Body · 14px / 400 — used inside cards and forms.</div><div class="swatch-token">--fs-md · --fw-regular</div></div>
+      <div><div style="font-size:var(--fs-base)">Base · 13px / 400 — default reading size.</div><div class="swatch-token">--fs-base</div></div>
+      <div><div class="label">Label · 11px / 500 · UPPERCASE · 0.06em</div><div class="swatch-token">.label · --fs-xs · used for KPI labels, table headers, section titles</div></div>
+      <div><div class="mono" style="color:var(--accent)">PR-2026-105 · RFQ-2026-042 · ₹15,47,500</div><div class="swatch-token">.mono · IBM Plex Mono · feature-settings: tnum 1</div></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       4. SPACING & RADIUS
+       ============================================================ -->
+  <section class="ds-section">
+    <div class="ds-section-head">
+      <div class="h3">4 · Spacing &amp; radius</div>
+    </div>
+    <div class="ds-row" style="flex-direction:column;align-items:flex-start;gap:var(--s-3)">
+      <div style="font-size:var(--fs-md)">Spacing scale: <span class="code">4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 48 · 64</span> — variables <span class="code">--s-1</span> through <span class="code">--s-16</span></div>
+      <div style="font-size:var(--fs-md)">Radius scale: <span class="code">--r-sm 4px</span> · <span class="code">--r-md 6px</span> · <span class="code">--r-lg 8px</span> · <span class="code">--r-xl 12px</span></div>
+      <div style="font-size:var(--fs-md)">Shell: nav width <span class="code">240px</span>, topbar height <span class="code">60px</span>, content max-width <span class="code">1600px</span></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       5. COMPONENTS
+       ============================================================ -->
+  <section class="ds-section">
+    <div class="ds-section-head">
+      <div class="h3">5 · Components</div>
+      <div class="muted" style="margin-top:var(--s-1);font-size:var(--fs-md)">All built from base CSS classes. When you re-scaffold in Shadcn, these map to Button, Badge, Card, Table, Input.</div>
+    </div>
+
+    <div class="label" style="margin-bottom:var(--s-2)">Buttons</div>
+    <div class="ds-row" style="margin-bottom:var(--s-5)">
+      <button class="btn btn-primary">Primary action</button>
+      <button class="btn btn-secondary">Secondary</button>
+      <button class="btn btn-ghost">Ghost</button>
+      <button class="btn btn-danger">Danger</button>
+      <button class="btn btn-primary btn-sm">Small</button>
+    </div>
+
+    <div class="label" style="margin-bottom:var(--s-2)">Badges &amp; status</div>
+    <div class="ds-row" style="margin-bottom:var(--s-5)">
+      <span class="badge">Draft</span>
+      <span class="badge accent">Active</span>
+      <span class="badge success">Approved</span>
+      <span class="badge warning">Pending</span>
+      <span class="badge danger">Rejected</span>
+      <span class="badge info">Normalized</span>
+      <span class="badge muted">Locked</span>
+    </div>
+
+    <div class="label" style="margin-bottom:var(--s-2)">KPI card</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s-3);margin-bottom:var(--s-5)">
+      <div class="kpi">
+        <div class="kpi-head">
+          <div class="kpi-label">Example KPI</div>
+          <div class="kpi-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/></svg></div>
+        </div>
+        <div class="kpi-value">14</div>
+        <div class="kpi-meta"><span class="kpi-trend up">+8.2% vs last month</span></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-head">
+          <div class="kpi-label">With info accent</div>
+          <div class="kpi-icon info"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13l4-6 3 3 5-7"/></svg></div>
+        </div>
+        <div class="kpi-value">₹47L</div>
+        <div class="kpi-meta"><span class="muted">Quarter to date</span></div>
+      </div>
+    </div>
+
+    <div class="label" style="margin-bottom:var(--s-2)">Table</div>
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:var(--s-5)">
+      <table class="table">
+        <thead>
+          <tr><th>ID</th><th>Vendor</th><th>Status</th><th style="text-align:right">Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="id-cell">PO-2026-018</span></td><td>SteelTech Industries</td><td><span class="badge success">Approved</span></td><td class="num-cell">₹15,47,500</td></tr>
+          <tr><td><span class="id-cell">PO-2026-017</span></td><td>Apex Valves</td><td><span class="badge warning">Pending</span></td><td class="num-cell">₹8,50,000</td></tr>
+          <tr><td><span class="id-cell">PO-2026-016</span></td><td>Precision Valves Ltd</td><td><span class="badge muted">Issued</span></td><td class="num-cell">₹6,20,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="label" style="margin-bottom:var(--s-2)">Status pill (header)</div>
+    <div class="ds-row" style="margin-bottom:var(--s-5)">
+      <div class="status-pill"><span class="pulse"></span><span>All systems operational</span></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       6. INTERN HANDOFF NOTES
+       ============================================================ -->
+  <section class="ds-section">
+    <div class="ds-section-head">
+      <div class="h3">6 · Handoff notes</div>
+    </div>
+
+    <div class="ds-row" style="flex-direction:column;align-items:flex-start;gap:var(--s-3);font-size:var(--fs-md);line-height:1.7">
+      <div><strong>Shell first.</strong> The left nav + top bar + context switcher in <span class="code">index.html</span> is the layout for every authenticated page. Build it once as a Next.js layout component.</div>
+      <div><strong>ID display format.</strong> Always render IDs as <span class="mono" style="color:var(--accent)">PR-2026-105</span> / <span class="mono" style="color:var(--accent)">RFQ-2026-042</span> / <span class="mono" style="color:var(--accent)">PO-2026-018</span> in IBM Plex Mono, accent color, medium weight. The TSD stores them as integers — format on the application layer.</div>
+      <div><strong>Indian numbering.</strong> Use lakhs and crores in display (₹15,47,500 not ₹1,547,500). Use IBM Plex Mono with <span class="code">font-feature-settings: "tnum" 1</span> for any numeric column to keep digits aligned.</div>
+      <div><strong>No "AI" labels in the UI.</strong> AI moments (cost normalization, deviation flagging, line-item extraction) appear as smart defaults — never as branded callouts. The product positions as sophisticated, not "AI-powered."</div>
+      <div><strong>Soft delete everywhere.</strong> Per the FSD, every reject/delete action opens a modal that requires an internal comment before submit. Build a reusable <span class="code">&lt;ConfirmDestructive comment-required&gt;</span> primitive.</div>
+      <div><strong>Project-context filter is global.</strong> The "Active Context · Client · Project" selector in the top bar gates everything below it. All API calls must include the active project_id.</div>
+      <div><strong>Subtle borders &gt; heavy borders.</strong> Use <span class="code">--border-subtle</span> for row dividers inside cards, <span class="code">--border</span> for card outlines, <span class="code">--border-strong</span> only on focused inputs or active states.</div>
+    </div>
+  </section>
+
+  <div style="margin-top:var(--s-12);padding-top:var(--s-5);border-top:1px solid var(--border-subtle);color:var(--fg-subtle);font-size:var(--fs-sm)">
+    <a href="index.html" style="color:var(--accent)">← Back to dashboard</a> · v0.1 · Aker Procurement Phase 1 demo
+  </div>
+
+</div>
+
+</body>
+</html>

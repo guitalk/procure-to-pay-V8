@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — Bid Evaluation · RFQ-2026-038</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* Page-specific styles — bid matrix uses a denser layout than the dashboard */
+    .main.matrix-main { padding: var(--s-5) var(--s-6); max-width: none; }
+
+    /* Page header strip */
+    .matrix-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--s-6);
+      margin-bottom: var(--s-4);
+    }
+    .matrix-title-block .crumb {
+      font-size: var(--fs-xs);
+      color: var(--fg-subtle);
+      margin-bottom: var(--s-2);
+      letter-spacing: 0.04em;
+    }
+    .matrix-title-block .crumb .mono { color: var(--fg-muted); }
+    .matrix-title-row { display: flex; align-items: center; gap: var(--s-3); }
+    .matrix-title { font-size: var(--fs-2xl); font-weight: var(--fw-semibold); letter-spacing: -0.01em; }
+    .matrix-meta {
+      display: flex; gap: var(--s-5);
+      margin-top: var(--s-3);
+      font-size: var(--fs-sm);
+      color: var(--fg-muted);
+    }
+    .matrix-meta strong { color: var(--fg); font-weight: var(--fw-medium); }
+
+    /* Unlock banner — celebrates the sealed envelope opening */
+    .unlock-banner {
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+      padding: var(--s-3) var(--s-4);
+      background: linear-gradient(90deg, rgba(6, 182, 212, 0.10), rgba(59, 130, 246, 0.06));
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      border-radius: var(--r-md);
+      margin-bottom: var(--s-5);
+      font-size: var(--fs-md);
+    }
+    .unlock-banner .lock-icon {
+      width: 32px; height: 32px;
+      border-radius: var(--r-md);
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--info);
+      display: grid; place-items: center;
+    }
+    .unlock-banner-meta { color: var(--fg-muted); font-size: var(--fs-sm); margin-top: 2px; }
+    .unlock-banner-stats { margin-left: auto; display: flex; gap: var(--s-5); }
+    .unlock-banner-stat { text-align: right; }
+    .unlock-banner-stat-value { font-family: var(--font-mono); font-weight: var(--fw-semibold); color: var(--info); font-size: var(--fs-md); }
+    .unlock-banner-stat-label { font-size: var(--fs-xs); color: var(--fg-subtle); }
+
+    /* The matrix grid */
+    .matrix {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      margin-bottom: var(--s-5);
+    }
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: 320px repeat(3, minmax(240px, 1fr));
+      font-size: var(--fs-sm);
+    }
+
+    /* Vendor column headers */
+    .vh {
+      background: var(--bg-elevated);
+      padding: var(--s-4);
+      border-bottom: 1px solid var(--border);
+      border-left: 1px solid var(--border-subtle);
+    }
+    .vh:first-child { border-left: none; }
+    .vh-name {
+      font-size: var(--fs-md);
+      font-weight: var(--fw-semibold);
+      color: var(--fg);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+    }
+    .vh-meta { font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .vh-recommend {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px var(--s-2);
+      background: var(--success-soft);
+      color: var(--success);
+      border-radius: var(--r-sm);
+      font-size: 10px;
+      font-weight: var(--fw-semibold);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .vh-left {
+      background: var(--bg-elevated);
+      padding: var(--s-4);
+      border-bottom: 1px solid var(--border);
+    }
+    .vh-left-label { font-size: var(--fs-xs); color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.06em; font-weight: var(--fw-medium); }
+    .vh-left-title { font-size: var(--fs-md); color: var(--fg); margin-top: 2px; font-weight: var(--fw-medium); }
+
+    /* Section divider rows */
+    .matrix-section-row {
+      grid-column: 1 / -1;
+      padding: var(--s-3) var(--s-4);
+      background: var(--bg-base);
+      font-size: var(--fs-xs);
+      color: var(--fg-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: var(--fw-medium);
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    /* Line item rows */
+    .li-label {
+      padding: var(--s-3) var(--s-4);
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+    }
+    .li-label-desc { font-size: var(--fs-md); color: var(--fg); font-weight: var(--fw-medium); margin-bottom: 2px; }
+    .li-label-meta { font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .li-label-spec { font-family: var(--font-mono); color: var(--accent); font-size: var(--fs-xs); margin-top: 4px; cursor: pointer; }
+
+    .li-cell {
+      padding: var(--s-3) var(--s-4);
+      border-bottom: 1px solid var(--border-subtle);
+      border-left: 1px solid var(--border-subtle);
+      text-align: right;
+      position: relative;
+    }
+    .li-cell-unit { font-family: var(--font-mono); font-size: var(--fs-md); color: var(--fg); font-weight: var(--fw-medium); }
+    .li-cell-calc { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: 2px; }
+
+    /* Normalization dual-display */
+    .li-cell.normalized .li-cell-unit { color: var(--info); }
+    .li-cell-original {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      color: var(--fg-disabled);
+      text-decoration: line-through;
+      margin-bottom: 2px;
+    }
+    .norm-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      color: var(--info);
+      font-weight: var(--fw-medium);
+      margin-top: 4px;
+      cursor: help;
+    }
+    .norm-tag .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--info); }
+
+    /* Vendor footer cells (subtotal / GST / total) */
+    .vf {
+      padding: var(--s-3) var(--s-4);
+      border-left: 1px solid var(--border-subtle);
+      text-align: right;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .vf-label-cell {
+      padding: var(--s-3) var(--s-4);
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      font-size: var(--fs-sm);
+      color: var(--fg-muted);
+    }
+    .vf-total .vf {
+      background: var(--bg-elevated);
+      font-family: var(--font-mono);
+      font-weight: var(--fw-semibold);
+      font-size: var(--fs-lg);
+      color: var(--fg);
+    }
+    .vf-total .vf.preferred { color: var(--success); background: rgba(16, 185, 129, 0.08); }
+    .vf-total .vf-label-cell {
+      background: var(--bg-elevated);
+      font-weight: var(--fw-semibold);
+      color: var(--fg);
+      font-size: var(--fs-md);
+    }
+    .vf-num { font-family: var(--font-mono); }
+    .vf-cell-meta { font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: 2px; }
+
+    /* Vendor selection */
+    .vh.vendor-selected { background: rgba(16,185,129,0.07); border-bottom: 2px solid #10B981; }
+    .li-cell.vendor-selected { background: rgba(16,185,129,0.04); }
+    .vf.vendor-selected { background: rgba(16,185,129,0.06); }
+    .vf.preferred.vendor-selected { background: rgba(16,185,129,0.12); }
+    .btn-select-vendor {
+      margin-top: var(--s-2); padding: 3px var(--s-3);
+      background: none; border: 1px solid var(--border);
+      border-radius: var(--r-sm); color: var(--fg-subtle);
+      font-family: var(--font-sans); font-size: var(--fs-xs);
+      font-weight: var(--fw-medium); cursor: pointer; transition: all 0.15s;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .btn-select-vendor:hover { border-color: #10B981; color: #10B981; }
+    .btn-select-vendor.awarded { background: rgba(16,185,129,0.12); border-color: #10B981; color: #10B981; }
+    .awarded-chip {
+      display: none; align-items: center; gap: 4px;
+      padding: 1px 6px; border-radius: var(--r-sm);
+      background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3);
+      color: #10B981; font-size: 10px; font-weight: var(--fw-semibold);
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .awarded-chip.visible { display: inline-flex; }
+    .btn-po-gated { opacity: 0.38; pointer-events: none; cursor: not-allowed; }
+    .po-gate-hint { font-size: var(--fs-xs); color: var(--fg-subtle); }
+
+    /* Deviation flag rows */
+    .deviation-row {
+      padding: var(--s-3) var(--s-4);
+      border-bottom: 1px solid var(--border-subtle);
+      border-left: 1px solid var(--border-subtle);
+      vertical-align: top;
+    }
+    .deviation-flag {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--s-2);
+      padding: var(--s-2) var(--s-3);
+      background: var(--warning-soft);
+      border-radius: var(--r-sm);
+      margin-bottom: var(--s-2);
+      font-size: var(--fs-xs);
+    }
+    .deviation-flag.danger { background: var(--danger-soft); }
+    .deviation-flag-icon { color: var(--warning); flex-shrink: 0; margin-top: 1px; }
+    .deviation-flag.danger .deviation-flag-icon { color: var(--danger); }
+    .deviation-flag-title { color: var(--fg); font-weight: var(--fw-medium); display: block; margin-bottom: 2px; }
+    .deviation-flag-detail { color: var(--fg-muted); }
+    .deviation-flag-impact {
+      display: inline-block;
+      margin-top: 4px;
+      font-family: var(--font-mono);
+      color: var(--warning);
+      font-weight: var(--fw-medium);
+    }
+    .deviation-flag.danger .deviation-flag-impact { color: var(--danger); }
+    .no-deviation {
+      padding: var(--s-3);
+      text-align: center;
+      color: var(--success);
+      font-size: var(--fs-xs);
+      background: var(--success-soft);
+      border-radius: var(--r-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Excluded vendor strip */
+    .excluded-strip {
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+      padding: var(--s-3) var(--s-4);
+      background: var(--bg-base);
+      border: 1px dashed var(--border);
+      border-radius: var(--r-md);
+      color: var(--fg-subtle);
+      font-size: var(--fs-sm);
+      margin-bottom: var(--s-5);
+    }
+    .excluded-strip strong { color: var(--fg-muted); font-weight: var(--fw-medium); }
+
+
+    /* ── Normalize mode styles ── */
+    .norm-mode-banner {
+      display: none;
+      align-items: center;
+      gap: var(--s-3);
+      padding: var(--s-3) var(--s-4);
+      background: rgba(6,182,212,0.07);
+      border: 1px solid rgba(6,182,212,0.25);
+      border-radius: var(--r-md);
+      margin-bottom: var(--s-4);
+      font-size: var(--fs-sm);
+    }
+    .norm-mode-banner.active { display: flex; }
+    .norm-mode-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--info);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .norm-mode-label { color: var(--info); font-weight: var(--fw-semibold); }
+    .norm-mode-hint { color: var(--fg-muted); font-size: var(--fs-xs); }
+    .norm-mode-exit { margin-left: auto; font-size: var(--fs-xs); color: var(--fg-subtle); cursor: pointer; padding: var(--s-1) var(--s-3); border: 1px solid var(--border); border-radius: var(--r-sm); background: transparent; }
+    .norm-mode-exit:hover { background: var(--bg-subtle); color: var(--fg); }
+
+    /* cells editable in normalize mode */
+    body.normalize-mode .li-cell.normalized,
+    body.normalize-mode .li-cell.missing-data,
+    body.normalize-mode .vf.missing-data {
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    body.normalize-mode .li-cell.normalized:hover,
+    body.normalize-mode .li-cell.missing-data:hover,
+    body.normalize-mode .vf.missing-data:hover {
+      background: rgba(6,182,212,0.06);
+    }
+    body.normalize-mode .li-cell.normalized::after,
+    body.normalize-mode .li-cell.missing-data::after,
+    body.normalize-mode .vf.missing-data::after {
+      content: '✎';
+      position: absolute;
+      top: var(--s-2); right: var(--s-2);
+      font-size: 11px;
+      color: var(--info);
+      opacity: 0.7;
+    }
+    /* missing data cell */
+    .li-cell.missing-data .missing-val,
+    .vf.missing-data .missing-val {
+      font-family: var(--font-mono);
+      font-size: var(--fs-sm);
+      color: var(--fg-subtle);
+    }
+    .add-norm-btn {
+      display: none;
+      margin-top: var(--s-2);
+      font-size: 10px;
+      color: var(--info);
+      border: 1px dashed rgba(6,182,212,0.4);
+      border-radius: var(--r-sm);
+      padding: 2px var(--s-2);
+      cursor: pointer;
+      background: transparent;
+      transition: background 0.1s;
+    }
+    .add-norm-btn:hover { background: rgba(6,182,212,0.08); }
+    body.normalize-mode .add-norm-btn { display: inline-block; }
+
+    /* ── Normalization popover ── */
+    .norm-popover-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      z-index: 50;
+    }
+    .norm-popover-overlay.open { display: block; }
+    .norm-popover {
+      position: fixed;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      width: 320px;
+      z-index: 60;
+      padding: var(--s-4);
+    }
+    .norm-pop-header {
+      display: flex; align-items: center; gap: var(--s-2);
+      margin-bottom: var(--s-3);
+    }
+    .norm-pop-icon {
+      width: 28px; height: 28px;
+      border-radius: var(--r-sm);
+      background: rgba(6,182,212,0.12);
+      color: var(--info);
+      display: grid; place-items: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+    .norm-pop-title { font-weight: var(--fw-semibold); font-size: var(--fs-sm); }
+    .norm-pop-vendor { font-size: var(--fs-xs); color: var(--fg-muted); }
+    .norm-pop-close { margin-left: auto; cursor: pointer; color: var(--fg-subtle); font-size: 16px; line-height: 1; }
+    .norm-pop-close:hover { color: var(--fg); }
+    .norm-pop-row { margin-bottom: var(--s-3); }
+    .norm-pop-label {
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+      color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.05em;
+      margin-bottom: var(--s-1);
+    }
+    .norm-pop-original {
+      font-family: var(--font-mono); font-size: var(--fs-sm);
+      color: var(--fg-disabled); text-decoration: line-through;
+      margin-bottom: var(--s-1);
+    }
+    .norm-pop-input-wrap { position: relative; }
+    .norm-pop-prefix {
+      position: absolute; left: var(--s-3); top: 50%;
+      transform: translateY(-50%);
+      font-size: var(--fs-xs); color: var(--fg-subtle);
+      font-family: var(--font-mono); pointer-events: none;
+    }
+    .norm-pop-input {
+      width: 100%; box-sizing: border-box;
+      background: var(--bg-input, var(--bg-subtle));
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--s-2) var(--s-3) var(--s-2) 28px;
+      font-family: var(--font-mono); font-size: var(--fs-md);
+      color: var(--fg); transition: border-color 0.15s;
+    }
+    .norm-pop-input:focus { outline: none; border-color: var(--info); }
+    .norm-pop-reason {
+      width: 100%; box-sizing: border-box;
+      background: var(--bg-input, var(--bg-subtle));
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--s-2) var(--s-3);
+      font-family: var(--font-sans); font-size: var(--fs-sm);
+      color: var(--fg); resize: none; min-height: 60px;
+      transition: border-color 0.15s;
+    }
+    .norm-pop-reason:focus { outline: none; border-color: var(--info); }
+    .norm-pop-reason::placeholder { color: var(--fg-subtle); }
+    .norm-pop-actions { display: flex; gap: var(--s-2); justify-content: flex-end; margin-top: var(--s-3); }
+    .btn-norm-cancel {
+      padding: var(--s-1) var(--s-3);
+      background: transparent; border: 1px solid var(--border);
+      border-radius: var(--r-md); color: var(--fg-muted);
+      font-family: var(--font-sans); font-size: var(--fs-xs); cursor: pointer;
+    }
+    .btn-norm-apply {
+      padding: var(--s-1) var(--s-4);
+      background: var(--info); border: none;
+      border-radius: var(--r-md); color: #fff;
+      font-family: var(--font-sans); font-size: var(--fs-xs);
+      font-weight: var(--fw-semibold); cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-norm-apply:hover { background: #0891b2; }
+
+    /* ── Normalize toggle button ── */
+    .btn-normalize {
+      padding: var(--s-2) var(--s-4);
+      background: transparent;
+      border: 1px solid rgba(6,182,212,0.4);
+      border-radius: var(--r-md);
+      color: var(--info);
+      font-family: var(--font-sans);
+      font-size: var(--fs-sm);
+      cursor: pointer;
+      display: flex; align-items: center; gap: var(--s-2);
+      transition: background 0.15s;
+    }
+    .btn-normalize:hover, body.normalize-mode .btn-normalize {
+      background: rgba(6,182,212,0.08);
+    }
+
+    /* Action footer */
+    .action-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+      padding: var(--s-4);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+    }
+    .action-bar-meta { color: var(--fg-muted); font-size: var(--fs-sm); margin-right: auto; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- LEFT NAV (Shell) -->
+  <aside class="nav">
+        <div class="nav-brand">
+      <button class="hamburger-btn" onclick="toggleNav()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
+      <div class="nav-brand-text">
+        <div class="nav-brand-name">Procure</div>
+        <div class="nav-brand-sub">Procurement</div>
+      </div>
+    </div>
+    <div class="nav-items">
+
+      <a class="nav-item" href="index.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded" href="clients.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V7l6-4 6 4v7zM6 14V9h4v5"/></svg>
+          <span>Master Data</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="clients.html">Clients</a>
+          <a class="nav-item nav-sub-item" href="projects.html">Projects</a>
+          <a class="nav-item nav-sub-item" href="vendor-categories.html">Categories</a>
+          <a class="nav-item nav-sub-item" href="terms-conditions.html">Terms &amp; Conditions</a>
+          <a class="nav-item nav-sub-item" href="payment-terms.html">Payment Terms</a>
+          <a class="nav-item nav-sub-item" href="inco-terms.html">Inco Terms</a>
+          <a class="nav-item nav-sub-item" href="vendors.html">Vendors</a>
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-requisitions.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Purchase Requisitions</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded has-active" href="#">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+          <span>RFQs</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="rfq-list.html">All RFQs</a>
+          <a class="nav-item nav-sub-item" href="rfq-create.html">New RFQ</a>
+          
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-orders.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l1.5 8.5a1 1 0 0 0 1 .85h7a1 1 0 0 0 1-.85L14 4"/><path d="M2 4h12M6 7v3M10 7v3"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+
+    </div>
+
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">AD</div>
+        <div>
+          <div class="user-name">Admin User</div>
+          <div class="user-email">admin@aker.com</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div>
+
+    <main class="main matrix-main">
+
+      <!-- PAGE HEADER -->
+      <div class="matrix-header">
+        <div class="matrix-title-block">
+          <div class="matrix-title-row">
+            <div class="matrix-title">Centrifugal Pumps — 50 HP, API 610 OH2</div>
+            <span class="badge accent">Commercial Evaluation</span>
+          </div>
+          <div class="matrix-meta">
+            <div>RFQ ID · <strong class="mono">RFQ-2026-038</strong></div>
+            <div>Parent PR · <strong class="mono">PR-2026-105</strong></div>
+            <div>Commercial deadline · <strong>Closed · 20 May, 14:00</strong></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:var(--s-2)">
+          <button class="btn btn-secondary" onclick="exportExcel()">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6L9 2Z"/><path d="M9 2v4h4"/><path d="M6 9l4 4M10 9l-4 4" stroke-width="1.4"/></svg>
+            Export Excel
+          </button>
+        </div>
+      </div>
+
+      <!-- UNLOCK BANNER — celebrates the sealed envelope opening + subtly surfaces AI-driven normalization -->
+      <div class="unlock-banner">
+        <div class="lock-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 6 0"/></svg>
+        </div>
+        <div>
+          <div style="font-weight:var(--fw-medium)">Commercial envelope unlocked · 4 of 5 vendors submitted</div>
+          <div class="unlock-banner-meta">Cost normalization applied to 2 bids · hidden costs identified: ₹42,600 · all deviations flagged</div>
+        </div>
+        <div class="unlock-banner-stats">
+          <div class="unlock-banner-stat">
+            <div class="unlock-banner-stat-value">2</div>
+            <div class="unlock-banner-stat-label">Cells normalized</div>
+          </div>
+          <div class="unlock-banner-stat">
+            <div class="unlock-banner-stat-value">2</div>
+            <div class="unlock-banner-stat-label">Deviation flags</div>
+          </div>
+          <div class="unlock-banner-stat">
+            <div class="unlock-banner-stat-value">₹42,600</div>
+            <div class="unlock-banner-stat-label">Hidden cost surfaced</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NORMALIZE MODE BANNER (hidden until mode active) -->
+      <div class="norm-mode-banner" id="norm-mode-banner">
+        <div class="norm-mode-dot"></div>
+        <div>
+          <span class="norm-mode-label">Normalize mode active</span>
+          <span class="norm-mode-hint"> — Click any highlighted cell to add or edit a market-rate adjustment</span>
+        </div>
+        <button class="norm-mode-exit" onclick="toggleNormalizeMode()">Exit mode</button>
+      </div>
+
+      <!-- EXCLUDED VENDOR STRIP — shows the system gating worked -->
+      <div class="excluded-strip">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--danger)"><circle cx="8" cy="8" r="6"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5"/></svg>
+        <div><strong>Flowtech Industries</strong> · Technically Rejected · commercial bid not opened.</div>
+        <a class="card-action" style="margin-left:auto">View detail</a>
+      </div>
+
+      <!-- THE MATRIX -->
+      <div class="matrix">
+        <div class="matrix-grid">
+
+          <!-- Vendor column headers -->
+          <div class="vh-left">
+            <div class="vh-left-label">Line items</div>
+            <div class="vh-left-title">3 line items</div>
+          </div>
+
+          <div class="vh" id="vh-steeltech" data-vendor="steeltech">
+            <div style="display:flex;align-items:center;gap:var(--s-2);margin-bottom:3px;">
+              <span style="font-size:10px;font-weight:700;font-family:var(--font-mono);padding:1px 7px;border-radius:999px;background:rgba(239,68,68,0.10);color:#EF4444;border:1px solid rgba(239,68,68,0.22);">L3</span>
+            </div>
+            <div class="vh-name">SteelTech Industries</div>
+            <div class="vh-meta">Heavy Forging</div>
+            <div style="margin-top:var(--s-2); display:flex; align-items:center; gap:var(--s-2);">
+              <button class="btn-select-vendor" id="sel-steeltech" onclick="selectVendor('steeltech')">Select vendor</button>
+              <span class="awarded-chip" id="chip-steeltech">✓ Awarded</span>
+            </div>
+          </div>
+
+          <div class="vh" id="vh-apex" data-vendor="apex">
+            <div style="display:flex;align-items:center;gap:var(--s-2);margin-bottom:3px;">
+              <span style="font-size:10px;font-weight:700;font-family:var(--font-mono);padding:1px 7px;border-radius:999px;background:rgba(16,185,129,0.12);color:#10B981;border:1px solid rgba(16,185,129,0.25);">L1</span>
+              <span style="font-size:10px;color:var(--fg-subtle);">Lowest landed cost</span>
+            </div>
+            <div class="vh-name">Apex Valves <span class="vh-recommend">Recommended</span></div>
+            <div class="vh-meta">Piping · <a href="commercial-bid.html" style="color:var(--info);text-decoration:none;font-size:var(--fs-xs);">View submission →</a></div>
+            <div style="margin-top:var(--s-2); display:flex; align-items:center; gap:var(--s-2);">
+              <button class="btn-select-vendor" id="sel-apex" onclick="selectVendor('apex')">Select vendor</button>
+              <span class="awarded-chip" id="chip-apex">✓ Awarded</span>
+            </div>
+          </div>
+
+          <div class="vh" id="vh-precision" data-vendor="precision">
+            <div style="display:flex;align-items:center;gap:var(--s-2);margin-bottom:3px;">
+              <span style="font-size:10px;font-weight:700;font-family:var(--font-mono);padding:1px 7px;border-radius:999px;background:rgba(245,158,11,0.10);color:#F59E0B;border:1px solid rgba(245,158,11,0.22);">L2</span>
+            </div>
+            <div class="vh-name">Precision Valves Ltd</div>
+            <div class="vh-meta">Piping</div>
+            <div style="margin-top:var(--s-2); display:flex; align-items:center; gap:var(--s-2);">
+              <button class="btn-select-vendor" id="sel-precision" onclick="selectVendor('precision')">Select vendor</button>
+              <span class="awarded-chip" id="chip-precision">✓ Awarded</span>
+            </div>
+          </div>
+
+          <!-- Section: Line items -->
+          <div class="matrix-section-row">Line items · Total value per line</div>
+
+          <!-- Line 1 -->
+          <div class="li-label">
+            <div class="li-label-desc">Centrifugal Pump · 50HP · API 610 OH2</div>
+            <div class="li-label-meta">CS construction · 3" suction</div>
+            <div class="li-label-spec">📎 Spec-MPL-038.pdf</div>
+          </div>
+          <div class="li-cell" data-vendor="steeltech">
+            <div class="li-cell-unit">₹17,10,000</div>
+          </div>
+          <div class="li-cell" data-vendor="apex">
+            <div class="li-cell-unit">₹15,72,000</div>
+          </div>
+          <div class="li-cell" data-vendor="precision">
+            <div class="li-cell-unit">₹16,29,000</div>
+          </div>
+
+          <!-- Line 2 — normalization on Apex Valves (missing insurance) -->
+          <div class="li-label">
+            <div class="li-label-desc">Mechanical seal kit · Cartridge type</div>
+            <div class="li-label-meta">API plan 11 + 52</div>
+            <div class="li-label-spec">📎 Spec-MPL-038-seal.pdf</div>
+          </div>
+          <div class="li-cell" data-vendor="steeltech">
+            <div class="li-cell-unit">₹2,91,000</div>
+          </div>
+          <div class="li-cell normalized" id="norm-cell-apex-seal" data-vendor="apex"
+               onclick="openNormPopover(this, 'Apex Valves', 'Mechanical Seal Kit — Insurance', '2,52,000', '2,80,800', 'Insurance not included · market rate added')"
+               title="Click in Normalize mode to edit">
+            <div class="li-cell-original">₹2,52,000</div>
+            <div class="li-cell-unit" id="norm-val-apex-seal">₹2,80,800</div>
+            <span class="norm-tag"><span class="dot"></span><span id="norm-reason-apex-seal">Insurance not included · market rate added</span></span>
+          </div>
+          <div class="li-cell" data-vendor="precision">
+            <div class="li-cell-unit">₹2,83,200</div>
+          </div>
+
+          <!-- Line 3 — normalization on Precision Valves (handling cost) -->
+          <div class="li-label">
+            <div class="li-label-desc">Coupling guard assembly · ASME B15.1</div>
+            <div class="li-label-meta">Aluminum</div>
+            <div class="li-label-spec">📎 Spec-MPL-038-guard.pdf</div>
+          </div>
+          <div class="li-cell" data-vendor="steeltech">
+            <div class="li-cell-unit">₹36,400</div>
+          </div>
+          <div class="li-cell" data-vendor="apex">
+            <div class="li-cell-unit">₹34,800</div>
+          </div>
+          <div class="li-cell normalized" id="norm-cell-prec-guard" data-vendor="precision"
+               onclick="openNormPopover(this, 'Precision Valves Ltd', 'Coupling Guard — Handling fee', '35,600', '36,200', 'Handling fee normalized')"
+               title="Click in Normalize mode to edit">
+            <div class="li-cell-original">₹35,600</div>
+            <div class="li-cell-unit" id="norm-val-prec-guard">₹36,200</div>
+            <span class="norm-tag"><span class="dot"></span><span id="norm-reason-prec-guard">Handling fee normalized</span></span>
+          </div>
+
+          <!-- Section: Vendor footer (line subtotal) -->
+          <div class="matrix-section-row">Subtotals &amp; header costs</div>
+
+          <div class="vf-label-cell">Line subtotal</div>
+          <div class="vf" data-vendor="steeltech"><span class="vf-num">₹20,37,400</span></div>
+          <div class="vf" data-vendor="apex">
+            <span class="vf-num">₹18,87,600</span>
+            <div class="vf-cell-meta">↑ ₹28,800 normalized</div>
+          </div>
+          <div class="vf" data-vendor="precision">
+            <span class="vf-num">₹19,48,400</span>
+            <div class="vf-cell-meta">↑ ₹600 normalized</div>
+          </div>
+
+          <div class="vf-label-cell">Transport (vendor-quoted)</div>
+          <div class="vf" data-vendor="steeltech"><span class="vf-num">₹42,000</span></div>
+          <div class="vf" data-vendor="apex"><span class="vf-num">₹38,500</span></div>
+          <div class="vf" data-vendor="precision"><span class="vf-num">₹40,200</span></div>
+
+          <div class="vf-label-cell">Packaging</div>
+          <div class="vf" data-vendor="steeltech"><span class="vf-num">₹12,500</span></div>
+          <div class="vf" data-vendor="apex"><span class="vf-num">₹11,800</span></div>
+          <div class="vf" data-vendor="precision"><span class="vf-num">₹13,200</span></div>
+
+          <div class="vf-label-cell">Handling <span style="font-size:var(--fs-xs);color:var(--fg-subtle);font-weight:400;">(FSD §5)</span></div>
+          <div class="vf" data-vendor="steeltech"><span class="vf-num">₹6,800</span></div>
+          <div class="vf" data-vendor="apex"><span class="vf-num">₹5,900</span></div>
+          <div class="vf" data-vendor="precision"><span class="vf-num">₹7,200</span></div>
+
+          <!-- Grand total row -->
+          <div class="vf-total" style="display:contents">
+            <div class="vf-label-cell">Normalized total</div>
+            <div class="vf" data-vendor="steeltech"><span class="vf-num">₹20,98,700</span></div>
+            <div class="vf preferred" data-vendor="apex"><span class="vf-num">₹19,43,800</span><div class="vf-cell-meta">Lowest</div></div>
+            <div class="vf" data-vendor="precision"><span class="vf-num">₹20,09,000</span></div>
+          </div>
+
+          <!-- Section: Deviations -->
+          <div class="matrix-section-row">Vendor-proposed amendments · flagged as deviations</div>
+
+          <div class="vf-label-cell" style="vertical-align:top">Payment Terms / Inco Terms / Delivery</div>
+
+          <div class="deviation-row">
+            <div class="no-deviation">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3.5 3.5L13 5"/></svg>
+              No deviations — accepts all RFQ terms
+            </div>
+          </div>
+
+          <div class="deviation-row">
+            <div class="deviation-flag danger">
+              <svg class="deviation-flag-icon" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L1.5 13.5h13L8 2z"/><path d="M8 6.5v3"/><circle cx="8" cy="11.5" r="0.5" fill="currentColor"/></svg>
+              <div>
+                <span class="deviation-flag-title">Payment Terms changed</span>
+                <span class="deviation-flag-detail">RFQ: Net-60 from invoice → Vendor: 50% advance + 50% on dispatch</span>
+              </div>
+            </div>
+            <div class="deviation-flag">
+              <svg class="deviation-flag-icon" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L1.5 13.5h13L8 2z"/><path d="M8 6.5v3"/><circle cx="8" cy="11.5" r="0.5" fill="currentColor"/></svg>
+              <div>
+                <span class="deviation-flag-title">Delivery extended</span>
+                <span class="deviation-flag-detail">RFQ: 60 days → Vendor: 75 days</span>
+                <div class="deviation-flag-impact">+15 days vs plan</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="deviation-row">
+            <div class="deviation-flag">
+              <svg class="deviation-flag-icon" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2L1.5 13.5h13L8 2z"/><path d="M8 6.5v3"/><circle cx="8" cy="11.5" r="0.5" fill="currentColor"/></svg>
+              <div>
+                <span class="deviation-flag-title">Inco Terms changed</span>
+                <span class="deviation-flag-detail">RFQ: DDP site → Vendor: FOB Mumbai</span>
+                <div class="deviation-flag-impact">Logistics responsibility shifts to Aker</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ACTION BAR -->
+      <div class="action-bar">
+        <div class="action-bar-meta">
+          <span class="mono">RFQ-2026-038</span> · Last updated 14:32 · Saved automatically
+        </div>
+        <button class="btn-normalize" id="normalize-btn" onclick="toggleNormalizeMode()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h12M2 11h12M5 2l-3 3 3 3M11 14l3-3-3-3"/></svg>
+          Normalize values
+        </button>
+        <button class="btn btn-ghost">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5l2 1"/></svg>
+          Raise clarification
+        </button>
+        <button class="btn btn-secondary">Save draft</button>
+        <span class="po-gate-hint" id="po-gate-hint">Select a vendor to proceed</span>
+        <a href="purchase-orders.html" class="btn btn-primary btn-po-gated" id="send-po-btn">Send for PO approval →</a>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Demo presenter strip -->
+<div class="demo-strip">
+  <span class="step-num">05 / 06</span>
+  <span>Bid Comparison Matrix — the hero screen</span>
+  <span style="color:var(--border-strong)">·</span>
+  <a href="index.html">← Dashboard</a>
+  <a href="design-system.html">Design system</a>
+</div>
+
+
+<!-- ══════════════════════ NORMALIZATION POPOVER ══ -->
+<div class="norm-popover-overlay" id="norm-popover-overlay" onclick="closeNormPopover(event)"></div>
+<div class="norm-popover" id="norm-popover" style="display:none;">
+  <div class="norm-pop-header">
+    <div class="norm-pop-icon">⇄</div>
+    <div>
+      <div class="norm-pop-title" id="norm-pop-title">Normalize cell</div>
+      <div class="norm-pop-vendor" id="norm-pop-vendor"></div>
+    </div>
+    <span class="norm-pop-close" onclick="closeNormPopover()">×</span>
+  </div>
+  <div class="norm-pop-row">
+    <div class="norm-pop-label">Vendor submitted</div>
+    <div class="norm-pop-original" id="norm-pop-original">— Not provided</div>
+  </div>
+  <div class="norm-pop-row">
+    <div class="norm-pop-label">Buyer cost adjustment (₹ per unit)</div>
+    <div class="norm-pop-input-wrap">
+      <span class="norm-pop-prefix">₹</span>
+      <input class="norm-pop-input" type="text" id="norm-pop-value" placeholder="0" />
+    </div>
+  </div>
+  <div class="norm-pop-row">
+    <div class="norm-pop-label">Justification comment <span style="color:var(--danger);font-size:10px;">* mandatory per audit policy</span></div>
+    <textarea class="norm-pop-reason" id="norm-pop-reason" placeholder="e.g. Vendor omitted transit insurance — applied market rate of 0.5% of order value for landed cost parity"></textarea>
+  </div>
+  <div class="norm-pop-actions">
+    <button class="btn-norm-cancel" onclick="closeNormPopover()">Cancel</button>
+    <button class="btn-norm-apply" onclick="applyNormalization()">Apply adjustment</button>
+  </div>
+</div>
+
+<!-- ── Export toast ── -->
+<div id="export-toast" style="
+  position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%) translateY(16px);
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: var(--s-3) var(--s-5);
+  display: flex; align-items: center; gap: var(--s-3);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  font-size: var(--fs-sm); color: var(--fg);
+  opacity: 0; transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none; z-index: 200; white-space: nowrap;
+">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#10B981" stroke-width="2"><path d="M2.5 8.5l3.5 3.5 7-7"/></svg>
+  <span><strong>BidMatrix_RFQ-2026-038.xlsx</strong> — ready to download</span>
+  <span style="margin-left:var(--s-2); font-size:var(--fs-xs); color:var(--fg-subtle);">127 KB</span>
+</div>
+
+<div class="nav-backdrop" id="nav-backdrop" onclick="closeNav()"></div>
+
+<script>
+  /* ══════════════════════ VENDOR SELECTION ══ */
+  var selectedVendor = null;
+  var vendors = ['steeltech', 'apex', 'precision'];
+
+  function selectVendor(vendor) {
+    selectedVendor = vendor;
+
+    // Reset all columns
+    vendors.forEach(function(v) {
+      document.getElementById('vh-' + v).classList.remove('vendor-selected');
+      document.getElementById('sel-' + v).classList.remove('awarded');
+      document.getElementById('sel-' + v).textContent = 'Select vendor';
+      document.getElementById('chip-' + v).classList.remove('visible');
+      document.querySelectorAll('[data-vendor="' + v + '"]').forEach(function(el) {
+        el.classList.remove('vendor-selected');
+      });
+    });
+
+    // Highlight selected column
+    document.getElementById('vh-' + vendor).classList.add('vendor-selected');
+    document.getElementById('sel-' + vendor).classList.add('awarded');
+    document.getElementById('sel-' + vendor).textContent = 'Awarded';
+    document.getElementById('chip-' + vendor).classList.add('visible');
+    document.querySelectorAll('[data-vendor="' + vendor + '"]').forEach(function(el) {
+      el.classList.add('vendor-selected');
+    });
+
+    // Unlock PO button
+    var btn = document.getElementById('send-po-btn');
+    btn.classList.remove('btn-po-gated');
+    document.getElementById('po-gate-hint').style.display = 'none';
+  }
+
+  function exportExcel() {
+    var toast = document.getElementById('export-toast');
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(-50%) translateY(16px)';
+    }, 3200);
+  }
+
+  function toggleNav() {
+    const nav = document.querySelector('.nav');
+    const backdrop = document.getElementById('nav-backdrop');
+    const isOpen = nav.classList.toggle('open');
+    backdrop.classList.toggle('visible', isOpen);
+  }
+  function closeNav() {
+    document.querySelector('.nav').classList.remove('open');
+    document.getElementById('nav-backdrop').classList.remove('visible');
+  }
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 700) closeNav();
+  });
+
+  /* ══════════════════════ NORMALIZATION ENGINE ══ */
+
+  var normMode = false;
+  var activeCellEl = null;
+  var activeCellMeta = {};
+
+  function toggleNormalizeMode() {
+    normMode = !normMode;
+    document.body.classList.toggle('normalize-mode', normMode);
+    document.getElementById('norm-mode-banner').classList.toggle('active', normMode);
+    document.getElementById('normalize-btn').style.background =
+      normMode ? 'rgba(6,182,212,0.12)' : '';
+    if (!normMode) closeNormPopover();
+  }
+
+  function openNormPopover(cellEl, vendor, label, originalVal, currentVal, currentReason) {
+    if (!normMode) return;
+    activeCellEl = cellEl;
+    activeCellMeta = { vendor: vendor, label: label, originalVal: originalVal };
+
+    // Populate popover fields
+    document.getElementById('norm-pop-title').textContent = label;
+    document.getElementById('norm-pop-vendor').textContent = vendor;
+    document.getElementById('norm-pop-original').textContent =
+      originalVal ? '₹ ' + originalVal : '— Not provided by vendor';
+    document.getElementById('norm-pop-value').value = currentVal || '';
+    document.getElementById('norm-pop-reason').value = currentReason || '';
+
+    // Position popover near the cell
+    var rect = cellEl.getBoundingClientRect();
+    var pop = document.getElementById('norm-popover');
+    pop.style.display = 'block';
+    document.getElementById('norm-popover-overlay').classList.add('open');
+
+    var top = rect.bottom + 8;
+    var left = rect.left - 320 + rect.width;
+    if (left < 8) left = 8;
+    if (top + 340 > window.innerHeight) top = rect.top - 348;
+    pop.style.top = top + 'px';
+    pop.style.left = left + 'px';
+
+    setTimeout(function() {
+      document.getElementById('norm-pop-value').focus();
+    }, 50);
+  }
+
+  function closeNormPopover(evt) {
+    if (evt && evt.target !== document.getElementById('norm-popover-overlay')) return;
+    document.getElementById('norm-popover').style.display = 'none';
+    document.getElementById('norm-popover-overlay').classList.remove('open');
+    activeCellEl = null;
+  }
+
+  function applyNormalization() {
+    var val = document.getElementById('norm-pop-value').value.trim();
+    var reason = document.getElementById('norm-pop-reason').value.trim();
+    if (!val) {
+      document.getElementById('norm-pop-value').style.borderColor = 'var(--danger)';
+      return;
+    }
+    if (!reason) {
+      document.getElementById('norm-pop-reason').style.borderColor = 'var(--danger)';
+      return;
+    }
+
+    var numVal = parseInt(val.replace(/[^0-9]/g, ''), 10);
+    var formatted = numVal.toLocaleString('en-IN');
+
+    if (activeCellEl) {
+      var isMissing = activeCellEl.classList.contains('missing-data');
+
+      if (isMissing) {
+        // Replace missing-data cell content with normalized display
+        activeCellEl.classList.remove('missing-data');
+        activeCellEl.classList.add('normalized');
+        activeCellEl.innerHTML =
+          '<div class="li-cell-original">— Not provided</div>' +
+          '<div class="li-cell-unit" style="color:var(--info)">₹ ' + formatted + '</div>' +
+          '<div class="li-cell-calc">market rate</div>' +
+          '<span class="norm-tag"><span class="dot"></span>' + reason + '</span>';
+        activeCellEl.onclick = function() {
+          openNormPopover(activeCellEl, activeCellMeta.vendor, activeCellMeta.label, null, formatted, reason);
+        };
+
+        // Update the unlock-banner "cells normalized" counter
+        var counter = document.querySelector('.unlock-banner-stat-value');
+        if (counter) counter.textContent = parseInt(counter.textContent) + 1;
+
+        // Update hidden cost stat
+        var hiddenStat = document.querySelectorAll('.unlock-banner-stat-value')[2];
+        if (hiddenStat) {
+          var existing = parseInt(hiddenStat.textContent.replace(/[^0-9]/g, ''), 10) || 42600;
+          var addedL = numVal / 100000;
+          hiddenStat.textContent = '₹' + (existing + addedL).toFixed(2) + 'L';
+        }
+      } else {
+        // Update existing normalized cell
+        var unitEl = activeCellEl.querySelector('.li-cell-unit, [id^="norm-val"]');
+        if (unitEl) { unitEl.textContent = '₹ ' + formatted; unitEl.style.color = 'var(--info)'; }
+        var reasonSpan = activeCellEl.querySelector('[id^="norm-reason"]') ||
+                         activeCellEl.querySelector('.norm-tag');
+        if (reasonSpan) {
+          if (reasonSpan.tagName === 'SPAN' && reasonSpan.classList.contains('norm-tag')) {
+            reasonSpan.innerHTML = '<span class="dot"></span>' + reason;
+          } else {
+            reasonSpan.textContent = reason;
+          }
+        }
+        // Update onclick for next edit
+        var capturedVal = formatted;
+        var capturedReason = reason;
+        var capturedMeta = activeCellMeta;
+        activeCellEl.onclick = (function(el, v, r, m) {
+          return function() { openNormPopover(el, m.vendor, m.label, m.originalVal, v, r); };
+        })(activeCellEl, capturedVal, capturedReason, capturedMeta);
+      }
+    }
+
+    closeNormPopover();
+  }
+
+  // Close popover on Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeNormPopover();
+  });
+</script>
+</body>
+</html>

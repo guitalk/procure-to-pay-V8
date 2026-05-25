@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============================================================
+       LEFT NAVIGATION (Shell — same on every screen)
+       ============================================================ -->
+  <aside class="nav">
+        <div class="nav-brand">
+      <button class="hamburger-btn" onclick="toggleNav()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
+      <div class="nav-brand-text">
+        <div class="nav-brand-name">Procure</div>
+        <div class="nav-brand-sub">Procurement</div>
+      </div>
+    </div>
+    <div class="nav-items">
+
+      <a class="nav-item active" href="index.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded" href="clients.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V7l6-4 6 4v7zM6 14V9h4v5"/></svg>
+          <span>Master Data</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="clients.html">Clients</a>
+          <a class="nav-item nav-sub-item" href="projects.html">Projects</a>
+          <a class="nav-item nav-sub-item" href="vendor-categories.html">Categories</a>
+          <a class="nav-item nav-sub-item" href="terms-conditions.html">Terms &amp; Conditions</a>
+          <a class="nav-item nav-sub-item" href="payment-terms.html">Payment Terms</a>
+          <a class="nav-item nav-sub-item" href="inco-terms.html">Inco Terms</a>
+          <a class="nav-item nav-sub-item" href="vendors.html">Vendors</a>
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-requisitions.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Purchase Requisitions</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded" href="#">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+          <span>RFQs</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="rfq-list.html">All RFQs</a>
+          <a class="nav-item nav-sub-item" href="rfq-create.html">New RFQ</a>
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-orders.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l1.5 8.5a1 1 0 0 0 1 .85h7a1 1 0 0 0 1-.85L14 4"/><path d="M2 4h12M6 7v3M10 7v3"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+
+    </div>
+
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">AD</div>
+        <div>
+          <div class="user-name">Admin User</div>
+          <div class="user-email">admin@aker.com</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       MAIN CONTENT
+       ============================================================ -->
+  <div>
+
+    <!-- PAGE BODY -->
+    <main class="main">
+
+      <div class="page-header">
+        <div class="page-title">Good evening, Admin</div>
+        <div class="page-subtitle">Wednesday, 20 May 2026 · Here's what's moving on Biofuel Expansion today.</div>
+      </div>
+
+      <!-- KPI ROW -->
+      <div class="kpi-grid">
+        <a class="kpi" href="purchase-requisitions.html" style="text-decoration:none; cursor:pointer;">
+          <div class="kpi-head">
+            <div class="kpi-label">PRs Pending Approval</div>
+            <div class="kpi-icon warning">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value">4</div>
+          <div class="kpi-meta">
+            <span class="muted">Awaiting Engineering Lead</span>
+          </div>
+        </a>
+
+        <div class="kpi">
+          <div class="kpi-head">
+            <div class="kpi-label">Active RFQs</div>
+            <div class="kpi-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value">14</div>
+          <div class="kpi-meta">
+            <span class="kpi-trend up">5 closing this week</span>
+          </div>
+        </div>
+
+        <a class="kpi" href="purchase-orders.html" style="text-decoration:none; cursor:pointer;">
+          <div class="kpi-head">
+            <div class="kpi-label">POs Awaiting Approval</div>
+            <div class="kpi-icon warning">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5l2 1"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value">6</div>
+          <div class="kpi-meta">
+            <span class="muted">2 overdue · Approver sign-off needed</span>
+          </div>
+        </a>
+
+        <div class="kpi">
+          <div class="kpi-head">
+            <div class="kpi-label">Vendors Active</div>
+            <div class="kpi-icon success">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2"/><path d="M2 14c0-3 2-5 4-5s4 2 4 5"/><path d="M12 7l1.5 1.5L16 6"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value">28</div>
+          <div class="kpi-meta">
+            <span class="muted">Approved &amp; onboarded</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TWO COLUMN: TASKS + SPEND -->
+      <div class="row-2col">
+
+        <!-- PENDING TASKS -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8l1.5 1.5L9.5 6"/></svg>
+              My Pending Tasks
+            </div>
+            <a class="card-action">5 remaining</a>
+          </div>
+
+          <div class="task">
+            <div class="task-check"></div>
+            <div>
+              <div class="task-text">Approve <span class="mono" style="color:var(--accent)">RFQ-2026-042</span> · Centrifugal Pumps</div>
+              <div class="task-meta">Due today · 5 vendors invited</div>
+            </div>
+            <div class="badge accent">RFQ</div>
+          </div>
+
+          <a class="task" href="technical-bid.html" style="text-decoration:none; cursor:pointer;">
+            <div class="task-check"></div>
+            <div>
+              <div class="task-text">Reply to <span class="mono" style="color:var(--accent)">TQ-2026-118</span> · Material substitution</div>
+              <div class="task-meta">From Precision Valves Ltd · 2 days open</div>
+            </div>
+            <div class="badge warning">TQ</div>
+          </a>
+
+          <a class="task" href="bid-matrix.html" style="text-decoration:none; cursor:pointer;">
+            <div class="task-check"></div>
+            <div>
+              <div class="task-text">Evaluate Commercial Bids · <span class="mono" style="color:var(--accent)">RFQ-2026-038</span></div>
+              <div class="task-meta">Envelope unlocked · 4 bids ready</div>
+            </div>
+            <div class="badge info">Bid</div>
+          </a>
+
+          <a class="task" href="bid-matrix.html" style="text-decoration:none; cursor:pointer;">
+            <div class="task-check"></div>
+            <div>
+              <div class="task-text">Review normalization on <span class="mono" style="color:var(--accent)">RFQ-2026-035</span></div>
+              <div class="task-meta">3 line items pre-filled · awaiting your sign-off</div>
+            </div>
+            <div class="badge muted">Normalize</div>
+          </a>
+
+          <a class="task" href="purchase-orders.html" style="text-decoration:none; cursor:pointer;">
+            <div class="task-check"></div>
+            <div>
+              <div class="task-text">Approve <span class="mono" style="color:var(--accent)">PO-2026-038</span> · Flowline Industries Ltd</div>
+              <div class="task-meta">Awaiting Approver sign-off</div>
+            </div>
+            <div class="badge success">PO</div>
+          </a>
+        </div>
+
+        <!-- RFQ PIPELINE -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+              RFQ Pipeline
+            </div>
+            <a class="card-action" href="rfq-list.html">View all →</a>
+          </div>
+
+          <div class="bar-row">
+            <div>Draft</div>
+            <div class="bar-track"><div class="bar-fill muted" style="width: 14%"></div></div>
+            <div class="bar-value" style="font-family:var(--font-mono);font-size:var(--fs-sm);">2</div>
+          </div>
+          <div class="bar-row">
+            <div>Sent to Vendors</div>
+            <div class="bar-track"><div class="bar-fill info" style="width: 36%"></div></div>
+            <div class="bar-value" style="font-family:var(--font-mono);font-size:var(--fs-sm);">5</div>
+          </div>
+          <div class="bar-row">
+            <div>Technical Evaluation</div>
+            <div class="bar-track"><div class="bar-fill warning" style="width: 43%"></div></div>
+            <div class="bar-value" style="font-family:var(--font-mono);font-size:var(--fs-sm);">6</div>
+          </div>
+          <div class="bar-row">
+            <div>Commercial Evaluation</div>
+            <div class="bar-track"><div class="bar-fill" style="width: 7%"></div></div>
+            <div class="bar-value" style="font-family:var(--font-mono);font-size:var(--fs-sm);">1</div>
+          </div>
+          <div class="bar-row">
+            <div>Closed</div>
+            <div class="bar-track"><div class="bar-fill success" style="width: 100%"></div></div>
+            <div class="bar-value" style="font-family:var(--font-mono);font-size:var(--fs-sm);">14</div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s-3);margin-top:var(--s-5);padding-top:var(--s-4);border-top:1px solid var(--border-subtle)">
+            <div>
+              <div class="num" style="font-size:var(--fs-lg);font-weight:var(--fw-semibold)">28</div>
+              <div class="muted" style="font-size:var(--fs-xs)">Total RFQs FY26</div>
+            </div>
+            <div>
+              <div class="num" style="font-size:var(--fs-lg);font-weight:var(--fw-semibold)">14</div>
+              <div class="muted" style="font-size:var(--fs-xs)">Active RFQs</div>
+            </div>
+            <div>
+              <div class="num" style="font-size:var(--fs-lg);font-weight:var(--fw-semibold)">6</div>
+              <div class="muted" style="font-size:var(--fs-xs)">Awaiting Action</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVITY STREAM -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h3l1.5-4 3 8 1.5-4h3"/></svg>
+            Recent Activity
+          </div>
+          <a class="card-action">View all</a>
+        </div>
+
+        <div class="activity">
+          <div class="activity-dot success"></div>
+          <div>
+            <div class="activity-text">SteelTech Industries submitted commercial bid for <span class="mono" style="color:var(--accent)">RFQ-2026-042</span></div>
+            <div class="muted" style="font-size:var(--fs-xs)">Envelope sealed · unlocks on deadline (22 May, 18:00)</div>
+          </div>
+          <div class="activity-time">14 min ago</div>
+        </div>
+
+        <div class="activity">
+          <div class="activity-dot info"></div>
+          <div>
+            <div class="activity-text">Cost normalization completed on 3 bids · hidden transport &amp; packaging costs identified</div>
+            <div class="muted" style="font-size:var(--fs-xs)"><span class="mono">RFQ-2026-035</span> · awaiting your review</div>
+          </div>
+          <div class="activity-time">1 hour ago</div>
+        </div>
+
+        <div class="activity">
+          <div class="activity-dot"></div>
+          <div>
+            <div class="activity-text"><span class="mono" style="color:var(--accent)">TQ-2026-118</span> broadcast as FAQ to all 5 invited vendors</div>
+            <div class="muted" style="font-size:var(--fs-xs)">Originating vendor identity stripped automatically</div>
+          </div>
+          <div class="activity-time">2 hours ago</div>
+        </div>
+
+        <div class="activity">
+          <div class="activity-dot success"></div>
+          <div>
+            <div class="activity-text"><span class="mono" style="color:var(--accent)">RFQ-2026-038</span> unlocked for commercial evaluation</div>
+            <div class="muted" style="font-size:var(--fs-xs)">All 4 vendors reached terminal technical status · envelope opened</div>
+          </div>
+          <div class="activity-time">3 hours ago</div>
+        </div>
+
+        <div class="activity">
+          <div class="activity-dot warning"></div>
+          <div>
+            <div class="activity-text">Deviation flagged: Apex Valves modified Payment Terms on <span class="mono" style="color:var(--accent)">RFQ-2026-040</span></div>
+            <div class="muted" style="font-size:var(--fs-xs)">Net-60 → 50% advance · deviates from standard Payment Terms</div>
+          </div>
+          <div class="activity-time">5 hours ago</div>
+        </div>
+
+        <div class="activity">
+          <div class="activity-dot muted"></div>
+          <div>
+            <div class="activity-text"><span class="mono" style="color:var(--accent)">PO-2026-016</span> issued to Precision Valves Ltd</div>
+            <div class="muted" style="font-size:var(--fs-xs)">PDF generated · vendor notified</div>
+          </div>
+          <div class="activity-time">Yesterday</div>
+        </div>
+
+        <div class="activity">
+          <div class="activity-dot"></div>
+          <div>
+            <div class="activity-text">New vendor Flowtech Industries submitted profile</div>
+            <div class="muted" style="font-size:var(--fs-xs)">GST &amp; PAN auto-validated · awaiting Purchase review</div>
+          </div>
+          <div class="activity-time">Yesterday</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Demo presenter strip -->
+<div class="demo-strip">
+  <span class="step-num">01 / 06</span>
+  <span>Dashboard — daily mission control</span>
+  <span style="color:var(--border-strong)">·</span>
+  <a href="design-system.html">Design system</a>
+  <a href="purchase-requisitions.html">Next →</a>
+</div>
+
+
+<div class="nav-backdrop" id="nav-backdrop" onclick="closeNav()"></div>
+
+<script>
+  function toggleNav() {
+    const nav = document.querySelector('.nav');
+    const backdrop = document.getElementById('nav-backdrop');
+    const isOpen = nav.classList.toggle('open');
+    backdrop.classList.toggle('visible', isOpen);
+  }
+  function closeNav() {
+    document.querySelector('.nav').classList.remove('open');
+    document.getElementById('nav-backdrop').classList.remove('visible');
+  }
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 700) closeNav();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — New RFQ from PR-2026-019</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Wizard chrome ─────────────────────────────────────── */
+    .wizard-layout {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Step progress bar */
+    .step-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: var(--s-4) var(--s-8);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-base);
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+      flex: 1;
+      position: relative;
+    }
+    .step:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: calc(28px + var(--s-2));
+      right: 0;
+      top: 50%;
+      height: 1px;
+      background: var(--border);
+    }
+    .step.done:not(:last-child)::after { background: var(--accent); }
+    .step-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .step.pending .step-num { background: var(--bg-elevated); color: var(--fg-subtle); border: 1.5px solid var(--border); }
+    .step.active  .step-num { background: var(--accent); color: white; border: 1.5px solid var(--accent); }
+    .step.done    .step-num { background: var(--success); color: white; border: 1.5px solid var(--success); }
+    .step-label {
+      display: flex; flex-direction: column;
+    }
+    .step-label-title { font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--fg-muted); }
+    .step-label-sub   { font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: 1px; }
+    .step.active .step-label-title  { color: var(--fg); }
+    .step.done   .step-label-title  { color: var(--fg-muted); }
+
+    /* Wizard body */
+    .wizard-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--s-6) var(--s-8);
+      padding-bottom: 100px;
+    }
+
+    /* Sticky action bar */
+    .wizard-footer {
+      position: fixed;
+      bottom: 0;
+      left: var(--nav-w);
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--s-4) var(--s-8);
+      background: var(--bg-elevated);
+      border-top: 1px solid var(--border);
+      z-index: 20;
+    }
+
+    /* ── Form pieces ───────────────────────────────────────── */
+    .form-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      margin-bottom: var(--s-5);
+    }
+    .form-section-head {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-4) var(--s-5);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+    .form-section-icon {
+      width: 28px; height: 28px;
+      border-radius: var(--r-sm);
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+    .form-section-title { font-size: var(--fs-md); font-weight: var(--fw-semibold); }
+    .form-section-sub   { font-size: var(--fs-sm); color: var(--fg-muted); margin-top: 1px; }
+    .form-body { padding: var(--s-5); }
+
+    /* Evaluation mode cards */
+    .eval-mode-card {
+      flex: 1; padding: var(--s-4); border: 1px solid var(--border);
+      border-radius: var(--r-md); cursor: pointer; transition: border-color 0.15s, background 0.15s;
+      background: var(--bg-subtle);
+    }
+    .eval-mode-card:hover { border-color: var(--info); background: rgba(6,182,212,0.04); }
+    .eval-mode-card.selected { border-color: var(--info); background: rgba(6,182,212,0.07); }
+    .eval-mode-radio {
+      width: 15px; height: 15px; border-radius: 50%;
+      border: 2px solid var(--border-strong); background: var(--bg-subtle);
+      flex-shrink: 0; display: grid; place-items: center; transition: border-color 0.15s;
+    }
+    .eval-mode-card.selected .eval-mode-radio { border-color: var(--info); }
+    .eval-mode-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--info); display: none; }
+    .eval-mode-card.selected .eval-mode-dot { display: block; }
+
+    .form-grid   { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-4); }
+    .form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s-4); }
+    .form-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-4); }
+    .col-span-2  { grid-column: span 2; }
+    .col-span-3  { grid-column: span 3; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field-label {
+      font-size: var(--fs-xs); font-weight: var(--fw-medium);
+      text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-muted);
+    }
+    .field-input {
+      width: 100%; padding: 8px var(--s-3);
+      background: var(--bg-base);
+      border: 1px solid var(--border); border-radius: var(--r-md);
+      color: var(--fg); font-size: var(--fs-md); font-family: var(--font-sans);
+      transition: border-color 0.12s;
+    }
+    .field-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+    .field-input::placeholder { color: var(--fg-subtle); }
+    .field-input.sel { cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 16 16' fill='none' stroke='%2371717a' stroke-width='1.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px;
+    }
+    textarea.field-input { resize: vertical; min-height: 72px; line-height: 1.5; }
+
+    /* Timeline visual */
+    .deadline-timeline {
+      display: flex; align-items: center; gap: 0;
+      margin-top: var(--s-4);
+      padding: var(--s-4);
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+    }
+    .tl-node {
+      display: flex; flex-direction: column; align-items: center; gap: var(--s-2);
+      flex-shrink: 0;
+    }
+    .tl-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+    }
+    .tl-dot.start   { background: var(--accent-soft); color: var(--accent); border: 1.5px solid var(--accent); }
+    .tl-dot.tech    { background: var(--warning-soft); color: var(--warning); border: 1.5px solid var(--warning); }
+    .tl-dot.comm    { background: var(--info-soft); color: var(--info); border: 1.5px solid var(--info); }
+    .tl-dot.eval    { background: var(--success-soft); color: var(--success); border: 1.5px solid var(--success); }
+    .tl-label { font-size: var(--fs-xs); color: var(--fg-muted); text-align: center; line-height: 1.3; }
+    .tl-date  { font-size: 10px; font-family: var(--font-mono); color: var(--fg-subtle); margin-top: 2px; }
+    .tl-line { flex: 1; height: 1px; background: var(--border); margin: 0 var(--s-2); margin-bottom: 22px; }
+    .tl-line.filled { background: var(--accent); }
+
+    /* ── Step 1 — Split table ──────────────────────────────── */
+    .split-table th {
+      text-align: left; font-size: 10px; font-weight: var(--fw-medium);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--fg-muted); padding: var(--s-3) var(--s-4);
+      border-bottom: 1px solid var(--border); background: var(--bg-base);
+      white-space: nowrap;
+    }
+    .split-table td {
+      padding: var(--s-3) var(--s-4);
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: middle; font-size: var(--fs-sm);
+    }
+    .split-table tr:last-child td { border-bottom: none; }
+    .split-table tr:hover td { background: var(--bg-hover); }
+    .split-table tr.assigned td { background: rgba(59,130,246,0.04); }
+
+    .rfq-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px;
+      border-radius: var(--r-sm);
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-medium);
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(59,130,246,0.2);
+    }
+    .rfq-select {
+      padding: 4px var(--s-2);
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--fg);
+      font-size: var(--fs-xs);
+      font-family: var(--font-sans);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 16 16' fill='none' stroke='%2371717a' stroke-width='1.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 6px center; padding-right: 22px;
+      cursor: pointer;
+    }
+
+    /* ── Step 3 — Vendor list ─────────────────────────────── */
+    .vendor-row {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-3) var(--s-4);
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background 0.1s;
+    }
+    .vendor-row:last-child { border-bottom: none; }
+    .vendor-row:hover { background: var(--bg-hover); }
+    .vendor-avatar {
+      width: 32px; height: 32px;
+      border-radius: var(--r-sm);
+      background: var(--bg-elevated);
+      color: var(--fg-muted);
+      display: grid; place-items: center;
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-semibold);
+      flex-shrink: 0;
+    }
+    .vendor-name  { font-size: var(--fs-md); font-weight: var(--fw-medium); }
+    .vendor-meta  { font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: 2px; }
+    .vendor-tags  { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+    .vendor-tag   {
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 10px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--fg-subtle);
+    }
+    .vendor-tag.match { background: var(--success-soft); color: var(--success); border-color: transparent; }
+
+    /* ── Step 4 — Review ──────────────────────────────────── */
+    .review-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-4);
+    }
+    .review-block {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+    .review-block-head {
+      padding: var(--s-3) var(--s-4);
+      border-bottom: 1px solid var(--border);
+      font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold);
+      background: var(--bg-elevated);
+      display: flex; align-items: center; gap: var(--s-2);
+    }
+    .review-block-body { padding: var(--s-4); }
+    .review-row {
+      display: flex; justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: var(--fs-sm);
+    }
+    .review-row:last-child { border-bottom: none; }
+    .review-label { color: var(--fg-muted); }
+    .review-value { color: var(--fg); font-weight: var(--fw-medium); text-align: right; }
+    .review-value.mono { font-family: var(--font-mono); }
+
+    .publish-banner {
+      display: flex; align-items: center; gap: var(--s-4);
+      padding: var(--s-5);
+      background: linear-gradient(90deg, rgba(16,185,129,0.08), rgba(59,130,246,0.05));
+      border: 1px solid rgba(16,185,129,0.22);
+      border-radius: var(--r-lg);
+      margin-top: var(--s-4);
+    }
+    .publish-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--r-md);
+      background: rgba(16,185,129,0.13);
+      color: var(--success);
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+    .publish-title { font-size: var(--fs-md); font-weight: var(--fw-semibold); }
+    .publish-sub   { font-size: var(--fs-sm); color: var(--fg-muted); margin-top: 3px; }
+
+    /* Checkbox */
+    .check-row {
+      display: flex; align-items: flex-start; gap: var(--s-3);
+      padding: var(--s-3) var(--s-4);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .check-row:last-child { border-bottom: none; }
+    .check-box {
+      width: 16px; height: 16px;
+      border: 1.5px solid var(--border-strong);
+      border-radius: var(--r-sm);
+      flex-shrink: 0;
+      margin-top: 2px;
+      display: grid; place-items: center;
+      cursor: pointer;
+    }
+    .check-box.checked { background: var(--accent); border-color: var(--accent); }
+    .check-label { font-size: var(--fs-sm); color: var(--fg); }
+    .check-sub   { font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: 2px; }
+
+    /* Breadcrumb */
+    .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--fg-subtle); margin-bottom: var(--s-1); }
+    .breadcrumb a { color: var(--fg-muted); }
+    .breadcrumb a:hover { color: var(--fg); }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── NAV ──────────────────────────────────────────────── -->
+  <aside class="nav">
+        <div class="nav-brand">
+      <button class="hamburger-btn" onclick="toggleNav()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
+      <div class="nav-brand-text">
+        <div class="nav-brand-name">Procure</div>
+        <div class="nav-brand-sub">Procurement</div>
+      </div>
+    </div>
+    <div class="nav-items">
+      <a class="nav-item" href="index.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded" href="clients.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V7l6-4 6 4v7zM6 14V9h4v5"/></svg>
+          <span>Master Data</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="clients.html">Clients</a>
+          <a class="nav-item nav-sub-item" href="projects.html">Projects</a>
+          <a class="nav-item nav-sub-item" href="vendor-categories.html">Categories</a>
+          <a class="nav-item nav-sub-item" href="terms-conditions.html">Terms &amp; Conditions</a>
+          <a class="nav-item nav-sub-item" href="payment-terms.html">Payment Terms</a>
+          <a class="nav-item nav-sub-item" href="inco-terms.html">Inco Terms</a>
+          <a class="nav-item nav-sub-item" href="vendors.html">Vendors</a>
+        </div>
+      </div>
+      <a class="nav-item" href="purchase-requisitions.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Purchase Requisitions</span>
+      </a>
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded has-active" href="rfq-list.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+          <span>RFQs</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="rfq-list.html">All RFQs</a>
+          <a class="nav-item nav-sub-item active" href="rfq-create.html">New RFQ</a>
+        </div>
+      </div>
+      <a class="nav-item" href="purchase-orders.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l1.5 8.5a1 1 0 0 0 1 .85h7a1 1 0 0 0 1-.85L14 4"/><path d="M2 4h12M6 7v3M10 7v3"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+    </div>
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">NP</div>
+        <div>
+          <div class="user-name">Neha Patel</div>
+          <div class="user-email">Purchase Manager</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN WIZARD ───────────────────────────────────────── -->
+  <div class="wizard-layout">
+
+    <!-- Step bar -->
+    <div class="step-bar" id="step-bar">
+      <div class="step done" id="s1">
+        <div class="step-num">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8l4 4 6-7"/></svg>
+        </div>
+        <div class="step-label">
+          <div class="step-label-title">Split Line Items</div>
+          <div class="step-label-sub">8 items → 1 RFQ</div>
+        </div>
+      </div>
+      <div class="step active" id="s2">
+        <div class="step-num">2</div>
+        <div class="step-label">
+          <div class="step-label-title">RFQ Details</div>
+          <div class="step-label-sub">Deadlines, terms</div>
+        </div>
+      </div>
+      <div class="step pending" id="s3">
+        <div class="step-num">3</div>
+        <div class="step-label">
+          <div class="step-label-title">Invite &amp; Publish</div>
+          <div class="step-label-sub">Select vendors, go live</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP VIEWS ──────────────────────────────────────── -->
+    <div class="wizard-body">
+
+      <!-- STEP 1 — Split line items -->
+      <div id="view-s1" style="display:none;">
+        <div class="breadcrumb">
+          <a href="purchase-requisitions.html">Purchase Requisitions</a>
+          <span>/</span>
+          <a href="purchase-requisitions.html">PR-2026-019</a>
+          <span>/</span>
+          <span>New RFQ</span>
+        </div>
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:var(--s-5);">
+          <div>
+            <div class="page-title">Split Line Items into RFQs</div>
+            <div class="page-subtitle">Assign each line item to an RFQ. Items in the same vendor category typically go together.</div>
+          </div>
+          <button class="btn btn-secondary btn-sm">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/></svg>
+            Add RFQ Group
+          </button>
+        </div>
+
+        <!-- Split table -->
+        <div class="form-section">
+          <div class="form-section-head">
+            <div class="form-section-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg></div>
+            <div>
+              <div class="form-section-title">RFQ-2026-039 — Instrumentation &amp; Control</div>
+              <div class="form-section-sub">8 of 8 items assigned</div>
+            </div>
+            <span class="badge success" style="margin-left:auto;">All assigned</span>
+          </div>
+          <table class="table split-table" style="font-size:var(--fs-sm);">
+            <thead>
+              <tr>
+                <th style="width:40px;">#</th>
+                <th>Item Description</th>
+                <th>Specification (summary)</th>
+                <th style="width:80px; text-align:right;">Qty</th>
+                <th style="width:72px;">Unit</th>
+                <th style="width:140px;">Assigned to RFQ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="assigned">
+                <td style="font-family:var(--font-mono); color:var(--fg-subtle);">01</td>
+                <td style="font-weight:var(--fw-medium);">Pressure Transmitter — Differential</td>
+                <td class="muted">4–20 mA HART, ATEX Zone 1, SS 316L, IP67</td>
+                <td style="text-align:right; font-family:var(--font-mono);">12</td>
+                <td><span class="unit-tag" style="display:inline-flex;align-items:center;padding:2px 8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);font-size:var(--fs-xs);color:var(--fg-muted);font-family:var(--font-mono);">Nos</span></td>
+                <td><span class="rfq-tag">RFQ-039</span></td>
+              </tr>
+              <tr class="assigned">
+                <td style="font-family:var(--font-mono); color:var(--fg-subtle);">02</td>
+                <td style="font-weight:var(--fw-medium);">Temperature Transmitter</td>
+                <td class="muted">4–20 mA HART, Pt100 RTD, ATEX Zone 1</td>
+                <td style="text-align:right; font-family:var(--font-mono);">8</td>
+                <td><span class="unit-tag" style="display:inline-flex;align-items:center;padding:2px 8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);font-size:var(--fs-xs);color:var(--fg-muted);font-family:var(--font-mono);">Nos</span></td>
+                <td><span class="rfq-tag">RFQ-039</span></td>
+              </tr>
+              <tr class="assigned">
+                <td style="font-family:var(--font-mono); color:var(--fg-subtle);">03</td>
+                <td style="font-weight:var(--fw-medium);">Flow Transmitter — Coriolis</td>
+                <td class="muted">Mass flow, HART + Modbus, ±0.1% accuracy</td>
+                <td style="text-align:right; font-family:var(--font-mono);">4</td>
+                <td><span class="unit-tag" style="display:inline-flex;align-items:center;padding:2px 8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);font-size:var(--fs-xs);color:var(--fg-muted);font-family:var(--font-mono);">Nos</span></td>
+                <td><span class="rfq-tag">RFQ-039</span></td>
+              </tr>
+              <tr class="assigned">
+                <td style="font-family:var(--font-mono); color:var(--fg-subtle);">04</td>
+                <td style="font-weight:var(--fw-medium);">Control Valve Assembly</td>
+                <td class="muted">Pneumatic, 2" Class 300, fail-closed</td>
+                <td style="text-align:right; font-family:var(--font-mono);">6</td>
+                <td><span class="unit-tag" style="display:inline-flex;align-items:center;padding:2px 8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);font-size:var(--fs-xs);color:var(--fg-muted);font-family:var(--font-mono);">Nos</span></td>
+                <td><span class="rfq-tag">RFQ-039</span></td>
+              </tr>
+              <tr class="assigned">
+                <td style="font-family:var(--font-mono); color:var(--fg-subtle);">05</td>
+                <td style="font-weight:var(--fw-medium);">Safety Relief Valve</td>
+                <td class="muted">Full-lift, API 526, ASME VIII certified</td>
+                <td style="text-align:right; font-family:var(--font-mono);">3</td>
+                <td><span class="unit-tag" style="display:inline-flex;align-items:center;padding:2px 8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);font-size:var(--fs-xs);color:var(--fg-muted);font-family:var(--font-mono);">Nos</span></td>
+                <td><span class="rfq-tag">RFQ-039</span></td>
+              </tr>
+              <tr class="assigned">
+                <td style="font-family:var(--font-mono); color:var(--fg-subtle);">06</td>
+                <td style="font-weight:var(--fw-medium);">Junction Box — Stainless Steel</td>
+                <td class="muted">SS 316L, 600×400×250 mm, IP66, ATEX Zone 1</td>
+                <td style="text-align:right; font-family:var(--font-mono);">15</td>
+                <td><span class="unit-tag" style="display:inline-flex;align-items:center;padding:2px 8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);font-size:var(--fs-xs);color:var(--fg-muted);font-family:var(--font-mono);">Nos</span></td>
+                <td><span class="rfq-tag">RFQ-039</span></td>
+              </tr>
+              <tr class="assigned">
+                <td style="font-family:var(--font-mono); color:var(--fg-subtle);">07</td>
+                <td style="font-weight:var(--fw-medium);">Cable Tray — Perforated SS</td>
+                <td class="muted">600 mm wide, 1.6 mm thick, 3 m lengths</td>
+                <td style="text-align:right; font-family:var(--font-mono);">120</td>
+                <td><span class="unit-tag" style="display:inline-flex;align-items:center;padding:2px 8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);font-size:var(--fs-xs);color:var(--fg-muted);font-family:var(--font-mono);">Mtrs</span></td>
+                <td><span class="rfq-tag">RFQ-039</span></td>
+              </tr>
+              <tr class="assigned">
+                <td style="font-family:var(--font-mono); color:var(--fg-subtle);">08</td>
+                <td style="font-weight:var(--fw-medium);">GI Conduit — Rigid Heavy Gauge</td>
+                <td class="muted">25 mm dia, IS 9537 Grade 3, hot-dip galvanized</td>
+                <td style="text-align:right; font-family:var(--font-mono);">250</td>
+                <td><span class="unit-tag" style="display:inline-flex;align-items:center;padding:2px 8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);font-size:var(--fs-xs);color:var(--fg-muted);font-family:var(--font-mono);">Mtrs</span></td>
+                <td><span class="rfq-tag">RFQ-039</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- STEP 2 — RFQ Details -->
+      <div id="view-s2">
+        <div class="breadcrumb">
+          <a href="purchase-requisitions.html">Purchase Requisitions</a>
+          <span>/</span>
+          <a href="purchase-requisitions.html">PR-2026-019</a>
+          <span>/</span>
+          <span>RFQ-2026-039 · Details</span>
+        </div>
+        <div style="margin-bottom:var(--s-5);">
+          <div class="page-title">RFQ Details</div>
+          <div class="page-subtitle">Set deadlines, commercial terms, and scope notes for <span style="font-family:var(--font-mono); color:var(--fg);">RFQ-2026-039</span></div>
+        </div>
+
+        <!-- Deadlines -->
+        <div class="form-section">
+          <div class="form-section-head">
+            <div class="form-section-icon">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+            </div>
+            <div>
+              <div class="form-section-title">Bidding Deadlines</div>
+              <div class="form-section-sub">Two-envelope schedule — technical closes before commercial opens</div>
+            </div>
+          </div>
+          <div class="form-body">
+
+            <!-- Evaluation Mode -->
+            <div class="field" style="margin-bottom:var(--s-5);">
+              <label class="field-label">Evaluation Mode <span style="color:var(--danger);">*</span></label>
+              <div style="display:flex; gap:var(--s-3); margin-top:var(--s-1);">
+                <div class="eval-mode-card selected" id="eval-sequential" onclick="setEvalMode('sequential')">
+                  <div style="display:flex; align-items:center; gap:var(--s-2); margin-bottom:4px;">
+                    <div class="eval-mode-radio"><div class="eval-mode-dot"></div></div>
+                    <span style="font-size:var(--fs-sm); font-weight:var(--fw-semibold); color:var(--fg);">Sequential</span>
+                    <span style="font-size:10px; padding:1px 6px; border-radius:999px; background:rgba(6,182,212,0.12); color:var(--info); font-weight:600;">Recommended</span>
+                  </div>
+                  <div style="font-size:var(--fs-xs); color:var(--fg-muted); line-height:1.5; padding-left:22px;">Technical evaluation completes first. Commercial envelopes are sealed and locked until all vendors reach a terminal technical status.</div>
+                </div>
+                <div class="eval-mode-card" id="eval-simultaneous" onclick="setEvalMode('simultaneous')">
+                  <div style="display:flex; align-items:center; gap:var(--s-2); margin-bottom:4px;">
+                    <div class="eval-mode-radio"><div class="eval-mode-dot"></div></div>
+                    <span style="font-size:var(--fs-sm); font-weight:var(--fw-semibold); color:var(--fg);">Simultaneous</span>
+                  </div>
+                  <div style="font-size:var(--fs-xs); color:var(--fg-muted); line-height:1.5; padding-left:22px;">Purchase can view commercial bids during the Technical phase. Engineering remains permanently blind to all commercial data.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid form-grid-4" style="margin-bottom:var(--s-5);">
+              <div class="field">
+                <label class="field-label">RFQ Publish Date</label>
+                <input class="field-input" type="date" value="2026-05-26" />
+              </div>
+              <div class="field">
+                <label class="field-label">Technical Bid Deadline</label>
+                <input class="field-input" type="date" value="2026-06-16" />
+              </div>
+              <div class="field">
+                <label class="field-label">Commercial Bid Deadline</label>
+                <input class="field-input" type="date" value="2026-06-30" />
+              </div>
+              <div class="field">
+                <label class="field-label">Expected Delivery By</label>
+                <input class="field-input" type="date" value="2026-08-15" />
+              </div>
+            </div>
+
+            <!-- Timeline visual -->
+            <div class="deadline-timeline">
+              <div class="tl-node">
+                <div class="tl-dot start">
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/></svg>
+                </div>
+                <div class="tl-label">Publish<br>&amp; Notify</div>
+                <div class="tl-date">26 May</div>
+              </div>
+              <div class="tl-line filled"></div>
+              <div class="tl-node">
+                <div class="tl-dot tech">T</div>
+                <div class="tl-label">Technical<br>Deadline</div>
+                <div class="tl-date">16 Jun</div>
+              </div>
+              <div class="tl-line"></div>
+              <div class="tl-node">
+                <div class="tl-dot comm">C</div>
+                <div class="tl-label">Commercial<br>Unseals</div>
+                <div class="tl-date">30 Jun</div>
+              </div>
+              <div class="tl-line"></div>
+              <div class="tl-node">
+                <div class="tl-dot eval">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l4 4 6-7"/></svg>
+                </div>
+                <div class="tl-label">Delivery<br>Target</div>
+                <div class="tl-date">15 Aug</div>
+              </div>
+            </div>
+            <p style="font-size:var(--fs-xs); color:var(--fg-subtle); margin-top:var(--s-2);">
+              Commercial bids are sealed and invisible to Purchase until the commercial deadline passes <em>or</em> all vendors reach a terminal technical status.
+            </p>
+          </div>
+        </div>
+
+        <!-- Commercial terms -->
+        <div class="form-section">
+          <div class="form-section-head">
+            <div class="form-section-icon">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M5 8h6M5 11h3"/></svg>
+            </div>
+            <div>
+              <div class="form-section-title">Commercial Terms</div>
+              <div class="form-section-sub">Vendors may propose alternatives — deviations will be flagged automatically</div>
+            </div>
+          </div>
+          <div class="form-body">
+            <div class="form-grid" style="margin-bottom:var(--s-4);">
+              <div class="field">
+                <label class="field-label">Inco Term</label>
+                <select class="field-input sel">
+                  <option>CIF — Cost, Insurance &amp; Freight</option>
+                  <option>FOB — Free on Board</option>
+                  <option>DAP — Delivered at Place</option>
+                  <option>EXW — Ex Works</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">Payment Terms</label>
+                <select class="field-input sel">
+                  <option>30% Advance · 40% Dispatch · 30% Delivery</option>
+                  <option>100% Against Delivery</option>
+                  <option>Net 45 Days</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">Currency</label>
+                <select class="field-input sel">
+                  <option>INR — Indian Rupee</option>
+                  <option>USD — US Dollar</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid form-grid-2">
+              <div class="field">
+                <label class="field-label">Delivery Location</label>
+                <input class="field-input" value="Mumbai Port — Nhava Sheva, Maharashtra" />
+              </div>
+              <div class="field">
+                <label class="field-label">Scope / Special Instructions</label>
+                <textarea class="field-input">All items must comply with ATEX Zone 1 certification. Include third-party test certificates (PESO / CCOE). Delivery schedule to be submitted along with the technical bid.</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- T&C checklist -->
+        <div class="form-section">
+          <div class="form-section-head">
+            <div class="form-section-icon">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l3 3 7-7"/><rect x="1" y="1" width="14" height="14" rx="2"/></svg>
+            </div>
+            <div>
+              <div class="form-section-title">Terms &amp; Conditions Checklist</div>
+              <div class="form-section-sub">Select clauses from master — vendors must acknowledge these before submitting</div>
+            </div>
+            <span class="badge accent" style="margin-left:auto;">3 of 5 selected</span>
+          </div>
+          <div style="padding:0;">
+            <div class="check-row">
+              <div class="check-box checked"><svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2.5"><path d="M3 8l4 4 6-7"/></svg></div>
+              <div>
+                <div class="check-label">Standard Warranty &amp; Defect Liability</div>
+                <div class="check-sub">12-month warranty from date of commissioning. Vendor liable for replacement of defective items.</div>
+              </div>
+            </div>
+            <div class="check-row">
+              <div class="check-box checked"><svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2.5"><path d="M3 8l4 4 6-7"/></svg></div>
+              <div>
+                <div class="check-label">Liquidated Damages for Delay</div>
+                <div class="check-sub">0.5% of order value per week of delay, capped at 5% of total order value.</div>
+              </div>
+            </div>
+            <div class="check-row">
+              <div class="check-box checked"><svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2.5"><path d="M3 8l4 4 6-7"/></svg></div>
+              <div>
+                <div class="check-label">Inspection &amp; Expediting Rights</div>
+                <div class="check-sub">Purchaser reserves the right to inspect at vendor's works at any stage of manufacture.</div>
+              </div>
+            </div>
+            <div class="check-row">
+              <div class="check-box"></div>
+              <div>
+                <div class="check-label" style="color:var(--fg-muted);">Force Majeure Clause</div>
+                <div class="check-sub">Events beyond reasonable control — neither party liable for delays caused by force majeure.</div>
+              </div>
+            </div>
+            <div class="check-row">
+              <div class="check-box"></div>
+              <div>
+                <div class="check-label" style="color:var(--fg-muted);">Governing Law &amp; Dispute Resolution</div>
+                <div class="check-sub">Jurisdiction: Mumbai courts. Disputes subject to arbitration under Indian Arbitration Act, 1996.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3 — Vendor Invite -->
+      <div id="view-s3" style="display:none;">
+        <div style="margin-bottom:var(--s-5);">
+          <div class="page-title">Invite Vendors</div>
+          <div class="page-subtitle">Select vendors from the approved pool for <strong style="color:var(--fg);">Instrumentation &amp; Control</strong> · 9 approved vendors available</div>
+        </div>
+
+        <!-- Toolbar -->
+        <div style="display:flex; gap:var(--s-3); margin-bottom:var(--s-4);">
+          <div style="position:relative; flex: 0 0 300px;">
+            <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--fg-subtle);" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5l3 3"/></svg>
+            <input class="search-input" style="padding-left:32px; width:100%;" placeholder="Search vendors…" />
+          </div>
+          <div class="filter-chips-inline" style="display:flex; gap:6px;">
+            <span class="chip active">All · 9</span>
+            <span class="chip">Selected · 4</span>
+            <span class="chip">Past Supplier</span>
+          </div>
+          <span style="margin-left:auto; font-size:var(--fs-sm); color:var(--fg-muted); align-self:center;">4 of 9 selected</span>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-head">
+            <div class="form-section-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="3"/><path d="M1 14s1-4 5-4 5 4 5 4"/><path d="M13 7l2 2-2 2"/></svg></div>
+            <div class="form-section-title">Approved Vendor Pool — Instrumentation &amp; Control</div>
+            <button class="btn btn-ghost btn-sm" style="margin-left:auto;">Select All</button>
+          </div>
+
+          <!-- Vendor rows -->
+          <div>
+            <div class="vendor-row" style="background:rgba(59,130,246,0.04);">
+              <input type="checkbox" checked style="accent-color:var(--accent); width:15px; height:15px; flex-shrink:0;" />
+              <div class="vendor-avatar" style="background:rgba(59,130,246,0.12); color:var(--accent);">EF</div>
+              <div style="flex:1;">
+                <div class="vendor-name">Endress+Hauser India Pvt Ltd</div>
+                <div class="vendor-meta">Mumbai · GST 27AAACE1234F1Z5</div>
+                <div class="vendor-tags">
+                  <span class="vendor-tag match">Pressure</span>
+                  <span class="vendor-tag match">Temperature</span>
+                  <span class="vendor-tag match">Flow</span>
+                  <span class="vendor-tag">Past supplier · 3 POs</span>
+                </div>
+              </div>
+              <div style="text-align:right; font-size:var(--fs-xs); color:var(--fg-muted);">
+                <div>Last order</div>
+                <div style="font-family:var(--font-mono); color:var(--fg);">₹3.2 Cr</div>
+                <div>Jan 2026</div>
+              </div>
+            </div>
+
+            <div class="vendor-row" style="background:rgba(59,130,246,0.04);">
+              <input type="checkbox" checked style="accent-color:var(--accent); width:15px; height:15px; flex-shrink:0;" />
+              <div class="vendor-avatar" style="background:rgba(59,130,246,0.12); color:var(--accent);">YO</div>
+              <div style="flex:1;">
+                <div class="vendor-name">Yokogawa India Ltd</div>
+                <div class="vendor-meta">Bengaluru · GST 29AAACY5678G1Z2</div>
+                <div class="vendor-tags">
+                  <span class="vendor-tag match">Pressure</span>
+                  <span class="vendor-tag match">Flow</span>
+                  <span class="vendor-tag match">Control Valves</span>
+                  <span class="vendor-tag">Past supplier · 5 POs</span>
+                </div>
+              </div>
+              <div style="text-align:right; font-size:var(--fs-xs); color:var(--fg-muted);">
+                <div>Last order</div>
+                <div style="font-family:var(--font-mono); color:var(--fg);">₹5.8 Cr</div>
+                <div>Mar 2026</div>
+              </div>
+            </div>
+
+            <div class="vendor-row" style="background:rgba(59,130,246,0.04);">
+              <input type="checkbox" checked style="accent-color:var(--accent); width:15px; height:15px; flex-shrink:0;" />
+              <div class="vendor-avatar" style="background:rgba(59,130,246,0.12); color:var(--accent);">AB</div>
+              <div style="flex:1;">
+                <div class="vendor-name">ABB India Ltd — Instrumentation</div>
+                <div class="vendor-meta">Vadodara · GST 24AAACA9012H1Z6</div>
+                <div class="vendor-tags">
+                  <span class="vendor-tag match">Temperature</span>
+                  <span class="vendor-tag match">Control Valves</span>
+                  <span class="vendor-tag">New vendor</span>
+                </div>
+              </div>
+              <div style="text-align:right; font-size:var(--fs-xs); color:var(--fg-muted);">
+                <div>Last order</div>
+                <div style="font-family:var(--font-mono); color:var(--fg);">—</div>
+                <div>New</div>
+              </div>
+            </div>
+
+            <div class="vendor-row" style="background:rgba(59,130,246,0.04);">
+              <input type="checkbox" checked style="accent-color:var(--accent); width:15px; height:15px; flex-shrink:0;" />
+              <div class="vendor-avatar" style="background:rgba(59,130,246,0.12); color:var(--accent);">EM</div>
+              <div style="flex:1;">
+                <div class="vendor-name">Emerson Automation Solutions India</div>
+                <div class="vendor-meta">Pune · GST 27AAACE3456I1Z1</div>
+                <div class="vendor-tags">
+                  <span class="vendor-tag match">Pressure</span>
+                  <span class="vendor-tag match">Flow</span>
+                  <span class="vendor-tag">Past supplier · 2 POs</span>
+                </div>
+              </div>
+              <div style="text-align:right; font-size:var(--fs-xs); color:var(--fg-muted);">
+                <div>Last order</div>
+                <div style="font-family:var(--font-mono); color:var(--fg);">₹1.9 Cr</div>
+                <div>Nov 2025</div>
+              </div>
+            </div>
+
+            <!-- Unselected vendors -->
+            <div class="vendor-row">
+              <input type="checkbox" style="accent-color:var(--accent); width:15px; height:15px; flex-shrink:0;" />
+              <div class="vendor-avatar">SI</div>
+              <div style="flex:1;">
+                <div class="vendor-name" style="color:var(--fg-muted);">Siemens India — Process Instrumentation</div>
+                <div class="vendor-meta">Delhi · GST 07AAACS7890J1Z8</div>
+                <div class="vendor-tags">
+                  <span class="vendor-tag match">Pressure</span>
+                  <span class="vendor-tag match">Temperature</span>
+                </div>
+              </div>
+              <div style="text-align:right; font-size:var(--fs-xs); color:var(--fg-muted);">
+                <div>Last order</div>
+                <div style="font-family:var(--font-mono);">₹0.9 Cr</div>
+                <div>Aug 2025</div>
+              </div>
+            </div>
+
+            <div class="vendor-row">
+              <input type="checkbox" style="accent-color:var(--accent); width:15px; height:15px; flex-shrink:0;" />
+              <div class="vendor-avatar">HO</div>
+              <div style="flex:1;">
+                <div class="vendor-name" style="color:var(--fg-muted);">Honeywell Automation India Ltd</div>
+                <div class="vendor-meta">Pune · GST 27AAACH2345K1Z3</div>
+                <div class="vendor-tags">
+                  <span class="vendor-tag match">Temperature</span>
+                  <span class="vendor-tag match">Control Valves</span>
+                  <span class="vendor-tag">Past supplier · 4 POs</span>
+                </div>
+              </div>
+              <div style="text-align:right; font-size:var(--fs-xs); color:var(--fg-muted);">
+                <div>Last order</div>
+                <div style="font-family:var(--font-mono);">₹2.4 Cr</div>
+                <div>Dec 2025</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4 — Review & Publish -->
+      <div id="view-s4" style="display:none;">
+        <div style="margin-bottom:var(--s-5);">
+          <div class="page-title">Review &amp; Publish</div>
+          <div class="page-subtitle">Confirm everything before broadcasting to vendors — this action cannot be undone without issuing a formal addendum.</div>
+        </div>
+
+        <div class="review-grid" style="margin-bottom:var(--s-4);">
+          <!-- RFQ summary -->
+          <div class="review-block">
+            <div class="review-block-head">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+              RFQ Summary
+            </div>
+            <div class="review-block-body">
+              <div class="review-row"><span class="review-label">RFQ Number</span><span class="review-value mono">RFQ-2026-039</span></div>
+              <div class="review-row"><span class="review-label">Source PR</span><span class="review-value mono">PR-2026-019</span></div>
+              <div class="review-row"><span class="review-label">Category</span><span class="review-value">Instrumentation &amp; Control</span></div>
+              <div class="review-row"><span class="review-label">Line Items</span><span class="review-value mono">8</span></div>
+              <div class="review-row"><span class="review-label">Publish Date</span><span class="review-value">26 May 2026</span></div>
+            </div>
+          </div>
+
+          <!-- Deadlines -->
+          <div class="review-block">
+            <div class="review-block-head">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+              Deadlines
+            </div>
+            <div class="review-block-body">
+              <div class="review-row"><span class="review-label">Technical Bid Closes</span><span class="review-value">16 Jun 2026</span></div>
+              <div class="review-row"><span class="review-label">Commercial Unseals</span><span class="review-value">30 Jun 2026</span></div>
+              <div class="review-row"><span class="review-label">Delivery Target</span><span class="review-value">15 Aug 2026</span></div>
+              <div class="review-row"><span class="review-label">Window — Technical</span><span class="review-value mono">21 days</span></div>
+              <div class="review-row"><span class="review-label">Window — Commercial</span><span class="review-value mono">14 days</span></div>
+            </div>
+          </div>
+
+          <!-- Terms -->
+          <div class="review-block">
+            <div class="review-block-head">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M5 8h6"/></svg>
+              Commercial Terms
+            </div>
+            <div class="review-block-body">
+              <div class="review-row"><span class="review-label">Inco Term</span><span class="review-value">CIF</span></div>
+              <div class="review-row"><span class="review-label">Payment</span><span class="review-value">30 / 40 / 30</span></div>
+              <div class="review-row"><span class="review-label">Currency</span><span class="review-value mono">INR</span></div>
+              <div class="review-row"><span class="review-label">T&amp;C Clauses</span><span class="review-value mono">3 of 5</span></div>
+              <div class="review-row"><span class="review-label">Delivery To</span><span class="review-value">Nhava Sheva</span></div>
+            </div>
+          </div>
+
+          <!-- Vendors -->
+          <div class="review-block">
+            <div class="review-block-head">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="3"/><path d="M1 14s1-4 5-4 5 4 5 4"/></svg>
+              Vendors Invited
+            </div>
+            <div class="review-block-body">
+              <div class="review-row"><span class="review-label">Endress+Hauser India</span><span class="review-value"><span class="badge success">Invited</span></span></div>
+              <div class="review-row"><span class="review-label">Yokogawa India Ltd</span><span class="review-value"><span class="badge success">Invited</span></span></div>
+              <div class="review-row"><span class="review-label">ABB India Ltd</span><span class="review-value"><span class="badge success">Invited</span></span></div>
+              <div class="review-row"><span class="review-label">Emerson Automation</span><span class="review-value"><span class="badge success">Invited</span></span></div>
+              <div class="review-row"><span class="review-label">Not invited</span><span class="review-value mono" style="color:var(--fg-muted);">5 vendors</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Publish CTA banner -->
+        <div class="publish-banner">
+          <div class="publish-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div class="publish-title">Ready to publish RFQ-2026-039</div>
+            <div class="publish-sub">4 vendors will be notified instantly via email &amp; WhatsApp. The technical bidding window opens on 26 May 2026. Commercial bids remain sealed until 30 Jun 2026.</div>
+          </div>
+          <button class="btn btn-primary" onclick="handlePublish()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M8 3l5 5-5 5"/></svg>
+            Publish RFQ
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /.wizard-body -->
+
+    <!-- Sticky footer nav -->
+    <div class="wizard-footer">
+      <div style="font-size:var(--fs-sm); color:var(--fg-muted);">
+        <span id="footer-label">Step 2 of 4 — RFQ Details</span>
+      </div>
+      <div style="display:flex; gap:var(--s-2);">
+        <button class="btn btn-secondary" id="btn-back" onclick="prevStep()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 4L6 8l4 4"/></svg>
+          Back
+        </button>
+        <button class="btn btn-primary" id="btn-next" onclick="nextStep()">
+          Continue
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /.wizard-layout -->
+</div><!-- /.app -->
+
+
+<script>
+  let currentStep = 2; // Start on step 2 (step 1 already "done" state in bar)
+
+  const views      = ['view-s1','view-s2','view-s3'];
+  const stepEls    = ['s1','s2','s3'];
+  const stepLabels = [
+    'Step 1 of 3 — Split Line Items',
+    'Step 2 of 3 — RFQ Details',
+    'Step 3 of 3 — Invite & Publish',
+  ];
+
+  function renderStep() {
+    // Show / hide views
+    views.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = (i+1 === currentStep) ? 'block' : 'none';
+    });
+    // Also hide step 4 view always
+    const s4 = document.getElementById('view-s4');
+    if (s4) s4.style.display = 'none';
+
+    // Update step bar
+    stepEls.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = 'step';
+      if (i+1 < currentStep)  el.classList.add('done');
+      if (i+1 === currentStep) el.classList.add('active');
+      if (i+1 > currentStep)  el.classList.add('pending');
+
+      const numEl = el.querySelector('.step-num');
+      if (i+1 < currentStep) {
+        numEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8l4 4 6-7"/></svg>';
+      } else {
+        numEl.textContent = i+1;
+      }
+    });
+
+    // Footer
+    document.getElementById('footer-label').textContent = stepLabels[currentStep-1];
+    document.getElementById('btn-back').style.display = currentStep === 1 ? 'none' : 'inline-flex';
+    const nextBtn = document.getElementById('btn-next');
+    nextBtn.style.display = 'inline-flex';
+    if (currentStep === 3) {
+      nextBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M8 3l5 5-5 5"/></svg> Publish RFQ';
+    } else {
+      nextBtn.innerHTML = 'Continue <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>';
+    }
+
+    window.scrollTo(0, 0);
+  }
+
+  function nextStep() {
+    if (currentStep < 3) { currentStep++; renderStep(); }
+    else { handlePublish(); }
+  }
+  function prevStep() { if (currentStep > 1) { currentStep--; renderStep(); } }
+
+  function handlePublish() {
+    window.location.href = 'bid-matrix.html';
+  }
+
+  // Evaluation mode toggle
+  function setEvalMode(mode) {
+    document.getElementById('eval-sequential').classList.toggle('selected', mode === 'sequential');
+    document.getElementById('eval-simultaneous').classList.toggle('selected', mode === 'simultaneous');
+  }
+
+  // Chip filter toggle
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+      const parent = this.closest('.filter-chips-inline') || this.parentNode;
+      parent.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  renderStep();
+</script>
+
+
+<div class="nav-backdrop" id="nav-backdrop" onclick="closeNav()"></div>
+
+<script>
+  function toggleNav() {
+    const nav = document.querySelector('.nav');
+    const backdrop = document.getElementById('nav-backdrop');
+    const isOpen = nav.classList.toggle('open');
+    backdrop.classList.toggle('visible', isOpen);
+  }
+  function closeNav() {
+    document.querySelector('.nav').classList.remove('open');
+    document.getElementById('nav-backdrop').classList.remove('visible');
+  }
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 700) closeNav();
+  });
+</script>
+</body>
+</html>

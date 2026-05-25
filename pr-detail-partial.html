@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — PR-2026-017</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Layout ─────────────────────────────────────────────── */
+    .main.prd-main { padding: 0; max-width: 1040px; }
+    .prd-inner { padding: var(--s-5) var(--s-6); padding-bottom: 100px; }
+
+    /* ── Back bar ── */
+    .prd-back-bar {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-3) var(--s-6);
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 20;
+    }
+    .prd-back-btn {
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      padding: var(--s-2) var(--s-3);
+      background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--r-md); color: var(--fg-muted);
+      font-family: var(--font-sans); font-size: var(--fs-sm);
+      font-weight: var(--fw-medium); text-decoration: none;
+      cursor: pointer; transition: background 0.12s, color 0.12s;
+    }
+    .prd-back-btn:hover { background: var(--bg-elevated); color: var(--fg); }
+    .prd-back-div { width: 1px; height: 18px; background: var(--border); }
+    .prd-crumb { font-size: var(--fs-sm); color: var(--fg-subtle); display: flex; align-items: center; gap: var(--s-2); }
+    .prd-crumb a { color: var(--fg-muted); text-decoration: none; }
+    .prd-crumb a:hover { color: var(--info); }
+    .prd-crumb .sep { color: var(--border-strong); }
+    .prd-crumb .cur { color: var(--fg); font-weight: var(--fw-medium); font-family: var(--font-mono); }
+
+    /* ── Page header ── */
+    .prd-header { margin-bottom: var(--s-5); }
+    .prd-title-row { display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-2); flex-wrap: wrap; }
+    .prd-title { font-size: var(--fs-2xl); font-weight: var(--fw-semibold); letter-spacing: -0.01em; }
+    .prd-meta { display: flex; gap: var(--s-5); flex-wrap: wrap; font-size: var(--fs-sm); color: var(--fg-muted); }
+    .prd-meta strong { color: var(--fg); font-weight: var(--fw-medium); }
+
+    /* ── KPI strip ── */
+    .prd-kpi {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: var(--s-3); margin-bottom: var(--s-5);
+    }
+    .prd-kpi-tile {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: var(--s-4);
+    }
+    .prd-kpi-val { font-family: var(--font-mono); font-size: var(--fs-xl); font-weight: var(--fw-semibold); color: var(--fg); margin-bottom: 2px; }
+    .prd-kpi-val.amber { color: #F59E0B; }
+    .prd-kpi-val.green { color: #10B981; }
+    .prd-kpi-label { font-size: var(--fs-xs); color: var(--fg-subtle); }
+
+    /* ── Progress bar ── */
+    .rfq-progress-bar-wrap {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-4) var(--s-5);
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); margin-bottom: var(--s-4);
+    }
+    .rfq-progress-track {
+      flex: 1; height: 8px; border-radius: 4px;
+      background: var(--bg-subtle); overflow: hidden;
+    }
+    .rfq-progress-fill {
+      height: 100%; border-radius: 4px;
+      background: linear-gradient(90deg, #10B981, #06B6D4);
+      width: 57%; /* 8/14 */
+    }
+    .rfq-progress-label { font-size: var(--fs-xs); color: var(--fg-muted); white-space: nowrap; }
+    .rfq-progress-label strong { color: var(--fg); }
+
+    /* ── Section card ── */
+    .prd-section {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); overflow: hidden; margin-bottom: var(--s-4);
+    }
+    .prd-section-head {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-4) var(--s-5); border-bottom: 1px solid var(--border-subtle);
+    }
+    .prd-section-icon {
+      width: 26px; height: 26px; border-radius: var(--r-sm);
+      background: var(--bg-subtle); display: grid; place-items: center;
+      font-size: 13px; flex-shrink: 0;
+    }
+    .prd-section-title { font-weight: var(--fw-semibold); font-size: var(--fs-md); }
+    .prd-section-hint  { margin-left: auto; font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .prd-section-body  { padding: var(--s-5); }
+
+    /* ── Line items table ── */
+    .li-table { width: 100%; border-collapse: collapse; }
+    .li-table th {
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--fg-subtle);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: var(--s-2) var(--s-3); text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .li-table th.r { text-align: right; }
+    .li-table td {
+      padding: var(--s-3); font-size: var(--fs-sm);
+      border-bottom: 1px solid var(--border-subtle); vertical-align: middle;
+    }
+    .li-table tr:last-child td { border-bottom: none; }
+    .li-desc { font-weight: var(--fw-medium); color: var(--fg); }
+    .li-spec { font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: 2px; }
+    .li-num  { font-family: var(--font-mono); font-size: var(--fs-sm); text-align: right; }
+
+    /* ── RFQ status badges on line items ── */
+    .li-rfq-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 7px; border-radius: 20px; font-size: 11px; font-weight: var(--fw-semibold);
+      font-family: var(--font-mono); white-space: nowrap;
+    }
+    .li-rfq-in  { background: rgba(6,182,212,0.10); color: #06B6D4; border: 1px solid rgba(6,182,212,0.22); }
+    .li-rfq-out { background: rgba(245,158,11,0.10); color: #F59E0B; border: 1px solid rgba(245,158,11,0.25); }
+
+    /* ── Row group separators ── */
+    .li-group-header td {
+      background: var(--bg-subtle);
+      padding: var(--s-2) var(--s-3) var(--s-2) var(--s-5);
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+      color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .li-table tr.in-rfq td { background: rgba(6,182,212,0.03); }
+    .li-table tr.pending-rfq td { background: transparent; }
+
+    /* ── Documents ── */
+    .doc-list { display: flex; flex-direction: column; gap: var(--s-2); }
+    .doc-row {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-3) var(--s-4); background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle); border-radius: var(--r-md);
+    }
+    .doc-icon { font-size: 16px; flex-shrink: 0; }
+    .doc-name { font-size: var(--fs-sm); font-weight: var(--fw-medium); flex: 1; }
+    .doc-meta { font-size: var(--fs-xs); color: var(--fg-subtle); font-family: var(--font-mono); }
+
+    /* ── Comments ── */
+    .comment-list { display: flex; flex-direction: column; gap: var(--s-4); }
+    .comment-item { display: flex; gap: var(--s-3); }
+    .comment-av {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      display: grid; place-items: center;
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--fg-muted);
+      flex-shrink: 0;
+    }
+    .comment-av.system { background: var(--bg-subtle); color: var(--fg-subtle); font-size: 10px; }
+    .comment-body { flex: 1; }
+    .comment-header { display: flex; align-items: center; gap: var(--s-2); margin-bottom: var(--s-1); }
+    .comment-author { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--fg); }
+    .comment-time   { font-size: var(--fs-xs); color: var(--fg-subtle); font-family: var(--font-mono); }
+    .comment-role   { font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .comment-text   { font-size: var(--fs-sm); color: var(--fg-muted); line-height: 1.6; }
+    .comment-text.system-msg { font-style: italic; color: var(--fg-subtle); }
+    .comment-divider { border: none; border-top: 1px solid var(--border-subtle); margin: var(--s-2) 0; }
+
+    /* ── Info grid ── */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); }
+    .info-field label {
+      display: block; font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+      color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--s-1);
+    }
+    .info-val { font-size: var(--fs-sm); color: var(--fg); }
+    .info-val.mono { font-family: var(--font-mono); }
+
+    /* ── RFQ callout banner ── */
+    .rfq-link-banner {
+      display: flex; align-items: center; justify-content: space-between; gap: var(--s-4);
+      padding: var(--s-4) var(--s-5);
+      background: linear-gradient(90deg, rgba(6,182,212,0.07), rgba(99,102,241,0.04));
+      border: 1px solid rgba(6,182,212,0.20); border-radius: var(--r-lg); margin-bottom: var(--s-4);
+    }
+    .rfq-link-label { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--fg); }
+    .rfq-link-sub   { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 2px; }
+    .btn-rfq-link {
+      padding: var(--s-2) var(--s-4);
+      background: none; border: 1px solid var(--info); border-radius: var(--r-md);
+      color: var(--info); font-family: var(--font-sans); font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold); cursor: pointer; white-space: nowrap;
+      text-decoration: none; display: inline-flex; align-items: center; gap: var(--s-2);
+      transition: background 0.15s;
+    }
+    .btn-rfq-link:hover { background: rgba(6,182,212,0.10); }
+
+    /* ── Sticky action bar — Partial state ── */
+    .prd-action-bar {
+      position: fixed; bottom: 0; left: 240px; right: 0;
+      background: linear-gradient(90deg, rgba(245,158,11,0.06) 0%, var(--bg-card) 60%);
+      border-top: 1px solid rgba(245,158,11,0.28);
+      padding: var(--s-4) var(--s-6);
+      display: flex; align-items: center; gap: var(--s-4);
+      z-index: 30;
+    }
+
+    /* progress pill in action bar */
+    .bar-progress-pill {
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      padding: var(--s-1) var(--s-3);
+      background: rgba(6,182,212,0.10); border: 1px solid rgba(6,182,212,0.25);
+      border-radius: 20px; font-family: var(--font-mono); font-size: var(--fs-xs);
+      color: #06B6D4; font-weight: var(--fw-semibold); white-space: nowrap;
+    }
+    .bar-status-text {
+      font-size: var(--fs-sm); color: var(--fg-muted); flex: 1;
+    }
+    .bar-status-text strong { color: var(--fg); }
+
+    .btn-create-rfq-remaining {
+      padding: var(--s-2) var(--s-5);
+      background: #F59E0B; border: none; border-radius: var(--r-md);
+      color: #000; font-family: var(--font-sans); font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold); cursor: pointer;
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-create-rfq-remaining:hover { background: #D97706; color: #fff; }
+
+    /* ── Modal overlay ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px); z-index: 100;
+      display: none; align-items: center; justify-content: center; padding: var(--s-5);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--r-xl); width: 100%; max-width: 480px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: var(--s-5) var(--s-6); border-bottom: 1px solid var(--border); gap: var(--s-3);
+    }
+    .modal-header-icon {
+      width: 36px; height: 36px; border-radius: var(--r-md);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .modal-header-icon.amber { background: rgba(245,158,11,0.12); color: #F59E0B; }
+    .modal-title { font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+    .modal-sub   { font-size: var(--fs-sm); color: var(--fg-muted); margin-top: 2px; }
+    .modal-close {
+      width: 28px; height: 28px; border-radius: var(--r-sm);
+      background: none; border: 1px solid var(--border);
+      color: var(--fg-muted); cursor: pointer; display: grid; place-items: center; flex-shrink: 0;
+    }
+    .modal-body { padding: var(--s-5) var(--s-6); }
+    .modal-hint { font-size: var(--fs-sm); color: var(--fg-muted); line-height: 1.6; margin-bottom: var(--s-4); }
+    .modal-item-list { display: flex; flex-direction: column; gap: var(--s-2); margin-bottom: var(--s-4); }
+    .modal-item-row {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-3) var(--s-4); background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle); border-radius: var(--r-md);
+      font-size: var(--fs-sm);
+    }
+    .modal-item-num { font-family: var(--font-mono); color: var(--fg-subtle); font-size: var(--fs-xs); width: 20px; }
+    .modal-item-desc { flex: 1; font-weight: var(--fw-medium); color: var(--fg); }
+    .modal-item-qty { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--fg-muted); }
+    .modal-footer {
+      padding: var(--s-4) var(--s-6); border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: var(--s-3);
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ══════════════════════════════════════════════ NAV ══ -->
+  <aside class="nav">
+    <div class="nav-brand">
+      <button class="hamburger-btn" onclick="toggleNav()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
+      <div class="nav-brand-text">
+        <div class="nav-brand-name">Procure</div>
+        <div class="nav-brand-sub">Procurement</div>
+      </div>
+    </div>
+    <div class="nav-items">
+      <a class="nav-item" href="index.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded" href="clients.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V7l6-4 6 4v7zM6 14V9h4v5"/></svg>
+          <span>Master Data</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="clients.html">Clients</a>
+          <a class="nav-item nav-sub-item" href="projects.html">Projects</a>
+          <a class="nav-item nav-sub-item" href="vendor-categories.html">Categories</a>
+          <a class="nav-item nav-sub-item" href="terms-conditions.html">Terms &amp; Conditions</a>
+          <a class="nav-item nav-sub-item" href="payment-terms.html">Payment Terms</a>
+          <a class="nav-item nav-sub-item" href="inco-terms.html">Inco Terms</a>
+          <a class="nav-item nav-sub-item" href="vendors.html">Vendors</a>
+        </div>
+      </div>
+      <a class="nav-item active" href="purchase-requisitions.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Purchase Requisitions</span>
+      </a>
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded" href="#">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+          <span>RFQs</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="rfq-list.html">All RFQs</a>
+          <a class="nav-item nav-sub-item" href="rfq-create.html">New RFQ</a>
+        </div>
+      </div>
+      <a class="nav-item" href="purchase-orders.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l1.5 8.5a1 1 0 0 0 1 .85h7a1 1 0 0 0 1-.85L14 4"/><path d="M2 4h12M6 7v3M10 7v3"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+    </div>
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">SM</div>
+        <div>
+          <div class="user-name">S. Mehta</div>
+          <div class="user-email">Engineering Lead</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════ MAIN ══ -->
+  <main class="main prd-main">
+    <button class="topbar-hamburger" onclick="toggleNav()">☰</button>
+
+    <!-- ── Back bar ── -->
+    <div class="prd-back-bar">
+      <a class="prd-back-btn" href="purchase-requisitions.html">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
+        Purchase Requisitions
+      </a>
+      <div class="prd-back-div"></div>
+      <div class="prd-crumb">
+        <a href="purchase-requisitions.html">Purchase Requisitions</a>
+        <span class="sep">/</span>
+        <span class="cur">PR-2026-017</span>
+      </div>
+    </div>
+
+    <div class="prd-inner">
+
+      <!-- ── Page header ── -->
+      <div class="prd-header">
+        <div class="prd-title-row">
+          <h1 class="prd-title">PR-2026-017</h1>
+          <span class="badge badge-info">Partial · 8/14 in RFQ</span>
+        </div>
+        <div style="font-size:var(--fs-md); color:var(--fg-muted); margin-bottom:var(--s-3);">
+          Mechanical — Piping &amp; Fittings Supply · Kakinada Offshore Phase II
+        </div>
+        <div class="prd-meta">
+          <span>Requested by <strong>A. Nair · Piping Engg.</strong></span>
+          <span>Project <strong>Kakinada Offshore Ph-II</strong></span>
+          <span>Category <strong>Mechanical — Piping</strong></span>
+          <span>Submitted <strong class="mono">09 Apr 2026</strong></span>
+          <span>Approved by <strong>S. Mehta · 14 Apr 2026</strong></span>
+        </div>
+      </div>
+
+      <!-- ── KPI strip ── -->
+      <div class="prd-kpi">
+        <div class="prd-kpi-tile">
+          <div class="prd-kpi-val">14</div>
+          <div class="prd-kpi-label">Total line items</div>
+        </div>
+        <div class="prd-kpi-tile">
+          <div class="prd-kpi-val green">8</div>
+          <div class="prd-kpi-label">Items in RFQ</div>
+        </div>
+        <div class="prd-kpi-tile">
+          <div class="prd-kpi-val amber">6</div>
+          <div class="prd-kpi-label">Pending RFQ</div>
+        </div>
+        <div class="prd-kpi-tile">
+          <div class="prd-kpi-val" style="font-size:var(--fs-xs); padding-top:6px;">
+            <span class="badge badge-info" style="font-size:var(--fs-xs);">Partial</span>
+          </div>
+          <div class="prd-kpi-label">PR status</div>
+        </div>
+      </div>
+
+      <!-- ── Progress bar ── -->
+      <div class="rfq-progress-bar-wrap">
+        <div style="font-size:var(--fs-sm); font-weight:var(--fw-semibold); color:var(--fg); white-space:nowrap;">Sourcing Progress</div>
+        <div class="rfq-progress-track">
+          <div class="rfq-progress-fill"></div>
+        </div>
+        <div class="rfq-progress-label"><strong>8 of 14</strong> items covered · RFQ-2026-041 active</div>
+      </div>
+
+      <!-- ── Active RFQ callout ── -->
+      <div class="rfq-link-banner">
+        <div>
+          <div class="rfq-link-label">Active RFQ for this PR</div>
+          <div class="rfq-link-sub">RFQ-2026-041 · Mechanical Piping Batch 1 · 8 items · Bid evaluation in progress</div>
+        </div>
+        <a class="btn-rfq-link" href="rfq-detail.html">
+          View RFQ-2026-041
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M8 3l5 5-5 5"/></svg>
+        </a>
+      </div>
+
+      <!-- ── Line items ── -->
+      <div class="prd-section">
+        <div class="prd-section-head">
+          <div class="prd-section-icon">📦</div>
+          <div class="prd-section-title">Line Items</div>
+          <div class="prd-section-hint">TXN_PR_LINE_ITEM · 14 items</div>
+        </div>
+        <div class="prd-section-body" style="padding:0;">
+          <table class="li-table">
+            <thead>
+              <tr>
+                <th style="width:36px; padding-left:var(--s-5);">#</th>
+                <th>Description</th>
+                <th style="width:70px;">UOM</th>
+                <th class="r" style="width:60px;">Qty</th>
+                <th style="width:140px; text-align:center;">RFQ Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- GROUP: In RFQ -->
+              <tr class="li-group-header">
+                <td colspan="5">
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#06B6D4" stroke-width="2" style="vertical-align:-1px;"><path d="M2.5 8.5l3.5 3.5 7-7"/></svg>
+                  &nbsp;In RFQ-2026-041 &nbsp;·&nbsp; 8 items
+                </td>
+              </tr>
+              <tr class="in-rfq">
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">01</td>
+                <td><div class="li-desc">CS Seamless Pipe</div><div class="li-spec">ASTM A106 Gr.B, SCH 40, 6" NB</div></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">MTR</span></td>
+                <td class="li-num">240</td>
+                <td style="text-align:center;"><span class="li-rfq-badge li-rfq-in">✓ RFQ-041</span></td>
+              </tr>
+              <tr class="in-rfq">
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">02</td>
+                <td><div class="li-desc">CS Seamless Pipe</div><div class="li-spec">ASTM A106 Gr.B, SCH 80, 4" NB</div></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">MTR</span></td>
+                <td class="li-num">180</td>
+                <td style="text-align:center;"><span class="li-rfq-badge li-rfq-in">✓ RFQ-041</span></td>
+              </tr>
+              <tr class="in-rfq">
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">03</td>
+                <td><div class="li-desc">SS316L Seamless Pipe</div><div class="li-spec">ASTM A312, SCH 10S, 3" NB</div></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">MTR</span></td>
+                <td class="li-num">90</td>
+                <td style="text-align:center;"><span class="li-rfq-badge li-rfq-in">✓ RFQ-041</span></td>
+              </tr>
+              <tr class="in-rfq">
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">04</td>
+                <td><div class="li-desc">CS Weld Neck Flange</div><div class="li-spec">ASME B16.5, Class 600, 6" RF</div></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td>
+                <td class="li-num">48</td>
+                <td style="text-align:center;"><span class="li-rfq-badge li-rfq-in">✓ RFQ-041</span></td>
+              </tr>
+              <tr class="in-rfq">
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">05</td>
+                <td><div class="li-desc">CS Weld Neck Flange</div><div class="li-spec">ASME B16.5, Class 300, 4" RF</div></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td>
+                <td class="li-num">36</td>
+                <td style="text-align:center;"><span class="li-rfq-badge li-rfq-in">✓ RFQ-041</span></td>
+              </tr>
+              <tr class="in-rfq">
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">06</td>
+                <td><div class="li-desc">CS 90° Long Radius Elbow</div><div class="li-spec">ASME B16.9, SCH 40, 6" BW</div></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td>
+                <td class="li-num">24</td>
+                <td style="text-align:center;"><span class="li-rfq-badge li-rfq-in">✓ RFQ-041</span></td>
+              </tr>
+              <tr class="in-rfq">
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">07</td>
+                <td><div class="li-desc">CS Concentric Reducer</div><div class="li-spec">ASME B16.9, 6"×4", SCH 40</div></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td>
+                <td class="li-num">12</td>
+                <td style="text-align:center;"><span class="li-rfq-badge li-rfq-in">✓ RFQ-041</span></td>
+              </tr>
+              <tr class="in-rfq">
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">08</td>
+                <td><div class="li-desc">CS Tee Equal</div><div class="li-spec">ASME B16.9, SCH 40, 4" BW</div></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td>
+                <td class="li-num">18</td>
+                <td style="text-align:center;"><span class="li-rfq-badge li-rfq-in">✓ RFQ-041</span></td>
+              </tr>
+
+              <!-- GROUP: Pending RFQ -->
+              <tr class="li-group-header">
+                <td colspan="5">
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#F59E0B" stroke-width="2" style="vertical-align:-1px;"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5l2 1.5"/></svg>
+                  &nbsp;No RFQ yet &nbsp;·&nbsp; 6 items pending
+                </td>
+              </tr>
+              <tr class="pending-rfq">
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">09</td>
+                <td><div class="li-desc">Ball Valve</div><div class="li-spec">API 6D, Full Bore, 4" Class 600, TRUNNION</div></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td>
+                <td class="li-num">8</td>
+                <td style="text-align:center;"><span class="li-rfq-badge li-rfq-out">⏳ Pending</span></td>
+              </tr>
+              <tr class="pending-rfq">
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">10</td>
+                <td><div class="li-desc">Check Valve</div><div class="li-spec">API 594, Wafer type, 6" Class 300</div></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td>
+                <td class="li-num">6</td>
+                <td style="text-align:center;"><span class="li-rfq-badge li-rfq-out">⏳ Pending</span></td>
+              </tr>
+              <tr class="pending-rfq">
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">11</td>
+                <td><div class="li-desc">Gate Valve</div><div class="li-spec">API 600, 4" Class 600, Bolted Bonnet</div></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td>
+                <td class="li-num">10</td>
+                <td style="text-align:center;"><span class="li-rfq-badge li-rfq-out">⏳ Pending</span></td>
+              </tr>
+              <tr class="pending-rfq">
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">12</td>
+                <td><div class="li-desc">Globe Valve</div><div class="li-spec">API 623, 2" Class 300, Flanged</div></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td>
+                <td class="li-num">4</td>
+                <td style="text-align:center;"><span class="li-rfq-badge li-rfq-out">⏳ Pending</span></td>
+              </tr>
+              <tr class="pending-rfq">
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">13</td>
+                <td><div class="li-desc">SS316L Pipe Fittings Set</div><div class="li-spec">Socketweld, SCH 10S, 1"–2" assorted</div></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Lots</span></td>
+                <td class="li-num">3</td>
+                <td style="text-align:center;"><span class="li-rfq-badge li-rfq-out">⏳ Pending</span></td>
+              </tr>
+              <tr class="pending-rfq">
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">14</td>
+                <td><div class="li-desc">Pipe Supports &amp; Clamps</div><div class="li-spec">CS, IS 1239, Various sizes 1"–6"</div></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Sets</span></td>
+                <td class="li-num">20</td>
+                <td style="text-align:center;"><span class="li-rfq-badge li-rfq-out">⏳ Pending</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── PR Details ── -->
+      <div class="prd-section">
+        <div class="prd-section-head">
+          <div class="prd-section-icon">📋</div>
+          <div class="prd-section-title">PR Details</div>
+        </div>
+        <div class="prd-section-body">
+          <div class="info-grid">
+            <div class="info-field">
+              <label>PR Number</label>
+              <div class="info-val mono">PR-2026-017</div>
+            </div>
+            <div class="info-field">
+              <label>Status</label>
+              <div class="info-val"><span class="badge badge-info">Partial — Sourcing in progress</span></div>
+            </div>
+            <div class="info-field">
+              <label>Requested By</label>
+              <div class="info-val">A. Nair · Piping Engineering</div>
+            </div>
+            <div class="info-field">
+              <label>Approved By</label>
+              <div class="info-val">S. Mehta · Engineering Lead · 14 Apr 2026</div>
+            </div>
+            <div class="info-field">
+              <label>Project</label>
+              <div class="info-val">Kakinada Offshore Phase II</div>
+            </div>
+            <div class="info-field">
+              <label>Category</label>
+              <div class="info-val">Mechanical — Piping</div>
+            </div>
+            <div class="info-field">
+              <label>Required by Date</label>
+              <div class="info-val mono">30 Jun 2026</div>
+            </div>
+            <div class="info-field">
+              <label>Priority</label>
+              <div class="info-val"><span class="priority-high">🔴 High</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Supporting Documents ── -->
+      <div class="prd-section">
+        <div class="prd-section-head">
+          <div class="prd-section-icon">📎</div>
+          <div class="prd-section-title">Supporting Documents</div>
+          <div class="prd-section-hint">2 files</div>
+        </div>
+        <div class="prd-section-body">
+          <div class="doc-list">
+            <div class="doc-row">
+              <div class="doc-icon">📄</div>
+              <div class="doc-name">Piping_MTO_PR017_Rev2.pdf</div>
+              <div class="doc-meta">620 KB · Uploaded 09 Apr 2026</div>
+            </div>
+            <div class="doc-row">
+              <div class="doc-icon">📄</div>
+              <div class="doc-name">P&ID_Kakinada_Zone3_Rev4.pdf</div>
+              <div class="doc-meta">1.2 MB · Uploaded 09 Apr 2026</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Comments ── -->
+      <div class="prd-section">
+        <div class="prd-section-head">
+          <div class="prd-section-icon">💬</div>
+          <div class="prd-section-title">Comments &amp; Activity</div>
+        </div>
+        <div class="prd-section-body">
+          <div class="comment-list">
+            <div class="comment-item">
+              <div class="comment-av system">⚙</div>
+              <div class="comment-body">
+                <div class="comment-header">
+                  <span class="comment-author">System</span>
+                  <span class="comment-time">09 Apr 2026 · 11:05</span>
+                </div>
+                <div class="comment-text system-msg">PR-2026-017 submitted by A. Nair for Engineering Lead approval.</div>
+              </div>
+            </div>
+            <hr class="comment-divider"/>
+            <div class="comment-item">
+              <div class="comment-av">SM</div>
+              <div class="comment-body">
+                <div class="comment-header">
+                  <span class="comment-author">S. Mehta</span>
+                  <span class="comment-role">Engineering Lead</span>
+                  <span class="comment-time">14 Apr 2026 · 09:42</span>
+                </div>
+                <div class="comment-text">PR approved. Priority items — pipes and flanges — need to go out on RFQ immediately given the June delivery deadline. Valves and fittings can follow in a second RFQ once specs are confirmed with the piping team.</div>
+              </div>
+            </div>
+            <hr class="comment-divider"/>
+            <div class="comment-item">
+              <div class="comment-av system">⚙</div>
+              <div class="comment-body">
+                <div class="comment-header">
+                  <span class="comment-author">System</span>
+                  <span class="comment-time">15 Apr 2026 · 14:18</span>
+                </div>
+                <div class="comment-text system-msg">RFQ-2026-041 raised by P. Sharma (Procurement) for 8 line items from PR-2026-017.</div>
+              </div>
+            </div>
+            <hr class="comment-divider"/>
+            <div class="comment-item">
+              <div class="comment-av">PS</div>
+              <div class="comment-body">
+                <div class="comment-header">
+                  <span class="comment-author">P. Sharma</span>
+                  <span class="comment-role">Procurement</span>
+                  <span class="comment-time">18 Apr 2026 · 10:22</span>
+                </div>
+                <div class="comment-text">Three bids received for RFQ-041. Evaluation under way. Will initiate second RFQ for valves and SS fittings (items 09–14) once valve spec sheet from piping team is finalised.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /prd-inner -->
+  </main>
+
+  <!-- ══════════════════ STICKY ACTION BAR — PARTIAL STATE ══ -->
+  <!--
+    ENGINEERING LEAD VIEW (Read-only):
+    This bar is informational — EL approved the PR, sourcing is in progress.
+    The "Create RFQ for Remaining" CTA is a Purchase team action, shown here
+    as a shortcut to hand off / prompt. Procurement can also access this from
+    the PR list directly.
+  -->
+  <div class="prd-action-bar">
+    <span class="bar-progress-pill">
+      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2.5 8.5l3.5 3.5 7-7"/></svg>
+      8 / 14 in RFQ
+    </span>
+    <div class="bar-status-text">
+      <strong>PR approved · Sourcing in progress</strong> &nbsp;·&nbsp; 6 items still need an RFQ
+    </div>
+    <button class="btn-create-rfq-remaining" onclick="openModal('modal-rfq-remaining')">
+      Create RFQ for Remaining
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8h12M8 3l5 5-5 5"/></svg>
+    </button>
+  </div>
+
+  <!-- ══════════════════ MODAL: Create RFQ for Remaining ══ -->
+  <div class="modal-overlay" id="modal-rfq-remaining">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-header-icon amber">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+        </div>
+        <div>
+          <div class="modal-title">Raise RFQ for Remaining Items</div>
+          <div class="modal-sub">6 items from PR-2026-017 have no RFQ coverage</div>
+        </div>
+        <button class="modal-close" onclick="closeModal('modal-rfq-remaining')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">The following 6 items are not yet covered by any RFQ. Clicking "Proceed" will pre-fill a new RFQ with these items so procurement can complete the setup.</p>
+        <div class="modal-item-list">
+          <div class="modal-item-row">
+            <div class="modal-item-num">09</div>
+            <div class="modal-item-desc">Ball Valve · API 6D, Full Bore, 4" Class 600</div>
+            <div class="modal-item-qty">8 Nos.</div>
+          </div>
+          <div class="modal-item-row">
+            <div class="modal-item-num">10</div>
+            <div class="modal-item-desc">Check Valve · API 594, Wafer, 6" Class 300</div>
+            <div class="modal-item-qty">6 Nos.</div>
+          </div>
+          <div class="modal-item-row">
+            <div class="modal-item-num">11</div>
+            <div class="modal-item-desc">Gate Valve · API 600, 4" Class 600</div>
+            <div class="modal-item-qty">10 Nos.</div>
+          </div>
+          <div class="modal-item-row">
+            <div class="modal-item-num">12</div>
+            <div class="modal-item-desc">Globe Valve · API 623, 2" Class 300</div>
+            <div class="modal-item-qty">4 Nos.</div>
+          </div>
+          <div class="modal-item-row">
+            <div class="modal-item-num">13</div>
+            <div class="modal-item-desc">SS316L Pipe Fittings Set · 1"–2" assorted</div>
+            <div class="modal-item-qty">3 Lots</div>
+          </div>
+          <div class="modal-item-row">
+            <div class="modal-item-num">14</div>
+            <div class="modal-item-desc">Pipe Supports &amp; Clamps · CS, 1"–6"</div>
+            <div class="modal-item-qty">20 Sets</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-rfq-remaining')">Cancel</button>
+        <a class="btn btn-primary" href="rfq-create.html">
+          Proceed to Create RFQ →
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+  /* ── Nav toggle ── */
+  function toggleNav() {
+    document.querySelector('.app').classList.toggle('nav-collapsed');
+  }
+
+  /* ── Modal helpers ── */
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  /* Close on backdrop click */
+  document.querySelectorAll('.modal-overlay').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      if (e.target === el) closeModal(el.id);
+    });
+  });
+</script>
+</body>
+</html>

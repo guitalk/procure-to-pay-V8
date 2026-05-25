@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — Vendor Profile · Emerson Electric India</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .main.vp-main { padding: 0; max-width: 1000px; }
+    .vp-main-inner { padding: var(--s-5) var(--s-6); }
+
+    /* ── Back navigation bar ── */
+    .vp-back-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+      padding: var(--s-3) var(--s-6);
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .vp-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--s-2);
+      padding: var(--s-2) var(--s-3);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      color: var(--fg-muted);
+      font-family: var(--font-sans);
+      font-size: var(--fs-sm);
+      font-weight: var(--fw-medium);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .vp-back-btn:hover {
+      background: var(--bg-elevated);
+      color: var(--fg);
+      border-color: var(--border-strong);
+    }
+    .vp-back-divider {
+      width: 1px; height: 18px;
+      background: var(--border);
+    }
+    .vp-back-crumb {
+      font-size: var(--fs-sm);
+      color: var(--fg-subtle);
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+    }
+    .vp-back-crumb a { color: var(--fg-muted); text-decoration: none; }
+    .vp-back-crumb a:hover { color: var(--info); }
+    .vp-back-crumb .sep { color: var(--border-strong); }
+    .vp-back-crumb .current { color: var(--fg); font-weight: var(--fw-medium); }
+
+    /* ── Header card ── */
+    .vp-hero {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--s-5);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: var(--s-5);
+      margin-bottom: var(--s-5);
+    }
+    .vp-avatar {
+      width: 64px; height: 64px;
+      border-radius: var(--r-lg);
+      background: linear-gradient(135deg, #3B82F6, #6366F1);
+      display: grid; place-items: center;
+      font-size: var(--fs-xl);
+      font-weight: var(--fw-semibold);
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .vp-hero-body { flex: 1; }
+    .vp-crumb {
+      font-size: var(--fs-xs); color: var(--fg-subtle);
+      margin-bottom: var(--s-2); letter-spacing: 0.04em;
+    }
+    .vp-crumb a { color: var(--fg-muted); text-decoration: none; }
+    .vp-crumb a:hover { color: var(--fg); }
+    .vp-name-row { display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-2); flex-wrap: wrap; }
+    .vp-name { font-size: var(--fs-2xl); font-weight: var(--fw-semibold); letter-spacing: -0.01em; }
+    .vp-meta-row {
+      display: flex; gap: var(--s-5); flex-wrap: wrap;
+      font-size: var(--fs-sm); color: var(--fg-muted);
+      margin-bottom: var(--s-3);
+    }
+    .vp-meta-row strong { color: var(--fg); font-weight: var(--fw-medium); }
+    .vp-cats { display: flex; gap: var(--s-2); flex-wrap: wrap; }
+    .vp-cat-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px;
+      background: rgba(99,102,241,0.10);
+      border: 1px solid rgba(99,102,241,0.20);
+      border-radius: 20px;
+      font-size: var(--fs-xs);
+      color: #818CF8;
+      font-weight: var(--fw-medium);
+    }
+    .vp-hero-actions { display: flex; flex-direction: column; gap: var(--s-2); flex-shrink: 0; }
+    .btn-vp-edit {
+      padding: var(--s-2) var(--s-4);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      color: var(--fg-muted);
+      font-family: var(--font-sans);
+      font-size: var(--fs-sm);
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-vp-edit:hover { background: var(--bg-subtle); color: var(--fg); }
+    .btn-vp-blacklist {
+      padding: var(--s-2) var(--s-4);
+      background: transparent;
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: var(--r-md);
+      color: #EF4444;
+      font-family: var(--font-sans);
+      font-size: var(--fs-sm);
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-vp-blacklist:hover { background: rgba(239,68,68,0.08); }
+
+    /* ── Stats strip ── */
+    .vp-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--s-3);
+      margin-bottom: var(--s-5);
+    }
+    .vp-stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--s-4);
+    }
+    .vp-stat-val {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xl);
+      font-weight: var(--fw-semibold);
+      color: var(--fg);
+      margin-bottom: 2px;
+    }
+    .vp-stat-val.green { color: #10B981; }
+    .vp-stat-val.blue  { color: var(--info); }
+    .vp-stat-label { font-size: var(--fs-xs); color: var(--fg-subtle); }
+
+    /* ── Two-column layout ── */
+    .vp-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-4);
+      margin-bottom: var(--s-4);
+    }
+
+    /* ── Info sections ── */
+    .vp-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      margin-bottom: var(--s-4);
+    }
+    .vp-section-head {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-4) var(--s-5);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .vp-section-icon {
+      width: 26px; height: 26px;
+      border-radius: var(--r-sm);
+      background: var(--bg-subtle);
+      display: grid; place-items: center;
+      font-size: 13px; flex-shrink: 0;
+    }
+    .vp-section-title { font-weight: var(--fw-semibold); font-size: var(--fs-md); }
+    .vp-section-body { padding: var(--s-5); }
+
+    /* ── Field grid ── */
+    .vp-field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-4);
+    }
+    .vp-field label {
+      display: block;
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-semibold);
+      color: var(--fg-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: var(--s-1);
+    }
+    .vp-field-val {
+      font-size: var(--fs-sm);
+      color: var(--fg);
+    }
+    .vp-field-val.mono { font-family: var(--font-mono); }
+    .vp-field-val .verified {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; color: #10B981;
+      background: rgba(16,185,129,0.10);
+      border: 1px solid rgba(16,185,129,0.20);
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin-left: var(--s-2);
+      font-weight: var(--fw-semibold);
+    }
+    .vp-field-val .unverified {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; color: #F59E0B;
+      background: rgba(245,158,11,0.10);
+      border: 1px solid rgba(245,158,11,0.20);
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin-left: var(--s-2);
+    }
+
+    /* ── Approval timeline ── */
+    .timeline { padding: var(--s-2) 0; }
+    .tl-item {
+      display: flex;
+      gap: var(--s-3);
+      padding-bottom: var(--s-4);
+      position: relative;
+    }
+    .tl-item:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 11px; top: 28px;
+      width: 2px;
+      bottom: 0;
+      background: var(--border-subtle);
+    }
+    .tl-dot {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 11px;
+      flex-shrink: 0;
+      border: 2px solid transparent;
+    }
+    .tl-dot.done  { background: rgba(16,185,129,0.15); border-color: #10B981; color: #10B981; }
+    .tl-dot.warn  { background: rgba(245,158,11,0.15); border-color: #F59E0B; color: #F59E0B; }
+    .tl-dot.info  { background: rgba(6,182,212,0.15); border-color: var(--info); color: var(--info); }
+    .tl-dot.muted { background: var(--bg-subtle); border-color: var(--border); color: var(--fg-subtle); }
+    .tl-body { flex: 1; padding-top: 2px; }
+    .tl-label { font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--fg); }
+    .tl-sub   { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 2px; line-height: 1.5; }
+    .tl-date  { font-size: var(--fs-xs); color: var(--fg-subtle); font-family: var(--font-mono); margin-top: 2px; }
+
+  /* ── Engagement History tabs ── */
+  .eh-tab {
+    padding: 4px 12px;
+    font-size: var(--fs-xs); font-weight: var(--fw-medium);
+    border-radius: var(--r-sm);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--fg-muted);
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .eh-tab:hover { background: var(--bg-elevated); color: var(--fg); }
+  .eh-tab.active { background: var(--accent-soft); border-color: rgba(59,130,246,0.35); color: var(--accent); }
+
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══════════════════════════════════════════════ NAV ══ -->
+  <aside class="nav">
+    <div class="nav-brand">
+      <button class="hamburger-btn" onclick="toggleNav()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
+      <div class="nav-brand-text">
+        <div class="nav-brand-name">Procure</div>
+        <div class="nav-brand-sub">Procurement</div>
+      </div>
+    </div>
+    <div class="nav-items">
+      <a class="nav-item" href="index.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded has-active" href="clients.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V7l6-4 6 4v7zM6 14V9h4v5"/></svg>
+          <span>Master Data</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="clients.html">Clients</a>
+          <a class="nav-item nav-sub-item" href="projects.html">Projects</a>
+          <a class="nav-item nav-sub-item" href="vendor-categories.html">Categories</a>
+          <a class="nav-item nav-sub-item" href="terms-conditions.html">Terms &amp; Conditions</a>
+          <a class="nav-item nav-sub-item" href="payment-terms.html">Payment Terms</a>
+          <a class="nav-item nav-sub-item" href="inco-terms.html">Inco Terms</a>
+          <a class="nav-item nav-sub-item active" href="vendors.html">Vendors</a>
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-requisitions.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Purchase Requisitions</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded" href="#">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+          <span>RFQs</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="rfq-list.html">All RFQs</a>
+          <a class="nav-item nav-sub-item" href="rfq-create.html">New RFQ</a>
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-orders.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l1.5 8.5a1 1 0 0 0 1 .85h7a1 1 0 0 0 1-.85L14 4"/><path d="M2 4h12M6 7v3M10 7v3"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+    </div>
+
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">AD</div>
+        <div>
+          <div class="user-name">Admin User</div>
+          <div class="user-email">admin@aker.com</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════ MAIN ══ -->
+  <main class="main vp-main">
+    <button class="topbar-hamburger" onclick="toggleNav()" aria-label="Open menu">☰</button>
+
+    <!-- ── Back navigation bar ── -->
+    <div class="vp-back-bar">
+      <a class="vp-back-btn" href="vendors.html">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
+        Vendors
+      </a>
+      <div class="vp-back-divider"></div>
+      <div class="vp-back-crumb">
+        <a href="vendors.html">Master Data</a>
+        <span class="sep">/</span>
+        <a href="vendors.html">Vendors</a>
+        <span class="sep">/</span>
+        <span class="current">Emerson Electric India Pvt. Ltd.</span>
+      </div>
+    </div>
+
+    <div class="vp-main-inner">
+
+    <!-- ── Hero card ── -->
+    <div class="vp-hero">
+      <div class="vp-avatar">EL</div>
+      <div class="vp-hero-body">
+        <div class="vp-name-row">
+          <h1 class="vp-name">Emerson Electric India Pvt. Ltd.</h1>
+          <span class="badge badge-success">Approved</span>
+        </div>
+        <div class="vp-meta-row">
+          <span>📍 <strong>Mumbai, Maharashtra</strong></span>
+          <span>📅 Onboarded <strong>12 Jan 2026</strong></span>
+          <span>🏭 <strong>OEM — Instrumentation & Control</strong></span>
+          <span>GSTIN <strong class="mono">27AABCE1234F1Z5</strong></span>
+        </div>
+        <div class="vp-cats">
+          <span class="vp-cat-chip">Instrumentation</span>
+          <span class="vp-cat-chip">Control &amp; Automation</span>
+          <span class="vp-cat-chip">Pressure &amp; Temperature</span>
+        </div>
+      </div>
+      <div class="vp-hero-actions">
+        <button class="btn-vp-edit">✎ Edit details</button>
+        <button class="btn-vp-blacklist">⊘ Blacklist</button>
+      </div>
+    </div>
+
+    <!-- ── Stats strip ── -->
+    <div class="vp-stats">
+      <div class="vp-stat">
+        <div class="vp-stat-val green">₹2.84 Cr</div>
+        <div class="vp-stat-label">Lifetime PO value</div>
+      </div>
+      <div class="vp-stat">
+        <div class="vp-stat-val blue">7</div>
+        <div class="vp-stat-label">Completed POs</div>
+      </div>
+      <div class="vp-stat">
+        <div class="vp-stat-val">94%</div>
+        <div class="vp-stat-label">On-time delivery</div>
+      </div>
+      <div class="vp-stat">
+        <div class="vp-stat-val">2</div>
+        <div class="vp-stat-label">Active RFQs</div>
+      </div>
+    </div>
+
+    <!-- ── Two-column top ── -->
+    <div class="vp-cols">
+
+      <!-- Identity -->
+      <div class="vp-section" style="margin-bottom:0">
+        <div class="vp-section-head">
+          <div class="vp-section-icon">🪪</div>
+          <span class="vp-section-title">Identity</span>
+        </div>
+        <div class="vp-section-body">
+          <div class="vp-field-grid">
+            <div class="vp-field">
+              <label>GSTIN</label>
+              <div class="vp-field-val mono">27AABCE1234F1Z5 <span class="verified">✓ Verified</span></div>
+            </div>
+            <div class="vp-field">
+              <label>PAN</label>
+              <div class="vp-field-val mono">AABCE1234F <span class="verified">✓ Verified</span></div>
+            </div>
+            <div class="vp-field">
+              <label>Bank Account</label>
+              <div class="vp-field-val">HDFC Bank · ••••3412 <span class="verified">✓ Verified</span></div>
+            </div>
+            <div class="vp-field">
+              <label>MSME Status</label>
+              <div class="vp-field-val">Large Enterprise <span class="unverified">Not MSME</span></div>
+            </div>
+            <div class="vp-field" style="grid-column: 1 / -1;">
+              <label>Registered Address</label>
+              <div class="vp-field-val">Plot 14, MIDC Industrial Area, Andheri East, Mumbai — 400 093, Maharashtra, India</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Approval timeline -->
+      <div class="vp-section" style="margin-bottom:0">
+        <div class="vp-section-head">
+          <div class="vp-section-icon">📋</div>
+          <span class="vp-section-title">Approval Timeline</span>
+        </div>
+        <div class="vp-section-body">
+          <div class="timeline">
+            <div class="tl-item">
+              <div class="tl-dot done">✓</div>
+              <div class="tl-body">
+                <div class="tl-label">Vendor onboarded via self-registration</div>
+                <div class="tl-sub">GST, PAN, and bank details auto-fetched from govt. APIs</div>
+                <div class="tl-date">08 Jan 2026</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot done">✓</div>
+              <div class="tl-body">
+                <div class="tl-label">Clarification requested by Purchase</div>
+                <div class="tl-sub">ISO 9001 certificate expiry date missing — vendor resubmitted</div>
+                <div class="tl-date">10 Jan 2026</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot done">✓</div>
+              <div class="tl-body">
+                <div class="tl-label">Profile approved by Purchase</div>
+                <div class="tl-sub">Approved by A. Desai · Categorized under Instrumentation &amp; Control</div>
+                <div class="tl-date">12 Jan 2026</div>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-dot info">↑</div>
+              <div class="tl-body">
+                <div class="tl-label">Category extended — Pressure &amp; Temperature</div>
+                <div class="tl-sub">Additional category approved following PO-2025-019 performance review</div>
+                <div class="tl-date">03 Mar 2026</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Contacts (VENDOR_CONTACT — 1-to-many per TSD) ── -->
+    <div class="vp-section">
+      <div class="vp-section-head">
+        <div class="vp-section-icon">📞</div>
+        <span class="vp-section-title">Contacts</span>
+        <span style="margin-left:auto; font-size:var(--fs-xs); color:var(--fg-subtle);">VENDOR_CONTACT table · multiple allowed</span>
+      </div>
+      <div class="vp-section-body" style="padding:0;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">Name</th>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">Email</th>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">Phone</th>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">Role</th>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:center;border-bottom:1px solid var(--border-subtle);">Primary</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-weight:var(--fw-medium);border-bottom:1px solid var(--border-subtle);">Priya Sharma</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);border-bottom:1px solid var(--border-subtle);">priya@emerson.com</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-family:var(--font-mono);border-bottom:1px solid var(--border-subtle);">+91 98200 45123</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);color:var(--fg-muted);border-bottom:1px solid var(--border-subtle);">Senior Sales Manager</td>
+              <td style="padding:var(--s-3) var(--s-4);text-align:center;border-bottom:1px solid var(--border-subtle);"><span style="color:#10B981;font-size:14px;">●</span></td>
+            </tr>
+            <tr>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-weight:var(--fw-medium);border-bottom:1px solid var(--border-subtle);">Rakesh Nair</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);border-bottom:1px solid var(--border-subtle);">rakesh.nair@emerson.com</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-family:var(--font-mono);border-bottom:1px solid var(--border-subtle);">+91 97690 11234</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);color:var(--fg-muted);border-bottom:1px solid var(--border-subtle);">Technical Bid Coordinator</td>
+              <td style="padding:var(--s-3) var(--s-4);text-align:center;border-bottom:1px solid var(--border-subtle);"><span style="color:var(--fg-subtle);font-size:12px;">—</span></td>
+            </tr>
+            <tr>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-weight:var(--fw-medium);">Sunita Rao</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);">sunita.rao@emerson.com</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-family:var(--font-mono);">+91 99300 78821</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);color:var(--fg-muted);">Finance &amp; Accounts</td>
+              <td style="padding:var(--s-3) var(--s-4);text-align:center;"><span style="color:var(--fg-subtle);font-size:12px;">—</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Active RFQs ── -->
+    <div class="vp-section">
+      <div class="vp-section-head">
+        <div class="vp-section-icon">📬</div>
+        <span class="vp-section-title">Active RFQ Participation</span>
+      </div>
+      <div class="vp-section-body">
+        <div class="rfq-pill-list">
+          <a class="rfq-pill" href="technical-bid.html">
+            <div class="rfq-pill-id">RFQ-2026-038</div>
+            <div class="rfq-pill-desc">Rotating Equipment · Kakinada Offshore Phase II</div>
+            <div class="rfq-pill-status"><span class="badge badge-info">Technical Eval.</span></div>
+          </a>
+          <a class="rfq-pill" href="rfq-list.html">
+            <div class="rfq-pill-id">RFQ-2026-041</div>
+            <div class="rfq-pill-desc">Pressure Transmitters &amp; Flow Meters · Hazira Expansion</div>
+            <div class="rfq-pill-status"><span class="badge badge-pending">Submitted</span></div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Engagement History ── -->
+    <div class="vp-section">
+      <div class="vp-section-head">
+        <div class="vp-section-icon">📁</div>
+        <span class="vp-section-title">Engagement History</span>
+        <!-- Tab strip -->
+        <div style="display:flex; gap:4px; margin-left:auto;">
+          <button class="eh-tab active" onclick="switchEhTab('rfqs', this)">RFQs</button>
+          <button class="eh-tab" onclick="switchEhTab('pos', this)">Purchase Orders</button>
+        </div>
+      </div>
+
+      <!-- RFQs tab -->
+      <div id="eh-rfqs" class="eh-panel" style="padding:0;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">RFQ</th>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">Description</th>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">Invited</th>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">Technical Bid</th>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">Commercial Bid</th>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">Participation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-family:var(--font-mono);font-weight:var(--fw-medium);border-bottom:1px solid var(--border-subtle);white-space:nowrap;"><a href="rfq-detail.html" style="color:var(--accent);text-decoration:none;">RFQ-2026-038</a></td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);color:var(--fg-muted);border-bottom:1px solid var(--border-subtle);">Rotating Equipment · Kakinada Offshore Phase II</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-xs);color:var(--fg-subtle);border-bottom:1px solid var(--border-subtle);font-family:var(--font-mono);white-space:nowrap;">14 May 2026</td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge info">Under Evaluation</span></td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge muted">Sealed</span></td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge success">Submitted</span></td>
+            </tr>
+            <tr>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-family:var(--font-mono);font-weight:var(--fw-medium);border-bottom:1px solid var(--border-subtle);white-space:nowrap;"><a href="rfq-list.html" style="color:var(--accent);text-decoration:none;">RFQ-2026-041</a></td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);color:var(--fg-muted);border-bottom:1px solid var(--border-subtle);">Pressure Transmitters &amp; Flow Meters · Hazira Expansion</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-xs);color:var(--fg-subtle);border-bottom:1px solid var(--border-subtle);font-family:var(--font-mono);white-space:nowrap;">19 May 2026</td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge muted">Pending</span></td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge muted">Sealed</span></td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge success">Submitted</span></td>
+            </tr>
+            <tr>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-family:var(--font-mono);font-weight:var(--fw-medium);border-bottom:1px solid var(--border-subtle);white-space:nowrap;color:var(--fg-muted);">RFQ-2026-021</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);color:var(--fg-muted);border-bottom:1px solid var(--border-subtle);">Control Valves · Wellhead Platform Phase II</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-xs);color:var(--fg-subtle);border-bottom:1px solid var(--border-subtle);font-family:var(--font-mono);white-space:nowrap;">02 Mar 2026</td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge success">Accepted</span></td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge success">Evaluated</span></td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge success">Submitted</span></td>
+            </tr>
+            <tr>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-family:var(--font-mono);font-weight:var(--fw-medium);border-bottom:1px solid var(--border-subtle);white-space:nowrap;color:var(--fg-muted);">RFQ-2025-087</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);color:var(--fg-muted);border-bottom:1px solid var(--border-subtle);">DCS &amp; Instrumentation Package · Kakinada Phase I</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-xs);color:var(--fg-subtle);border-bottom:1px solid var(--border-subtle);font-family:var(--font-mono);white-space:nowrap;">18 Nov 2025</td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge success">Accepted</span></td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge success">Evaluated</span></td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge success">Submitted</span></td>
+            </tr>
+            <tr>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-family:var(--font-mono);font-weight:var(--fw-medium);white-space:nowrap;color:var(--fg-muted);">RFQ-2025-064</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);color:var(--fg-muted);">Pressure Gauges · Hazira Commissioning</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-xs);color:var(--fg-subtle);font-family:var(--font-mono);white-space:nowrap;">05 Sep 2025</td>
+              <td style="padding:var(--s-3) var(--s-4);"><span class="badge danger">Rejected</span></td>
+              <td style="padding:var(--s-3) var(--s-4);"><span class="badge muted">N/A</span></td>
+              <td style="padding:var(--s-3) var(--s-4);"><span class="badge success">Submitted</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- POs tab (hidden by default) -->
+      <div id="eh-pos" class="eh-panel" style="padding:0; display:none;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">PO Number</th>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">Project</th>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">Category</th>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">Issued</th>
+              <th style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;padding:var(--s-2) var(--s-4);text-align:left;border-bottom:1px solid var(--border-subtle);">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-family:var(--font-mono);font-weight:var(--fw-medium);border-bottom:1px solid var(--border-subtle);white-space:nowrap;"><a href="purchase-orders.html" style="color:var(--accent);text-decoration:none;">PO-2026-019</a></td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);border-bottom:1px solid var(--border-subtle);">Wellhead Platform Phase II</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);color:var(--fg-muted);border-bottom:1px solid var(--border-subtle);">Instrumentation &amp; Control</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-xs);color:var(--fg-subtle);border-bottom:1px solid var(--border-subtle);font-family:var(--font-mono);white-space:nowrap;">15 Mar 2026</td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge success">Delivered</span></td>
+            </tr>
+            <tr>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-family:var(--font-mono);font-weight:var(--fw-medium);border-bottom:1px solid var(--border-subtle);white-space:nowrap;"><a href="purchase-orders.html" style="color:var(--accent);text-decoration:none;">PO-2026-007</a></td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);border-bottom:1px solid var(--border-subtle);">Wellhead Platform Phase II</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);color:var(--fg-muted);border-bottom:1px solid var(--border-subtle);">Control &amp; Automation</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-xs);color:var(--fg-subtle);border-bottom:1px solid var(--border-subtle);font-family:var(--font-mono);white-space:nowrap;">08 Feb 2026</td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge success">Delivered</span></td>
+            </tr>
+            <tr>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-family:var(--font-mono);font-weight:var(--fw-medium);border-bottom:1px solid var(--border-subtle);white-space:nowrap;"><a href="purchase-orders.html" style="color:var(--accent);text-decoration:none;">PO-2025-041</a></td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);border-bottom:1px solid var(--border-subtle);">Kakinada Offshore Phase I</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);color:var(--fg-muted);border-bottom:1px solid var(--border-subtle);">DCS &amp; Instrumentation</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-xs);color:var(--fg-subtle);border-bottom:1px solid var(--border-subtle);font-family:var(--font-mono);white-space:nowrap;">29 Nov 2025</td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge success">Delivered</span></td>
+            </tr>
+            <tr>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-family:var(--font-mono);font-weight:var(--fw-medium);border-bottom:1px solid var(--border-subtle);white-space:nowrap;"><a href="purchase-orders.html" style="color:var(--accent);text-decoration:none;">PO-2025-019</a></td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);border-bottom:1px solid var(--border-subtle);">Kakinada Offshore Phase I</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);color:var(--fg-muted);border-bottom:1px solid var(--border-subtle);">Pressure &amp; Temperature</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-xs);color:var(--fg-subtle);border-bottom:1px solid var(--border-subtle);font-family:var(--font-mono);white-space:nowrap;">12 Jul 2025</td>
+              <td style="padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--border-subtle);"><span class="badge success">Delivered</span></td>
+            </tr>
+            <tr>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);font-family:var(--font-mono);font-weight:var(--fw-medium);white-space:nowrap;"><a href="purchase-orders.html" style="color:var(--accent);text-decoration:none;">PO-2025-008</a></td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);">Hazira Expansion</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-sm);color:var(--fg-muted);">Control Valves</td>
+              <td style="padding:var(--s-3) var(--s-4);font-size:var(--fs-xs);color:var(--fg-subtle);font-family:var(--font-mono);white-space:nowrap;">04 Apr 2025</td>
+              <td style="padding:var(--s-3) var(--s-4);"><span class="badge info">In Transit</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    </div><!-- /vp-main-inner -->
+  </main>
+</div>
+
+<div class="nav-backdrop" id="nav-backdrop" onclick="closeNav()"></div>
+
+<script>
+  function switchEhTab(tab, btn) {
+    document.querySelectorAll('.eh-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('eh-rfqs').style.display = tab === 'rfqs' ? '' : 'none';
+    document.getElementById('eh-pos').style.display  = tab === 'pos'  ? '' : 'none';
+  }
+
+  function toggleNav() {
+    var nav = document.querySelector('.nav');
+    var backdrop = document.getElementById('nav-backdrop');
+    var isOpen = nav.classList.toggle('open');
+    backdrop.classList.toggle('visible', isOpen);
+  }
+  function closeNav() {
+    document.querySelector('.nav').classList.remove('open');
+    document.getElementById('nav-backdrop').classList.remove('visible');
+  }
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 700) closeNav();
+  });
+
+</script>
+</body>
+</html>

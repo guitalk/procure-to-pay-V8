@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — Terms &amp; Conditions Master</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Modal chrome ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      z-index: 100; display: none; align-items: center; justify-content: center; padding: var(--s-5);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--r-xl); width: 100%; max-width: 520px;
+      max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: var(--s-5) var(--s-6); border-bottom: 1px solid var(--border); gap: var(--s-3);
+    }
+    .modal-header-icon {
+      width: 36px; height: 36px; border-radius: var(--r-md);
+      background: var(--accent-soft); color: var(--accent);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .modal-title { font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+    .modal-sub   { font-size: var(--fs-sm); color: var(--fg-muted); margin-top: 2px; line-height: 1.4; }
+    .modal-close {
+      width: 28px; height: 28px; border-radius: var(--r-sm);
+      background: none; border: 1px solid var(--border);
+      color: var(--fg-muted); cursor: pointer; display: grid; place-items: center; flex-shrink: 0; margin-top: 4px;
+    }
+    .modal-close:hover { background: var(--bg-elevated); color: var(--fg); }
+    .modal-body   { padding: var(--s-5) var(--s-6); }
+    .modal-footer {
+      display: flex; align-items: center; justify-content: flex-end; gap: var(--s-2);
+      padding: var(--s-4) var(--s-6); border-top: 1px solid var(--border); background: var(--bg-elevated);
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--s-4); }
+    .field:last-child { margin-bottom: 0; }
+    .field-label { font-size: var(--fs-xs); font-weight: var(--fw-medium); text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-muted); }
+    .field-input {
+      width: 100%; padding: 9px var(--s-3);
+      background: var(--bg-base); border: 1px solid var(--border);
+      border-radius: var(--r-md); color: var(--fg);
+      font-size: var(--fs-md); font-family: var(--font-sans); transition: border-color 0.12s;
+    }
+    .field-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+    .field-input::placeholder { color: var(--fg-subtle); }
+    textarea.field-input { resize: vertical; min-height: 110px; line-height: 1.6; }
+
+    /* ── T&C accordion ── */
+    .tc-stack { display: flex; flex-direction: column; gap: var(--s-3); }
+    .tc-group { border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+    .tc-group-header {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-3) var(--s-4);
+      background: var(--bg-card);
+      cursor: pointer; user-select: none;
+      transition: background 0.15s;
+    }
+    .tc-group-header:hover { background: var(--bg-subtle); }
+    .tc-chevron { transition: transform 0.2s; color: var(--fg-subtle); flex-shrink: 0; }
+    .tc-chevron.open { transform: rotate(90deg); }
+    .tc-group-id { font-size: var(--fs-xs); font-family: var(--font-mono); color: var(--fg-subtle); flex-shrink: 0; }
+    .tc-group-name { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--fg); flex: 1; }
+    .tc-group-desc { font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: 1px; }
+    .tc-group-count {
+      font-size: var(--fs-xs); color: var(--fg-subtle);
+      background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: 999px; padding: 2px 8px; flex-shrink: 0;
+    }
+    .tc-group-body { display: none; border-top: 1px solid var(--border); }
+    .tc-group-body.open { display: block; }
+    .tc-clause-table { width: 100%; border-collapse: collapse; }
+    .tc-clause-table th {
+      padding: var(--s-2) var(--s-4); font-size: var(--fs-xs); color: var(--fg-subtle);
+      font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: .04em;
+      border-bottom: 1px solid var(--border); text-align: left;
+      background: rgba(255,255,255,0.015);
+    }
+    .tc-clause-table td {
+      padding: var(--s-3) var(--s-4); font-size: var(--fs-sm); color: var(--fg-muted);
+      border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top;
+    }
+    .tc-clause-table tr:last-child td { border-bottom: none; }
+    .tc-clause-table tr:hover td { background: rgba(255,255,255,0.025); }
+    .tc-clause-title { font-weight: var(--fw-medium); color: var(--fg); display: block; margin-bottom: 2px; }
+    .tc-clause-preview { font-size: var(--fs-xs); color: var(--fg-subtle); line-height: 1.5; }
+    .tc-group-footer {
+      display: flex; justify-content: flex-end;
+      padding: var(--s-2) var(--s-4);
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,0.015);
+    }
+    .btn-add-clause {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px var(--s-3); background: transparent;
+      border: 1px dashed var(--border); border-radius: var(--r-md);
+      color: var(--fg-subtle); font-family: var(--font-sans);
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+      cursor: pointer; transition: color 0.15s, border-color 0.15s;
+    }
+    .btn-add-clause:hover { color: var(--accent); border-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="nav">
+    <div class="nav-brand">
+      <button class="hamburger-btn" onclick="toggleNav()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
+      <div class="nav-brand-text">
+        <div class="nav-brand-name">Procure</div>
+        <div class="nav-brand-sub">Procurement</div>
+      </div>
+    </div>
+    <div class="nav-items">
+      <a class="nav-item" href="index.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded has-active" href="clients.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V7l6-4 6 4v7zM6 14V9h4v5"/></svg>
+          <span>Master Data</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="clients.html">Clients</a>
+          <a class="nav-item nav-sub-item" href="projects.html">Projects</a>
+          <a class="nav-item nav-sub-item" href="vendor-categories.html">Categories</a>
+          <a class="nav-item nav-sub-item active" href="terms-conditions.html">Terms &amp; Conditions</a>
+          <a class="nav-item nav-sub-item" href="payment-terms.html">Payment Terms</a>
+          <a class="nav-item nav-sub-item" href="inco-terms.html">Inco Terms</a>
+          <a class="nav-item nav-sub-item" href="vendors.html">Vendors</a>
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-requisitions.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Purchase Requisitions</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header" href="#">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+          <span>RFQs</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="rfq-list.html">All RFQs</a>
+          <a class="nav-item nav-sub-item" href="rfq-create.html">New RFQ</a>
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-orders.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l1.5 8.5a1 1 0 0 0 1 .85h7a1 1 0 0 0 1-.85L14 4"/><path d="M2 4h12M6 7v3M10 7v3"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+    </div>
+
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">AD</div>
+        <div>
+          <div class="user-name">Admin User</div>
+          <div class="user-email">admin@aker.com</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div>
+    <main class="main">
+
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-end">
+        <div>
+          <div class="page-title">Terms &amp; Conditions Master</div>
+          <div class="page-subtitle">Named T&amp;C groups — each group is a selectable clause package that Purchase attaches to an RFQ in one click.</div>
+        </div>
+        <div style="display:flex;gap:var(--s-2);">
+          <button class="btn btn-secondary" onclick="showExcelToast()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v8M5 8l3 3 3-3"/><path d="M2 13h12"/></svg>
+            Download Template
+          </button>
+          <button class="btn btn-secondary" onclick="showExcelToast()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 11V3M5 6l3-3 3 3"/><path d="M2 13h12"/></svg>
+            Import Excel
+          </button>
+          <button class="btn btn-primary" onclick="openModal('modal-new-group')">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+            New Group
+          </button>
+        </div>
+      </div>
+
+      <div class="tc-stack">
+
+        <!-- TG-001 Standard Supply Contract -->
+        <div class="tc-group">
+          <div class="tc-group-header" onclick="toggleTcGroup('tg001')">
+            <svg class="tc-chevron open" id="chev-tg001" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:var(--s-3)">
+                <span class="tc-group-id">TG-001</span>
+                <span class="tc-group-name">Standard Supply Contract</span>
+              </div>
+              <div class="tc-group-desc">General-purpose clauses for supply of goods and services</div>
+            </div>
+            <span class="tc-group-count">4 clauses</span>
+          </div>
+          <div class="tc-group-body open" id="body-tg001">
+            <table class="tc-clause-table">
+              <thead>
+                <tr>
+                  <th style="width:90px">Clause ID</th>
+                  <th>Title &amp; Summary</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="id-cell">TC-001</span></td>
+                  <td>
+                    <span class="tc-clause-title">Liquidated Damages</span>
+                    <span class="tc-clause-preview">Vendor shall pay LD at 0.5% of contract value per week of delay, up to a maximum of 10% of the total order value…</span>
+                  </td>
+                  <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td><span class="id-cell">TC-002</span></td>
+                  <td>
+                    <span class="tc-clause-title">Warranty</span>
+                    <span class="tc-clause-preview">Vendor warrants that all supplied goods will be free from defects in material and workmanship for a period of 18 months from the date of commissioning…</span>
+                  </td>
+                  <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td><span class="id-cell">TC-003</span></td>
+                  <td>
+                    <span class="tc-clause-title">Force Majeure</span>
+                    <span class="tc-clause-preview">Neither party shall be held liable for failure to perform obligations due to causes beyond reasonable control, including acts of God, war, or government action…</span>
+                  </td>
+                  <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td><span class="id-cell">TC-004</span></td>
+                  <td>
+                    <span class="tc-clause-title">Confidentiality &amp; NDA</span>
+                    <span class="tc-clause-preview">All technical drawings, process data, and commercial terms shared under this agreement shall be kept strictly confidential for a period of 5 years…</span>
+                  </td>
+                  <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="tc-group-footer">
+              <button class="btn-add-clause" onclick="openAddClause('TG-001', 'Standard Supply Contract')">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+                Add Clause
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TG-002 Oil & Gas Field Package -->
+        <div class="tc-group">
+          <div class="tc-group-header" onclick="toggleTcGroup('tg002')">
+            <svg class="tc-chevron" id="chev-tg002" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:var(--s-3)">
+                <span class="tc-group-id">TG-002</span>
+                <span class="tc-group-name">Oil &amp; Gas Field Package</span>
+              </div>
+              <div class="tc-group-desc">Clauses specific to upstream/midstream procurement; includes HSE and liability caps</div>
+            </div>
+            <span class="tc-group-count">3 clauses</span>
+          </div>
+          <div class="tc-group-body" id="body-tg002">
+            <table class="tc-clause-table">
+              <thead>
+                <tr>
+                  <th style="width:90px">Clause ID</th>
+                  <th>Title &amp; Summary</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="id-cell">TC-001</span></td>
+                  <td>
+                    <span class="tc-clause-title">Liquidated Damages</span>
+                    <span class="tc-clause-preview">Vendor shall pay LD at 0.5% of contract value per week of delay, up to a maximum of 10% of the total order value…</span>
+                  </td>
+                  <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td><span class="id-cell">TC-005</span></td>
+                  <td>
+                    <span class="tc-clause-title">HSE Compliance</span>
+                    <span class="tc-clause-preview">Vendor must comply with all applicable Health, Safety, and Environmental regulations at site. Non-compliance may result in immediate suspension of work…</span>
+                  </td>
+                  <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td><span class="id-cell">TC-006</span></td>
+                  <td>
+                    <span class="tc-clause-title">Limitation of Liability</span>
+                    <span class="tc-clause-preview">Vendor's total liability under this contract shall not exceed 100% of the contract value, excluding liability for wilful misconduct or fraud…</span>
+                  </td>
+                  <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="tc-group-footer">
+              <button class="btn-add-clause" onclick="openAddClause('TG-002', 'Oil &amp; Gas Field Package')">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+                Add Clause
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TG-003 Biofuel &amp; Renewable Terms -->
+        <div class="tc-group">
+          <div class="tc-group-header" onclick="toggleTcGroup('tg003')">
+            <svg class="tc-chevron" id="chev-tg003" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4l4 4-4 4"/></svg>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:var(--s-3)">
+                <span class="tc-group-id">TG-003</span>
+                <span class="tc-group-name">Biofuel &amp; Renewable Terms</span>
+              </div>
+              <div class="tc-group-desc">Sustainability compliance, feedstock quality, and IP clauses for renewable energy projects</div>
+            </div>
+            <span class="tc-group-count">3 clauses</span>
+          </div>
+          <div class="tc-group-body" id="body-tg003">
+            <table class="tc-clause-table">
+              <thead>
+                <tr>
+                  <th style="width:90px">Clause ID</th>
+                  <th>Title &amp; Summary</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="id-cell">TC-003</span></td>
+                  <td>
+                    <span class="tc-clause-title">Force Majeure</span>
+                    <span class="tc-clause-preview">Neither party shall be held liable for failure to perform obligations due to causes beyond reasonable control, including acts of God, war, or government action…</span>
+                  </td>
+                  <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td><span class="id-cell">TC-007</span></td>
+                  <td>
+                    <span class="tc-clause-title">Intellectual Property Rights</span>
+                    <span class="tc-clause-preview">All process designs, formulations, and innovations developed under this engagement remain the sole property of the buyer unless explicitly transferred in writing…</span>
+                  </td>
+                  <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td><span class="id-cell">TC-008</span></td>
+                  <td>
+                    <span class="tc-clause-title">Sustainability &amp; Compliance</span>
+                    <span class="tc-clause-preview">Vendor confirms that all supplied feedstock and materials comply with applicable environmental and sustainability standards including BIS and ISO norms…</span>
+                  </td>
+                  <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="tc-group-footer">
+              <button class="btn-add-clause" onclick="openAddClause('TG-003', 'Biofuel &amp; Renewable Terms')">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+                Add Clause
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /.tc-stack -->
+
+    </main>
+  </div>
+</div>
+
+
+<!-- ── Modal: New Group ──────────────────────────────── -->
+<div class="modal-overlay" id="modal-new-group">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="display:flex;gap:var(--s-3);align-items:flex-start;flex:1;min-width:0;">
+        <div class="modal-header-icon">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 7h6M5 10h4"/></svg>
+        </div>
+        <div>
+          <div class="modal-title">New T&amp;C Group</div>
+          <div class="modal-sub">Creates a named clause package — Purchase selects it whole when drafting an RFQ</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-new-group')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">Group Name</label>
+        <input class="field-input" id="group-name" placeholder="e.g. Standard Supply Contract" />
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label">Description</label>
+        <textarea class="field-input" id="group-desc" style="min-height:72px;" placeholder="Brief note on when this group applies…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-new-group')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-new-group')">Save Group</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Add Clause ─────────────────────────────── -->
+<div class="modal-overlay" id="modal-add-clause">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="display:flex;gap:var(--s-3);align-items:flex-start;flex:1;min-width:0;">
+        <div class="modal-header-icon">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M8 5v3M5 8h6"/></svg>
+        </div>
+        <div>
+          <div class="modal-title">Add Clause</div>
+          <div class="modal-sub" id="add-clause-sub">Under selected group</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-add-clause')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">Clause Title</label>
+        <input class="field-input" id="clause-title" placeholder="e.g. Liquidated Damages" />
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label">Clause Text</label>
+        <textarea class="field-input" id="clause-text" placeholder="Enter the full clause text…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-clause')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-add-clause')">Save Clause</button>
+    </div>
+  </div>
+</div>
+
+<div class="nav-backdrop" id="nav-backdrop" onclick="closeNav()"></div>
+
+<script>
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  function showExcelToast() {
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px 20px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--fg-muted);z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.3);';
+    t.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#10B981" stroke-width="2"><path d="M2.5 8.5l3.5 3.5 7-7"/></svg><span><strong>TC_Master_Template.xlsx</strong> — ready to download</span>';
+    document.body.appendChild(t);
+    setTimeout(function() { t.remove(); }, 3000);
+  }
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
+  });
+
+  function openAddClause(groupId, groupName) {
+    document.getElementById('add-clause-sub').textContent = groupId + ' · ' + groupName.replace(/&amp;/g, '&');
+    document.getElementById('clause-title').value = '';
+    document.getElementById('clause-text').value = '';
+    openModal('modal-add-clause');
+  }
+
+  function toggleTcGroup(id) {
+    const body = document.getElementById('body-' + id);
+    const chev = document.getElementById('chev-' + id);
+    const isOpen = body.classList.toggle('open');
+    chev.classList.toggle('open', isOpen);
+  }
+  function toggleNav() {
+    const nav = document.querySelector('.nav');
+    const backdrop = document.getElementById('nav-backdrop');
+    const isOpen = nav.classList.toggle('open');
+    backdrop.classList.toggle('visible', isOpen);
+  }
+  function closeNav() {
+    document.querySelector('.nav').classList.remove('open');
+    document.getElementById('nav-backdrop').classList.remove('visible');
+  }
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 700) closeNav();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — Commercial Bid · RFQ-2026-038 · Flowline Industrial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ─── Page layout ─── */
+    .main.cbid-main { padding: var(--s-5) var(--s-6); max-width: 960px; }
+
+    /* ─── Page header ─── */
+    .cbid-header { margin-bottom: var(--s-5); }
+    .cbid-crumb {
+      font-size: var(--fs-xs);
+      color: var(--fg-subtle);
+      margin-bottom: var(--s-2);
+      letter-spacing: 0.04em;
+    }
+    .cbid-crumb a { color: var(--fg-muted); text-decoration: none; }
+    .cbid-crumb a:hover { color: var(--fg); }
+    .cbid-title-row { display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-2); }
+    .cbid-title { font-size: var(--fs-2xl); font-weight: var(--fw-semibold); letter-spacing: -0.01em; }
+    .cbid-meta {
+      display: flex; gap: var(--s-5);
+      font-size: var(--fs-sm);
+      color: var(--fg-muted);
+    }
+    .cbid-meta strong { color: var(--fg); font-weight: var(--fw-medium); }
+
+    /* ─── Unlock banner ─── */
+    .unlock-banner {
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+      padding: var(--s-3) var(--s-4);
+      background: linear-gradient(90deg, rgba(16,185,129,0.10), rgba(16,185,129,0.03));
+      border: 1px solid rgba(16,185,129,0.28);
+      border-radius: var(--r-md);
+      margin-bottom: var(--s-5);
+    }
+    .unlock-icon {
+      width: 36px; height: 36px;
+      border-radius: var(--r-md);
+      background: rgba(16,185,129,0.15);
+      color: #10B981;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+      font-size: 18px;
+    }
+    .unlock-label { font-weight: var(--fw-semibold); color: var(--fg); }
+    .unlock-sub { color: var(--fg-muted); font-size: var(--fs-sm); margin-top: 2px; }
+    .unlock-deadline {
+      margin-left: auto;
+      text-align: right;
+      font-size: var(--fs-sm);
+    }
+    .unlock-deadline-val {
+      font-family: var(--font-mono);
+      font-weight: var(--fw-semibold);
+      color: #10B981;
+    }
+    .unlock-deadline-label { color: var(--fg-subtle); font-size: var(--fs-xs); }
+
+    /* ─── Section cards ─── */
+    .cbid-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      margin-bottom: var(--s-4);
+      overflow: hidden;
+    }
+    .cbid-section-header {
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+      padding: var(--s-4) var(--s-5);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .cbid-section-icon {
+      width: 28px; height: 28px;
+      border-radius: var(--r-sm);
+      background: var(--bg-subtle);
+      display: grid; place-items: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .cbid-section-title { font-weight: var(--fw-semibold); font-size: var(--fs-md); }
+    .cbid-section-hint { margin-left: auto; font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .cbid-section-body { padding: var(--s-5); }
+
+    /* ─── Line items table ─── */
+    .li-table { width: 100%; border-collapse: collapse; }
+    .li-table th {
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-semibold);
+      color: var(--fg-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: var(--s-2) var(--s-3);
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .li-table th.num { text-align: right; }
+    .li-table td {
+      padding: var(--s-3);
+      font-size: var(--fs-sm);
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: middle;
+    }
+    .li-table tr:last-child td { border-bottom: none; }
+    .li-num { text-align: right; }
+    .li-desc { color: var(--fg); font-weight: var(--fw-medium); }
+    .li-spec { color: var(--fg-muted); font-size: var(--fs-xs); margin-top: 2px; }
+    .li-qty {
+      font-family: var(--font-mono);
+      font-size: var(--fs-sm);
+      color: var(--fg-muted);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .li-input-wrap { position: relative; }
+    .li-currency-prefix {
+      position: absolute;
+      left: var(--s-3);
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: var(--fs-xs);
+      color: var(--fg-subtle);
+      font-family: var(--font-mono);
+      pointer-events: none;
+    }
+    .li-input {
+      width: 100%;
+      background: var(--bg-input, var(--bg-subtle));
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: var(--s-2) var(--s-3) var(--s-2) 30px;
+      font-family: var(--font-mono);
+      font-size: var(--fs-sm);
+      color: var(--fg);
+      text-align: right;
+      min-width: 110px;
+      transition: border-color 0.15s;
+    }
+    .li-input:focus { outline: none; border-color: var(--info); }
+    .li-total-val {
+      font-family: var(--font-mono);
+      font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold);
+      color: var(--fg);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .li-total-val.computed { color: var(--info); }
+
+    /* ─── Total summary bar ─── */
+    .li-total-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--s-6);
+      padding: var(--s-4) var(--s-5);
+      background: var(--bg-subtle);
+      border-top: 1px solid var(--border);
+      margin: 0 calc(-1 * var(--s-5));
+      margin-bottom: calc(-1 * var(--s-5));
+    }
+    .li-total-bar .total-item { text-align: right; }
+    .li-total-bar .total-label { font-size: var(--fs-xs); color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.05em; }
+    .li-total-bar .total-val {
+      font-family: var(--font-mono);
+      font-weight: var(--fw-semibold);
+      font-size: var(--fs-lg);
+      color: var(--fg);
+      margin-top: 2px;
+    }
+    .li-total-bar .total-val.grand { color: #10B981; }
+
+    /* ─── Cost grid ─── */
+    .cost-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-4);
+    }
+    .cost-field label {
+      display: block;
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-semibold);
+      color: var(--fg-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: var(--s-2);
+    }
+    .cost-field .field-hint { font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: var(--s-1); }
+    .cost-input-wrap { position: relative; }
+    .cost-prefix {
+      position: absolute;
+      left: var(--s-3);
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: var(--fs-xs);
+      color: var(--fg-subtle);
+      font-family: var(--font-mono);
+      pointer-events: none;
+    }
+    .cost-input {
+      width: 100%;
+      background: var(--bg-input, var(--bg-subtle));
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--s-3) var(--s-3) var(--s-3) 36px;
+      font-family: var(--font-mono);
+      font-size: var(--fs-md);
+      color: var(--fg);
+      transition: border-color 0.15s;
+      box-sizing: border-box;
+    }
+    .cost-input:focus { outline: none; border-color: var(--info); }
+
+    /* ─── Amendments ─── */
+    .amend-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--s-4);
+    }
+    .amend-field label {
+      display: block;
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-semibold);
+      color: var(--fg-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: var(--s-2);
+    }
+    .amend-rfq-val {
+      font-size: var(--fs-xs);
+      color: var(--fg-subtle);
+      margin-bottom: var(--s-2);
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+    }
+    .amend-rfq-tag {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 10px;
+      color: var(--fg-muted);
+      font-family: var(--font-mono);
+    }
+    .amend-select {
+      width: 100%;
+      background: var(--bg-input, var(--bg-subtle));
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--s-3);
+      font-family: var(--font-sans);
+      font-size: var(--fs-sm);
+      color: var(--fg);
+      transition: border-color 0.15s;
+      box-sizing: border-box;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right var(--s-3) center;
+      padding-right: 32px;
+    }
+    .amend-select:focus { outline: none; border-color: var(--info); }
+    .amend-input {
+      width: 100%;
+      background: var(--bg-input, var(--bg-subtle));
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--s-3);
+      font-family: var(--font-sans);
+      font-size: var(--fs-sm);
+      color: var(--fg);
+      transition: border-color 0.15s;
+      box-sizing: border-box;
+    }
+    .amend-input:focus { outline: none; border-color: var(--info); }
+    .deviation-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: var(--fw-semibold);
+      color: #F59E0B;
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin-top: var(--s-1);
+    }
+    .deviation-tag .dot { width: 5px; height: 5px; border-radius: 50%; background: #F59E0B; }
+
+    /* ─── Documents upload ─── */
+    .doc-upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--r-md);
+      padding: var(--s-6);
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .doc-upload-zone:hover {
+      border-color: var(--info);
+      background: rgba(6,182,212,0.04);
+    }
+    .doc-upload-icon { font-size: 28px; margin-bottom: var(--s-2); }
+    .doc-upload-label { font-size: var(--fs-sm); color: var(--fg-muted); }
+    .doc-upload-hint { font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: var(--s-1); }
+    .doc-list { margin-top: var(--s-4); display: flex; flex-direction: column; gap: var(--s-2); }
+    .doc-item {
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+      padding: var(--s-3) var(--s-4);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--r-md);
+    }
+    .doc-icon { font-size: 16px; flex-shrink: 0; }
+    .doc-name { font-size: var(--fs-sm); font-weight: var(--fw-medium); flex: 1; }
+    .doc-size { font-size: var(--fs-xs); color: var(--fg-subtle); font-family: var(--font-mono); }
+    .doc-remove {
+      font-size: 12px; color: var(--fg-subtle); cursor: pointer;
+      width: 20px; height: 20px; display: grid; place-items: center;
+      border-radius: var(--r-sm); transition: background 0.1s, color 0.1s;
+    }
+    .doc-remove:hover { background: rgba(239,68,68,0.12); color: #EF4444; }
+
+    /* ─── Comments field ─── */
+    .comments-textarea {
+      width: 100%;
+      background: var(--bg-input, var(--bg-subtle));
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--s-3);
+      font-family: var(--font-sans);
+      font-size: var(--fs-sm);
+      color: var(--fg);
+      min-height: 90px;
+      resize: vertical;
+      transition: border-color 0.15s;
+      box-sizing: border-box;
+    }
+    .comments-textarea:focus { outline: none; border-color: var(--info); }
+    .comments-textarea::placeholder { color: var(--fg-subtle); }
+
+    /* ─── Submit footer ─── */
+    .submit-footer {
+      position: sticky;
+      bottom: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: var(--s-4) var(--s-6);
+      display: flex;
+      align-items: center;
+      gap: var(--s-4);
+      z-index: 10;
+      margin: 0 calc(-1 * var(--s-6)) calc(-1 * var(--s-5));
+    }
+    .submit-disclaimer {
+      font-size: var(--fs-xs);
+      color: var(--fg-subtle);
+      flex: 1;
+      line-height: 1.5;
+    }
+    .submit-disclaimer strong { color: var(--fg-muted); }
+    .btn-save-draft {
+      padding: var(--s-2) var(--s-4);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      color: var(--fg-muted);
+      font-family: var(--font-sans);
+      font-size: var(--fs-sm);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-save-draft:hover { background: var(--bg-subtle); color: var(--fg); }
+    .btn-submit-bid {
+      padding: var(--s-2) var(--s-5);
+      background: #10B981;
+      border: none;
+      border-radius: var(--r-md);
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-submit-bid:hover { background: #059669; transform: translateY(-1px); }
+
+    /* ─── Submitted overlay ─── */
+    .submitted-banner {
+      display: none;
+      align-items: center;
+      gap: var(--s-3);
+      padding: var(--s-4) var(--s-5);
+      background: linear-gradient(90deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04));
+      border: 1px solid rgba(16,185,129,0.35);
+      border-radius: var(--r-lg);
+      margin-bottom: var(--s-5);
+    }
+    .submitted-banner.visible { display: flex; }
+    .submitted-icon {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: rgba(16,185,129,0.18);
+      color: #10B981;
+      display: grid; place-items: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .submitted-title { font-weight: var(--fw-semibold); font-size: var(--fs-md); }
+    .submitted-sub { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 2px; }
+    .submitted-time {
+      margin-left: auto;
+      text-align: right;
+      font-size: var(--fs-xs);
+      color: var(--fg-subtle);
+      font-family: var(--font-mono);
+    }
+
+    /* ─── Vendor nav specific ─── */
+    .vendor-portal-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 9px;
+      font-weight: var(--fw-semibold);
+      color: #10B981;
+      background: rgba(16,185,129,0.10);
+      border: 1px solid rgba(16,185,129,0.20);
+      border-radius: 4px;
+      padding: 2px 5px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-left: var(--s-2);
+    }
+
+    /* ─── Confirm modal ─── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl, 16px);
+      padding: var(--s-6);
+      width: 420px;
+      max-width: 90vw;
+    }
+    .modal-icon {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: rgba(16,185,129,0.15);
+      color: #10B981;
+      display: grid; place-items: center;
+      font-size: 24px;
+      margin-bottom: var(--s-4);
+    }
+    .modal-title { font-size: var(--fs-xl); font-weight: var(--fw-semibold); margin-bottom: var(--s-2); }
+    .modal-body { font-size: var(--fs-sm); color: var(--fg-muted); line-height: 1.6; margin-bottom: var(--s-5); }
+    .modal-summary {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--r-md);
+      padding: var(--s-4);
+      margin-bottom: var(--s-5);
+      font-size: var(--fs-sm);
+    }
+    .modal-sum-row { display: flex; justify-content: space-between; padding: var(--s-1) 0; }
+    .modal-sum-row .lbl { color: var(--fg-muted); }
+    .modal-sum-row .val { font-family: var(--font-mono); font-weight: var(--fw-semibold); color: var(--fg); }
+    .modal-sum-row .val.green { color: #10B981; }
+    .modal-sum-row.sep { border-top: 1px solid var(--border-subtle); padding-top: var(--s-3); margin-top: var(--s-2); }
+    .modal-warn {
+      font-size: var(--fs-xs);
+      color: #F59E0B;
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.20);
+      border-radius: var(--r-sm);
+      padding: var(--s-3);
+      margin-bottom: var(--s-5);
+      line-height: 1.5;
+    }
+    .modal-actions { display: flex; gap: var(--s-3); justify-content: flex-end; }
+    .btn-modal-cancel {
+      padding: var(--s-2) var(--s-4);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      color: var(--fg-muted);
+      font-family: var(--font-sans);
+      font-size: var(--fs-sm);
+      cursor: pointer;
+    }
+    .btn-modal-confirm {
+      padding: var(--s-2) var(--s-5);
+      background: #10B981;
+      border: none;
+      border-radius: var(--r-md);
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold);
+      cursor: pointer;
+    }
+    .btn-modal-confirm:hover { background: #059669; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══════════════════════════════════════════ VENDOR NAV ══ -->
+  <aside class="nav">
+    <div class="nav-brand">
+      <div class="nav-brand-mark">A</div>
+      <div>
+        <div class="nav-brand-name">Aker Procure</div>
+        <div class="nav-brand-sub">Vendor Portal<span class="vendor-portal-tag">●&nbsp;Live</span></div>
+      </div>
+    </div>
+
+    <nav class="nav-links">
+      <a class="nav-item" href="#">
+        <span class="nav-icon">⊞</span> Dashboard
+      </a>
+
+      <div class="nav-section-label">Sourcing</div>
+      <a class="nav-item" href="#">
+        <span class="nav-icon">📋</span> Active RFQs
+        <span class="nav-badge">2</span>
+      </a>
+      <a class="nav-item" href="#">
+        <span class="nav-icon">🔍</span> Pre-Bid Queries
+      </a>
+
+      <div class="nav-section-label">My Bids</div>
+      <a class="nav-item" href="technical-bid.html">
+        <span class="nav-icon">📐</span> Technical Bids
+      </a>
+      <a class="nav-item active" href="commercial-bid.html">
+        <span class="nav-icon">💰</span> Commercial Bids
+      </a>
+
+      <div class="nav-section-label">Account</div>
+      <a class="nav-item" href="#">
+        <span class="nav-icon">📁</span> Documents
+      </a>
+      <a class="nav-item" href="#">
+        <span class="nav-icon">👤</span> Vendor Profile
+      </a>
+    </nav>
+
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">FI</div>
+        <div>
+          <div class="user-name">R. Patel</div>
+          <div class="user-email">Flowline Industrial</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <!-- /vendor nav -->
+
+  <!-- ══════════════════════════════════════════════════ MAIN ══ -->
+  <main class="main cbid-main">
+    <button class="topbar-hamburger" aria-label="Toggle navigation">☰</button>
+
+    <!-- Submitted success banner (hidden until submit) -->
+    <div class="submitted-banner" id="submitted-banner">
+      <div class="submitted-icon">✓</div>
+      <div>
+        <div class="submitted-title">Commercial bid submitted successfully</div>
+        <div class="submitted-sub">Your bid is sealed and under evaluation. You will be notified of the outcome.</div>
+      </div>
+      <div class="submitted-time" id="submitted-time"></div>
+    </div>
+
+    <!-- ── Page header ── -->
+    <div class="cbid-header">
+      <div class="cbid-crumb">
+        <a href="#">My Bids</a> /
+        <a href="#">Commercial Bids</a> /
+        <span class="mono">RFQ-2026-038</span>
+      </div>
+      <div class="cbid-title-row">
+        <h1 class="cbid-title">Commercial Bid Submission</h1>
+        <span class="badge badge-pending" id="bid-status-badge">Pending Submission</span>
+      </div>
+      <div class="cbid-meta">
+        <span>RFQ&nbsp;<strong class="mono">RFQ-2026-038</strong></span>
+        <span>Project&nbsp;<strong>Kakinada Offshore Phase II</strong></span>
+        <span>Category&nbsp;<strong>Rotating Equipment</strong></span>
+        <span>Deadline&nbsp;<strong class="mono">28 May 2026, 17:00</strong></span>
+      </div>
+    </div>
+
+    <!-- ── Unlock banner ── -->
+    <div class="unlock-banner">
+      <div class="unlock-icon">🔓</div>
+      <div>
+        <div class="unlock-label">Commercial envelope is now open</div>
+        <div class="unlock-sub">Technical evaluation is complete. You may now enter your commercial pricing and terms.</div>
+      </div>
+      <div class="unlock-deadline">
+        <div class="unlock-deadline-val">5d 14h 22m</div>
+        <div class="unlock-deadline-label">Remaining to submit</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════ SECTION 1 — LINE ITEM PRICING ══ -->
+    <div class="cbid-section">
+      <div class="cbid-section-header">
+        <div class="cbid-section-icon">₹</div>
+        <span class="cbid-section-title">Line Item Pricing</span>
+        <span class="cbid-section-hint">All values in INR · Exclusive of GST</span>
+      </div>
+      <div class="cbid-section-body">
+        <table class="li-table">
+          <thead>
+            <tr>
+              <th style="width:32px;">#</th>
+              <th>Description</th>
+              <th class="num">Qty</th>
+              <th class="num" style="width:130px;">Unit Rate (₹)</th>
+              <th class="num" style="width:130px;">Total (₹)</th>
+              <th class="num" style="width:70px;">HSN/SAC</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="li-num"><span class="mono" style="color:var(--fg-subtle)">01</span></td>
+              <td>
+                <div class="li-desc">Centrifugal Pump — API 610 BB2</div>
+                <div class="li-spec">MOC: SS316L · Seal: Mech. Type-2 · Driver: 37kW IE3 Motor</div>
+              </td>
+              <td class="li-qty">4 NOS</td>
+              <td>
+                <div class="li-input-wrap">
+                  <span class="li-currency-prefix">₹</span>
+                  <input class="li-input" type="text" id="rate-1" value="8,40,000" oninput="calcTotal(1)" />
+                </div>
+              </td>
+              <td class="li-total-val computed" id="total-1">₹ 33,60,000</td>
+              <td><span class="mono" style="font-size:var(--fs-xs);color:var(--fg-subtle)">8413</span></td>
+            </tr>
+            <tr>
+              <td class="li-num"><span class="mono" style="color:var(--fg-subtle)">02</span></td>
+              <td>
+                <div class="li-desc">Heat Exchanger Bundle — Shell &amp; Tube, TEMA-R</div>
+                <div class="li-spec">Shell: CS · Tubes: SS304 · Design Press: 25 bar · Duty: 1.8 MW</div>
+              </td>
+              <td class="li-qty">2 NOS</td>
+              <td>
+                <div class="li-input-wrap">
+                  <span class="li-currency-prefix">₹</span>
+                  <input class="li-input" type="text" id="rate-2" value="14,20,000" oninput="calcTotal(2)" />
+                </div>
+              </td>
+              <td class="li-total-val computed" id="total-2">₹ 28,40,000</td>
+              <td><span class="mono" style="font-size:var(--fs-xs);color:var(--fg-subtle)">8419</span></td>
+            </tr>
+            <tr>
+              <td class="li-num"><span class="mono" style="color:var(--fg-subtle)">03</span></td>
+              <td>
+                <div class="li-desc">Gate Valve — Full Bore, Flanged, Class 300</div>
+                <div class="li-spec">DN150 · Body: A216 WCB · Trim: SS316 · OS&amp;Y</div>
+              </td>
+              <td class="li-qty">12 NOS</td>
+              <td>
+                <div class="li-input-wrap">
+                  <span class="li-currency-prefix">₹</span>
+                  <input class="li-input" type="text" id="rate-3" value="38,500" oninput="calcTotal(3)" />
+                </div>
+              </td>
+              <td class="li-total-val computed" id="total-3">₹ 4,62,000</td>
+              <td><span class="mono" style="font-size:var(--fs-xs);color:var(--fg-subtle)">8481</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="li-total-bar">
+          <div class="total-item">
+            <div class="total-label">Sub-total</div>
+            <div class="total-val" id="subtotal-val">₹ 66,62,000</div>
+          </div>
+          <div class="total-item">
+            <div class="total-label">Add. costs</div>
+            <div class="total-val" id="addcost-val">₹ 2,15,000</div>
+          </div>
+          <div class="total-item">
+            <div class="total-label">Grand Total</div>
+            <div class="total-val grand" id="grandtotal-val">₹ 68,77,000</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════ SECTION 2 — ADDITIONAL COSTS ══ -->
+    <div class="cbid-section">
+      <div class="cbid-section-header">
+        <div class="cbid-section-icon">🚚</div>
+        <span class="cbid-section-title">Additional Costs</span>
+        <span class="cbid-section-hint">Leave 0 if included in line item pricing above</span>
+      </div>
+      <div class="cbid-section-body">
+        <div class="cost-grid">
+          <div class="cost-field">
+            <label>Transport / Freight</label>
+            <div class="cost-input-wrap">
+              <span class="cost-prefix">₹</span>
+              <input class="cost-input" type="text" value="1,25,000" />
+            </div>
+            <div class="field-hint">Door delivery to Kakinada Port, AP</div>
+          </div>
+          <div class="cost-field">
+            <label>Packaging &amp; Crating</label>
+            <div class="cost-input-wrap">
+              <span class="cost-prefix">₹</span>
+              <input class="cost-input" type="text" value="90,000" />
+            </div>
+            <div class="field-hint">Export-grade wooden crating for offshore delivery</div>
+          </div>
+          <div class="cost-field">
+            <label>Insurance</label>
+            <div class="cost-input-wrap">
+              <span class="cost-prefix">₹</span>
+              <input class="cost-input" type="text" placeholder="0" />
+            </div>
+            <div class="field-hint">Transit insurance — leave blank if buyer arranges</div>
+          </div>
+          <div class="cost-field">
+            <label>Inspection / Testing</label>
+            <div class="cost-input-wrap">
+              <span class="cost-prefix">₹</span>
+              <input class="cost-input" type="text" placeholder="0" />
+            </div>
+            <div class="field-hint">Third-party stage inspection charges, if any</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═════════════════════ SECTION 3 — PROPOSED AMENDMENTS ══ -->
+    <div class="cbid-section">
+      <div class="cbid-section-header">
+        <div class="cbid-section-icon">⚖</div>
+        <span class="cbid-section-title">Proposed Terms &amp; Amendments</span>
+        <span class="cbid-section-hint">Any deviation from RFQ terms will be flagged on the evaluation matrix</span>
+      </div>
+      <div class="cbid-section-body">
+        <div class="amend-grid">
+          <!-- INCO Terms -->
+          <div class="amend-field">
+            <label>INCO Terms</label>
+            <div class="amend-rfq-val">
+              RFQ requests: <span class="amend-rfq-tag">CIF — Kakinada Port</span>
+            </div>
+            <select class="amend-select" id="inco-select" onchange="checkDeviation('inco')">
+              <option value="cif" selected>CIF — Cost, Insurance &amp; Freight</option>
+              <option value="fob">FOB — Free On Board</option>
+              <option value="exw">EXW — Ex-Works</option>
+              <option value="dap">DAP — Delivered At Place</option>
+              <option value="ddp">DDP — Delivered Duty Paid</option>
+            </select>
+            <div class="deviation-tag" id="inco-dev" style="display:none;"><span class="dot"></span> Deviation from RFQ</div>
+          </div>
+
+          <!-- Payment Terms -->
+          <div class="amend-field">
+            <label>Payment Terms</label>
+            <div class="amend-rfq-val">
+              RFQ requests: <span class="amend-rfq-tag">30% Adv · 60% Dispatch · 10% DLP</span>
+            </div>
+            <select class="amend-select" id="pay-select" onchange="checkDeviation('pay')">
+              <option value="std" selected>30% Advance · 60% on Dispatch · 10% DLP</option>
+              <option value="alt1">50% Advance · 50% on Dispatch</option>
+              <option value="alt2">100% Advance</option>
+              <option value="alt3">Against LC at Sight</option>
+              <option value="alt4">Net 45 days from Invoice</option>
+            </select>
+            <div class="deviation-tag" id="pay-dev" style="display:none;"><span class="dot"></span> Deviation from RFQ</div>
+          </div>
+
+          <!-- Delivery Timeline -->
+          <div class="amend-field">
+            <label>Delivery Timeline</label>
+            <div class="amend-rfq-val">
+              RFQ requests: <span class="amend-rfq-tag">16 weeks from PO</span>
+            </div>
+            <input class="amend-input" type="text" id="delivery-input" value="14 weeks from PO date" oninput="checkDeviation('delivery')" />
+            <div class="deviation-tag" id="delivery-dev"><span class="dot"></span> Deviation from RFQ</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════ SECTION 4 — DOCUMENTS ══ -->
+    <div class="cbid-section">
+      <div class="cbid-section-header">
+        <div class="cbid-section-icon">📎</div>
+        <span class="cbid-section-title">Supporting Documents</span>
+        <span class="cbid-section-hint">Price schedule, datasheet, certifications</span>
+      </div>
+      <div class="cbid-section-body">
+        <div class="doc-upload-zone" onclick="simulateUpload()">
+          <div class="doc-upload-icon">📤</div>
+          <div class="doc-upload-label">Click to upload or drag &amp; drop</div>
+          <div class="doc-upload-hint">PDF, XLSX, DWG · Max 25 MB per file</div>
+        </div>
+        <div class="doc-list">
+          <div class="doc-item">
+            <div class="doc-icon">📄</div>
+            <div class="doc-name">Flowline_Price_Schedule_RFQ038.pdf</div>
+            <div class="doc-size">342 KB</div>
+            <div class="doc-remove" onclick="removeDoc(this)">✕</div>
+          </div>
+          <div class="doc-item">
+            <div class="doc-icon">📊</div>
+            <div class="doc-name">Commercial_Deviations_Summary.xlsx</div>
+            <div class="doc-size">58 KB</div>
+            <div class="doc-remove" onclick="removeDoc(this)">✕</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ SECTION 5 — COMMENTS ══ -->
+    <div class="cbid-section">
+      <div class="cbid-section-header">
+        <div class="cbid-section-icon">💬</div>
+        <span class="cbid-section-title">Remarks &amp; Clarifications</span>
+        <span class="cbid-section-hint">Optional — visible to Purchase team after envelope opens</span>
+      </div>
+      <div class="cbid-section-body">
+        <textarea class="comments-textarea" placeholder="e.g. Delivery timeline can be expedited to 12 weeks for an additional 3% premium. Insurance can be included on request…">Delivery can be expedited to 12 weeks with a 3% premium on pump items. All prices firm for 60 days. GST extra as applicable. Payment terms proposed as per our standard credit policy.</textarea>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════ SUBMIT FOOTER ══ -->
+    <div class="submit-footer" id="submit-footer">
+      <div class="submit-disclaimer">
+        <strong>Sealed submission:</strong> Once submitted, your commercial bid is encrypted and cannot be viewed by the buyer until the evaluation window opens or all vendors reach a terminal technical status.
+      </div>
+      <button class="btn-save-draft">Save Draft</button>
+      <button class="btn-submit-bid" onclick="openConfirmModal()">
+        🔒 &nbsp;Seal &amp; Submit Bid
+      </button>
+    </div>
+
+  </main>
+  <!-- /main -->
+
+</div><!-- /app -->
+
+<!-- ══════════════════════════════════════ CONFIRM MODAL ══ -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal-box">
+    <div class="modal-icon">🔒</div>
+    <div class="modal-title">Confirm bid submission?</div>
+    <div class="modal-body">
+      Once sealed, your commercial bid cannot be modified. The values below will be securely transmitted and locked until the evaluation window opens.
+    </div>
+    <div class="modal-summary">
+      <div class="modal-sum-row"><span class="lbl">Vendor</span><span class="val">Flowline Industrial Pvt. Ltd.</span></div>
+      <div class="modal-sum-row"><span class="lbl">RFQ</span><span class="val mono">RFQ-2026-038</span></div>
+      <div class="modal-sum-row"><span class="lbl">INCO Terms</span><span class="val">CIF — Kakinada Port</span></div>
+      <div class="modal-sum-row"><span class="lbl">Payment Terms</span><span class="val">30% Adv · 60% Dispatch · 10% DLP</span></div>
+      <div class="modal-sum-row"><span class="lbl">Delivery</span><span class="val">14 weeks from PO date <span class="deviation-tag" style="margin-left:6px;"><span class="dot"></span> Deviation</span></span></div>
+      <div class="modal-sum-row sep"><span class="lbl">Grand Total (ex-GST)</span><span class="val green">₹ 68,77,000</span></div>
+    </div>
+    <div class="modal-warn">
+      ⚠ Deviations detected in <strong>Delivery Timeline</strong>. These will be flagged on the evaluation matrix for Purchase review.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeConfirmModal()">Cancel</button>
+      <button class="btn-modal-confirm" onclick="confirmSubmit()">Confirm &amp; Seal Bid</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Qty lookup ──
+  var qtys = { 1: 4, 2: 2, 3: 12 };
+
+  function parseINR(str) {
+    return parseInt((str || '0').replace(/[^0-9]/g, ''), 10) || 0;
+  }
+  function formatINR(n) {
+    return n.toLocaleString('en-IN');
+  }
+
+  function calcTotal(idx) {
+    var rate = parseINR(document.getElementById('rate-' + idx).value);
+    var total = rate * qtys[idx];
+    document.getElementById('total-' + idx).textContent = '₹ ' + formatINR(total);
+    updateGrandTotal();
+  }
+
+  function updateGrandTotal() {
+    var sub = 0;
+    for (var i = 1; i <= 3; i++) {
+      var rate = parseINR(document.getElementById('rate-' + i).value);
+      sub += rate * qtys[i];
+    }
+    document.getElementById('subtotal-val').textContent = '₹ ' + formatINR(sub);
+    var addCosts = 125000 + 90000; // transport + packaging
+    document.getElementById('addcost-val').textContent = '₹ ' + formatINR(addCosts);
+    document.getElementById('grandtotal-val').textContent = '₹ ' + formatINR(sub + addCosts);
+  }
+
+  function checkDeviation(type) {
+    if (type === 'inco') {
+      var dev = document.getElementById('inco-select').value !== 'cif';
+      document.getElementById('inco-dev').style.display = dev ? 'inline-flex' : 'none';
+    } else if (type === 'pay') {
+      var dev = document.getElementById('pay-select').value !== 'std';
+      document.getElementById('pay-dev').style.display = dev ? 'inline-flex' : 'none';
+    } else if (type === 'delivery') {
+      var val = document.getElementById('delivery-input').value.trim().toLowerCase();
+      var isDefault = val === '16 weeks from po' || val === '16 weeks from po date';
+      document.getElementById('delivery-dev').style.display = isDefault ? 'none' : 'inline-flex';
+    }
+  }
+
+  function simulateUpload() {
+    var docList = document.querySelector('.doc-list');
+    var newDoc = document.createElement('div');
+    newDoc.className = 'doc-item';
+    newDoc.innerHTML = '<div class="doc-icon">📋</div>'
+      + '<div class="doc-name">Warranty_Certificate_Flowline.pdf</div>'
+      + '<div class="doc-size">124 KB</div>'
+      + '<div class="doc-remove" onclick="removeDoc(this)">✕</div>';
+    docList.appendChild(newDoc);
+  }
+
+  function removeDoc(el) {
+    el.closest('.doc-item').remove();
+  }
+
+  function openConfirmModal() {
+    document.getElementById('confirm-modal').classList.add('open');
+  }
+  function closeConfirmModal() {
+    document.getElementById('confirm-modal').classList.remove('open');
+  }
+
+  function confirmSubmit() {
+    closeConfirmModal();
+
+    // Update status badge
+    var badge = document.getElementById('bid-status-badge');
+    badge.className = 'badge badge-success';
+    badge.textContent = 'Submitted';
+
+    // Show success banner
+    var banner = document.getElementById('submitted-banner');
+    banner.classList.add('visible');
+    var now = new Date();
+    document.getElementById('submitted-time').textContent =
+      now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      + '\n' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+    // Disable submit footer
+    var footer = document.getElementById('submit-footer');
+    footer.innerHTML = '<div style="font-size:var(--fs-sm);color:var(--fg-muted);padding:var(--s-2) 0;">'
+      + '🔒 &nbsp;Bid sealed and submitted. All fields are now read-only.'
+      + '</div>';
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Disable all inputs
+    document.querySelectorAll('input, select, textarea').forEach(function(el) {
+      el.disabled = true;
+      el.style.opacity = '0.6';
+    });
+  }
+</script>
+</body>
+</html>

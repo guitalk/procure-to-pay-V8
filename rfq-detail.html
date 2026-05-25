@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — RFQ-2026-038</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .main.rfqd-main { padding: 0; max-width: 1040px; }
+    .rfqd-inner { padding: var(--s-5) var(--s-6); }
+
+    /* ── Sticky header wrapper (back-bar + tabs) — single block, guaranteed solid bg ── */
+    .rfqd-sticky-header {
+      position: sticky; top: 0; z-index: 20;
+      background: #111217; /* solid fallback; matches --bg-surface in dark theme */
+      background: var(--bg-surface, #111217);
+      box-shadow: 0 1px 0 var(--border);
+    }
+
+    /* ── Back bar ── */
+    .rfqd-back-bar {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-3) var(--s-6);
+      border-bottom: 1px solid var(--border);
+    }
+    .rfqd-back-btn {
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      padding: var(--s-2) var(--s-3);
+      background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--r-md); color: var(--fg-muted);
+      font-family: var(--font-sans); font-size: var(--fs-sm);
+      font-weight: var(--fw-medium); text-decoration: none;
+      cursor: pointer; transition: background 0.12s, color 0.12s;
+    }
+    .rfqd-back-btn:hover { background: var(--bg-elevated); color: var(--fg); }
+    .rfqd-back-div { width: 1px; height: 18px; background: var(--border); }
+    .rfqd-crumb { font-size: var(--fs-sm); color: var(--fg-subtle); display: flex; align-items: center; gap: var(--s-2); }
+    .rfqd-crumb a { color: var(--fg-muted); text-decoration: none; }
+    .rfqd-crumb a:hover { color: var(--info); }
+    .rfqd-crumb .sep { color: var(--border-strong); }
+    .rfqd-crumb .cur { color: var(--fg); font-weight: var(--fw-medium); font-family: var(--font-mono); }
+
+    /* ── Tab strip (inside sticky wrapper — no longer needs its own sticky) ── */
+    .rfqd-tabs {
+      display: flex; align-items: center; gap: 2px;
+      padding: 0 var(--s-6);
+    }
+    .rfqd-tab {
+      padding: var(--s-3) var(--s-4);
+      font-size: var(--fs-sm); font-weight: var(--fw-medium);
+      color: var(--fg-muted); text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: color 0.12s, border-color 0.12s;
+      white-space: nowrap; cursor: pointer; background: none; border-top: none; border-left: none; border-right: none;
+      font-family: var(--font-sans);
+    }
+    .rfqd-tab:hover { color: var(--fg); }
+    .rfqd-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── Page header (RFQ Details tab) ── */
+    .rfqd-header { margin-bottom: var(--s-5); }
+    .rfqd-title-row { display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-2); flex-wrap: wrap; }
+    .rfqd-title { font-size: var(--fs-2xl); font-weight: var(--fw-semibold); letter-spacing: -0.01em; }
+    .rfqd-meta { display: flex; gap: var(--s-5); flex-wrap: wrap; font-size: var(--fs-sm); color: var(--fg-muted); }
+    .rfqd-meta strong { color: var(--fg); font-weight: var(--fw-medium); }
+
+    /* ── KPI strip (RFQ Details) ── */
+    .rfqd-kpi {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: var(--s-3); margin-bottom: var(--s-5);
+    }
+    .rfqd-kpi-tile {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: var(--s-4);
+    }
+    .rfqd-kpi-val { font-family: var(--font-mono); font-size: var(--fs-xl); font-weight: var(--fw-semibold); color: var(--fg); margin-bottom: 2px; }
+    .rfqd-kpi-val.amber { color: #F59E0B; }
+    .rfqd-kpi-val.green { color: #10B981; }
+    .rfqd-kpi-val.red   { color: #EF4444; }
+    .rfqd-kpi-label { font-size: var(--fs-xs); color: var(--fg-subtle); }
+
+    /* ── Section card ── */
+    .rfqd-section {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); overflow: hidden; margin-bottom: var(--s-4);
+    }
+    .rfqd-section-head {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-4) var(--s-5); border-bottom: 1px solid var(--border-subtle);
+    }
+    .rfqd-section-icon {
+      width: 26px; height: 26px; border-radius: var(--r-sm);
+      background: var(--bg-subtle); display: grid; place-items: center;
+      font-size: 13px; flex-shrink: 0;
+    }
+    .rfqd-section-title { font-weight: var(--fw-semibold); font-size: var(--fs-md); }
+    .rfqd-section-hint { margin-left: auto; font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .rfqd-section-body { padding: var(--s-5); }
+
+    /* ── Terms grid ── */
+    .terms-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-4); }
+    .term-field label {
+      display: block; font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+      color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--s-1);
+    }
+    .term-val { font-size: var(--fs-sm); color: var(--fg); }
+    .term-val.mono { font-family: var(--font-mono); }
+
+    /* ── Vendor invite table ── */
+    .invite-table { width: 100%; border-collapse: collapse; }
+    .invite-table th {
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--fg-subtle);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: var(--s-2) var(--s-4); text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .invite-table td {
+      padding: var(--s-3) var(--s-4); font-size: var(--fs-sm);
+      border-bottom: 1px solid var(--border-subtle); vertical-align: middle;
+    }
+    .invite-table tr:last-child td { border-bottom: none; }
+    .invite-table tbody tr { cursor: default; transition: background 0.1s; }
+    .invite-table tbody tr:hover td { background: var(--bg-subtle); }
+    .vendor-cell { display: flex; align-items: center; gap: var(--s-3); }
+    .vendor-av {
+      width: 32px; height: 32px; border-radius: var(--r-sm);
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      display: grid; place-items: center;
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--fg-muted);
+      flex-shrink: 0;
+    }
+    .vendor-av.approved { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.25); color: #10B981; }
+    .vendor-av.rejected { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); color: #EF4444; }
+    .vendor-av.query    { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.25); color: #F59E0B; }
+    .vendor-name-val { font-weight: var(--fw-medium); color: var(--fg); }
+    .vendor-cat-val  { font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: 2px; }
+    .participation-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: var(--fs-xs); font-weight: var(--fw-medium);
+      padding: 2px 8px; border-radius: 20px;
+    }
+    .chip-active   { background: rgba(6,182,212,0.10); color: var(--info); border: 1px solid rgba(6,182,212,0.2); }
+    .chip-regret   { background: rgba(239,68,68,0.08); color: #EF4444; border: 1px solid rgba(239,68,68,0.18); }
+    .chip-pending  { background: var(--bg-subtle); color: var(--fg-muted); border: 1px solid var(--border); }
+    .last-activity { font-size: var(--fs-xs); color: var(--fg-subtle); font-family: var(--font-mono); }
+
+    /* ── Line items table ── */
+    .li-table { width: 100%; border-collapse: collapse; }
+    .li-table th {
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--fg-subtle);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: var(--s-2) var(--s-3); text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .li-table th.r { text-align: right; }
+    .li-table td {
+      padding: var(--s-3); font-size: var(--fs-sm);
+      border-bottom: 1px solid var(--border-subtle); vertical-align: middle;
+    }
+    .li-table tr:last-child td { border-bottom: none; }
+    .li-desc { font-weight: var(--fw-medium); color: var(--fg); }
+    .li-spec { font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: 2px; }
+    .li-num  { font-family: var(--font-mono); font-size: var(--fs-sm); text-align: right; }
+    .li-doc  { font-size: var(--fs-xs); color: var(--info); cursor: pointer; }
+
+    /* ── Documents ── */
+    .doc-list { display: flex; flex-direction: column; gap: var(--s-2); }
+    .doc-row {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-3) var(--s-4); background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle); border-radius: var(--r-md);
+    }
+    .doc-icon { font-size: 16px; flex-shrink: 0; }
+    .doc-name { font-size: var(--fs-sm); font-weight: var(--fw-medium); flex: 1; }
+    .doc-meta { font-size: var(--fs-xs); color: var(--fg-subtle); font-family: var(--font-mono); }
+
+    /* ── Timeline ── */
+    .tl-list { display: flex; flex-direction: column; }
+    .tl-item { display: flex; gap: var(--s-3); padding-bottom: var(--s-4); position: relative; }
+    .tl-item:not(:last-child)::before {
+      content: ''; position: absolute; left: 11px; top: 26px;
+      width: 2px; bottom: 0; background: var(--border-subtle);
+    }
+    .tl-dot {
+      width: 24px; height: 24px; border-radius: 50%;
+      display: grid; place-items: center; font-size: 11px;
+      flex-shrink: 0; border: 2px solid transparent;
+    }
+    .tl-done { background: rgba(16,185,129,0.15); border-color: #10B981; color: #10B981; }
+    .tl-warn { background: rgba(245,158,11,0.15); border-color: #F59E0B; color: #F59E0B; }
+    .tl-info { background: rgba(6,182,212,0.15); border-color: var(--info); color: var(--info); }
+    .tl-body { flex: 1; padding-top: 2px; }
+    .tl-label { font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--fg); }
+    .tl-sub   { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 2px; line-height: 1.5; }
+    .tl-date  { font-size: var(--fs-xs); color: var(--fg-subtle); font-family: var(--font-mono); margin-top: 2px; }
+
+    /* ══════════════════════════════════════════
+       TECHNICAL EVALUATION TAB STYLES
+    ══════════════════════════════════════════ */
+    .tech-inner { padding: var(--s-5) var(--s-6); max-width: 1080px; }
+
+    /* KPI strip */
+    .eval-strip {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: var(--s-3); margin-bottom: var(--s-5);
+    }
+    .eval-stat {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--s-3) var(--s-4);
+    }
+    .eval-stat-value {
+      font-family: var(--font-mono); font-size: var(--fs-xl);
+      font-weight: var(--fw-semibold); color: var(--fg);
+      line-height: 1; margin-bottom: var(--s-1);
+    }
+    .eval-stat-label { font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .eval-stat.color-warn    .eval-stat-value { color: var(--warning, #F59E0B); }
+    .eval-stat.color-info    .eval-stat-value { color: var(--info, #06B6D4); }
+    .eval-stat.color-success .eval-stat-value { color: var(--success, #22C55E); }
+    .eval-stat.color-danger  .eval-stat-value { color: var(--danger, #EF4444); }
+
+    /* Vendor evaluation card */
+    .vendor-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      margin-bottom: var(--s-4);
+      overflow: hidden;
+    }
+    .vendor-card.state-approved { border-color: rgba(34,197,94,0.3); }
+    .vendor-card.state-rejected { border-color: rgba(239,68,68,0.2); opacity: 0.75; }
+    .vendor-card.state-tq       { border-color: rgba(245,158,11,0.3); }
+
+    .vendor-card-header {
+      display: flex; align-items: center; gap: var(--s-4);
+      padding: var(--s-4) var(--s-5);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .vendor-avatar {
+      width: 40px; height: 40px; border-radius: var(--r-md);
+      background: var(--bg-subtle);
+      font-family: var(--font-mono); font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold); color: var(--fg-muted);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .vendor-name { font-weight: var(--fw-semibold); font-size: var(--fs-md); color: var(--fg); }
+    .vendor-meta-row {
+      display: flex; gap: var(--s-4); margin-top: var(--s-1);
+      font-size: var(--fs-xs); color: var(--fg-subtle);
+    }
+    .vendor-meta-row span { display: flex; align-items: center; gap: 4px; }
+    .vendor-card-header .badge { margin-left: auto; flex-shrink: 0; }
+    .vendor-card-header .header-actions {
+      display: flex; gap: var(--s-2); margin-left: var(--s-3);
+    }
+    .panel-chevron {
+      width: 24px; height: 24px; display: grid; place-items: center;
+      color: var(--fg-subtle); flex-shrink: 0;
+      transition: transform 0.2s; cursor: pointer;
+      background: none; border: none; padding: 0;
+      border-radius: var(--r-sm); margin-left: var(--s-2);
+    }
+    .panel-chevron:hover { color: var(--fg); background: var(--bg-subtle); }
+    .panel-chevron.open { transform: rotate(180deg); }
+
+    /* Card body */
+    .vendor-card-body { padding: var(--s-4) var(--s-5); }
+    .card-section-label {
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--fg-subtle); margin-bottom: var(--s-3);
+    }
+    .bid-comment-block {
+      background: var(--bg-subtle); border-radius: var(--r-md);
+      padding: var(--s-3) var(--s-4); font-size: var(--fs-sm);
+      color: var(--fg-muted); font-style: italic;
+      margin-bottom: var(--s-4); border-left: 3px solid var(--border-strong);
+    }
+
+    /* Line items inside vendor card */
+    .li-section { margin-bottom: var(--s-4); }
+    .li-table-v {
+      width: 100%; border: 1px solid var(--border);
+      border-radius: var(--r-md); overflow: hidden; font-size: var(--fs-sm);
+    }
+    .li-table-v th {
+      background: var(--bg-subtle); padding: var(--s-2) var(--s-3);
+      text-align: left; font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+      letter-spacing: 0.05em; color: var(--fg-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .li-table-v td {
+      padding: var(--s-3); border-bottom: 1px solid var(--border);
+      color: var(--fg-muted); vertical-align: middle;
+    }
+    .li-table-v tr:last-child td { border-bottom: none; }
+    .li-table-v .item-name { color: var(--fg); font-weight: var(--fw-medium); }
+    .li-table-v .mono { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .doc-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--r-sm); padding: 2px 8px;
+      font-size: var(--fs-xs); color: var(--fg-muted);
+      cursor: pointer; text-decoration: none; margin-right: 4px;
+    }
+    .doc-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* TQ thread */
+    .tq-section { margin-top: var(--s-4); }
+    .tq-thread {
+      background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--r-md); overflow: hidden;
+    }
+    .tq-thread-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--s-3) var(--s-4); border-bottom: 1px solid var(--border);
+      background: var(--bg-surface);
+    }
+    .tq-thread-title {
+      font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--fg);
+      display: flex; align-items: center; gap: var(--s-2);
+    }
+    .tq-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warning, #F59E0B); flex-shrink: 0; }
+    .tq-broadcast-tag {
+      font-size: var(--fs-xs); color: var(--fg-subtle);
+      background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--r-sm); padding: 1px 6px;
+    }
+    .tq-message { padding: var(--s-3) var(--s-4); font-size: var(--fs-sm); border-bottom: 1px solid var(--border); }
+    .tq-message:last-child { border-bottom: none; }
+    .tq-msg-meta { display: flex; gap: var(--s-2); align-items: center; margin-bottom: var(--s-2); }
+    .tq-author { font-weight: var(--fw-semibold); font-size: var(--fs-xs); color: var(--fg); }
+    .tq-author.vendor { color: var(--info, #06B6D4); }
+    .tq-time { font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .tq-msg-body { color: var(--fg-muted); line-height: 1.6; }
+    .tq-awaiting {
+      display: flex; align-items: center; gap: var(--s-2);
+      padding: var(--s-3) var(--s-4); font-size: var(--fs-xs);
+      color: var(--fg-subtle); font-style: italic;
+    }
+    .tq-awaiting-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--warning, #F59E0B); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .tq-compose { padding: var(--s-3) var(--s-4); border-top: 1px solid var(--border); background: var(--bg-surface); }
+    .tq-compose textarea {
+      width: 100%; background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: var(--s-2) var(--s-3);
+      font-family: var(--font-sans); font-size: var(--fs-sm); color: var(--fg);
+      resize: none; height: 64px; margin-bottom: var(--s-2);
+    }
+    .tq-compose-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
+    .tq-broadcast-toggle {
+      display: flex; align-items: center; gap: var(--s-2);
+      font-size: var(--fs-xs); color: var(--fg-muted); cursor: pointer;
+    }
+    .toggle-pill { width: 28px; height: 16px; border-radius: 8px; background: var(--border-strong); position: relative; transition: background 0.2s; }
+    .toggle-pill::after { content: ''; width: 12px; height: 12px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left 0.2s; }
+    .toggle-pill.on { background: var(--accent); }
+    .toggle-pill.on::after { left: 14px; }
+
+    /* Action bar */
+    .eval-action-bar {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-3) var(--s-5);
+      background: var(--bg-subtle); border-top: 1px solid var(--border);
+    }
+    .eval-action-bar .action-note {
+      margin-left: auto; font-size: var(--fs-xs); color: var(--fg-subtle);
+    }
+
+    /* Rejection block */
+    .rejection-block {
+      display: flex; align-items: flex-start; gap: var(--s-3);
+      background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2);
+      border-radius: var(--r-md); padding: var(--s-3) var(--s-4); margin-bottom: var(--s-4);
+    }
+    .rejection-icon {
+      width: 28px; height: 28px; border-radius: var(--r-md);
+      background: rgba(239,68,68,0.12); color: var(--danger, #EF4444);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .rejection-label {
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+      letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--danger, #EF4444); margin-bottom: 4px;
+    }
+    .rejection-comment { font-size: var(--fs-sm); color: var(--fg-muted); }
+    .rejection-meta { font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: 4px; }
+    .card-divider { height: 1px; background: var(--border); margin: var(--s-4) 0; }
+    .collapsed-body { padding: var(--s-4) var(--s-5); }
+
+    /* ══════════════════════════════════════════
+       COMMERCIAL EVALUATION TAB STYLES
+    ══════════════════════════════════════════ */
+    .comm-inner { padding: var(--s-5) var(--s-6); max-width: 1080px; }
+    .comm-section {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); overflow: hidden; margin-bottom: var(--s-4);
+    }
+    .comm-section-head {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-4) var(--s-5); border-bottom: 1px solid var(--border);
+    }
+    .comm-section-title { font-weight: var(--fw-semibold); font-size: var(--fs-md); }
+    .comm-section-hint { margin-left: auto; font-size: var(--fs-xs); color: var(--fg-subtle); }
+
+    /* Bid matrix table */
+    .bid-matrix-table { width: 100%; border-collapse: collapse; }
+    .bid-matrix-table th {
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--fg-subtle);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: var(--s-3) var(--s-4); text-align: left;
+      border-bottom: 1px solid var(--border); background: var(--bg-subtle);
+    }
+    .bid-matrix-table th.r { text-align: right; }
+    .bid-matrix-table td {
+      padding: var(--s-3) var(--s-4); font-size: var(--fs-sm);
+      border-bottom: 1px solid var(--border-subtle); vertical-align: middle;
+    }
+    .bid-matrix-table tr:last-child td { border-bottom: none; }
+    .bid-matrix-table tr:hover td { background: var(--bg-subtle); }
+    .price-val { font-family: var(--font-mono); font-weight: var(--fw-semibold); text-align: right; }
+    .price-total { font-family: var(--font-mono); font-weight: var(--fw-semibold); font-size: var(--fs-md); text-align: right; }
+    .price-lowest { color: var(--success, #22C55E); }
+    .price-higher { color: var(--fg); }
+    .deviation-tag {
+      display: inline-flex; padding: 2px 8px; border-radius: var(--r-sm);
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold); font-family: var(--font-mono);
+    }
+    .deviation-low  { background: rgba(34,197,94,0.12); color: var(--success, #22C55E); border: 1px solid rgba(34,197,94,0.25); }
+    .deviation-high { background: rgba(245,158,11,0.10); color: var(--warning, #F59E0B); border: 1px solid rgba(245,158,11,0.25); }
+
+    /* Normalize strip */
+    .normalize-strip {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-4) var(--s-5);
+      background: linear-gradient(90deg, rgba(6,182,212,0.06), transparent);
+      border-bottom: 1px solid var(--border);
+    }
+    .normalize-strip-icon {
+      width: 32px; height: 32px; border-radius: var(--r-md);
+      background: rgba(6,182,212,0.12); color: var(--info, #06B6D4);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .normalize-label { font-weight: var(--fw-semibold); font-size: var(--fs-sm); }
+    .normalize-sub { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 2px; }
+
+    /* ── Panel comment section ── */
+    .panel-comment-section {
+      margin-top: var(--s-4);
+      padding-top: var(--s-4);
+      border-top: 1px solid var(--border);
+    }
+    .panel-comment-area {
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      overflow: hidden;
+      background: var(--bg-subtle);
+    }
+    .panel-comment-trigger {
+      display: flex; align-items: center; gap: var(--s-2);
+      width: 100%; padding: var(--s-3) var(--s-4);
+      font-size: var(--fs-sm); color: var(--fg-muted);
+      background: none; border: none; text-align: left;
+      font-family: var(--font-sans); cursor: pointer;
+      transition: background 0.12s;
+    }
+    .panel-comment-trigger:hover { background: var(--bg-elevated); color: var(--fg); }
+    .panel-comment-expand { display: none; border-top: 1px solid var(--border); padding: var(--s-3) var(--s-4); }
+    .panel-comment-expand.open { display: block; }
+    .panel-comment-ta {
+      width: 100%; min-height: 72px; resize: none;
+      background: var(--bg-base); border: 1px solid var(--border);
+      border-radius: var(--r-sm); padding: var(--s-2) var(--s-3);
+      font-family: var(--font-sans); font-size: var(--fs-sm);
+      color: var(--fg); line-height: 1.5; margin-bottom: var(--s-3);
+      transition: border-color 0.12s;
+    }
+    .panel-comment-ta:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+    .panel-comment-ta::placeholder { color: var(--fg-subtle); }
+    .panel-comment-footer {
+      display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap;
+    }
+    .attach-btn-sm {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px var(--s-3); border: 1px dashed var(--border-strong);
+      border-radius: var(--r-sm); font-size: var(--fs-xs); color: var(--fg-subtle);
+      cursor: pointer; background: none; font-family: var(--font-sans);
+      transition: border-color 0.12s, color 0.12s;
+    }
+    .attach-btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+    .internal-toggle-wrap {
+      display: flex; align-items: center; gap: var(--s-2);
+      font-size: var(--fs-xs); color: var(--fg-muted); cursor: pointer;
+      user-select: none;
+    }
+    .int-pill {
+      width: 28px; height: 16px; border-radius: 8px;
+      background: var(--border-strong); position: relative;
+      transition: background 0.2s; flex-shrink: 0;
+    }
+    .int-pill::after {
+      content: ''; width: 12px; height: 12px; border-radius: 50%;
+      background: #fff; position: absolute; top: 2px; left: 2px;
+      transition: left 0.2s;
+    }
+    .int-pill.on { background: #F59E0B; }
+    .int-pill.on::after { left: 14px; }
+
+    /* Modal overlay */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--r-lg); width: 480px; max-width: 90vw; padding: var(--s-5);
+    }
+    .modal-title { font-size: var(--fs-lg); font-weight: var(--fw-semibold); margin-bottom: var(--s-2); }
+    .modal-sub { font-size: var(--fs-sm); color: var(--fg-muted); margin-bottom: var(--s-4); }
+    .modal-label { font-size: var(--fs-xs); font-weight: var(--fw-semibold); letter-spacing: 0.06em; color: var(--fg-muted); margin-bottom: var(--s-2); }
+    .modal-textarea {
+      width: 100%; background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: var(--s-3); font-family: var(--font-sans);
+      font-size: var(--fs-sm); color: var(--fg); resize: none; height: 80px; margin-bottom: var(--s-4);
+    }
+    .modal-actions { display: flex; gap: var(--s-3); justify-content: flex-end; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ══════════════════════════════════════════════ NAV ══ -->
+  <aside class="nav">
+    <div class="nav-brand">
+      <button class="hamburger-btn" onclick="toggleNav()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
+      <div class="nav-brand-text">
+        <div class="nav-brand-name">Procure</div>
+        <div class="nav-brand-sub">Procurement</div>
+      </div>
+    </div>
+    <div class="nav-items">
+      <a class="nav-item" href="index.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded" href="clients.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V7l6-4 6 4v7zM6 14V9h4v5"/></svg>
+          <span>Master Data</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="clients.html">Clients</a>
+          <a class="nav-item nav-sub-item" href="projects.html">Projects</a>
+          <a class="nav-item nav-sub-item" href="vendor-categories.html">Categories</a>
+          <a class="nav-item nav-sub-item" href="terms-conditions.html">Terms &amp; Conditions</a>
+          <a class="nav-item nav-sub-item" href="payment-terms.html">Payment Terms</a>
+          <a class="nav-item nav-sub-item" href="inco-terms.html">Inco Terms</a>
+          <a class="nav-item nav-sub-item" href="vendors.html">Vendors</a>
+        </div>
+      </div>
+      <a class="nav-item" href="purchase-requisitions.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Purchase Requisitions</span>
+      </a>
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded has-active" href="#">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+          <span>RFQs</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item active" href="rfq-list.html">All RFQs</a>
+          <a class="nav-item nav-sub-item" href="rfq-create.html">New RFQ</a>
+        </div>
+      </div>
+      <a class="nav-item" href="purchase-orders.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l1.5 8.5a1 1 0 0 0 1 .85h7a1 1 0 0 0 1-.85L14 4"/><path d="M2 4h12M6 7v3M10 7v3"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+    </div>
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">SM</div>
+        <div>
+          <div class="user-name">S. Mehta</div>
+          <div class="user-email">Engineering Lead</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════ MAIN ══ -->
+  <main class="main rfqd-main">
+    <button class="topbar-hamburger" onclick="toggleNav()">☰</button>
+
+    <!-- ── Sticky header: back-bar + tabs in one solid block ── -->
+    <div class="rfqd-sticky-header">
+      <div class="rfqd-back-bar">
+        <a class="rfqd-back-btn" href="rfq-list.html">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
+          All RFQs
+        </a>
+        <div class="rfqd-back-div"></div>
+        <div class="rfqd-crumb">
+          <a href="rfq-list.html">RFQs</a>
+          <span class="sep">/</span>
+          <span class="cur">RFQ-2026-038</span>
+          <span class="sep">/</span>
+          <span id="crumb-tab-label" style="color:var(--fg-muted);">RFQ Details</span>
+        </div>
+      </div>
+      <div class="rfqd-tabs">
+        <button class="rfqd-tab active" data-tab="rfq" onclick="switchTab('rfq')">RFQ Details</button>
+        <button class="rfqd-tab" data-tab="prebid" onclick="switchTab('prebid')">Pre-Bid Queries</button>
+        <button class="rfqd-tab" data-tab="tech" onclick="switchTab('tech')">Technical Evaluation</button>
+        <button class="rfqd-tab" data-tab="comm" onclick="switchTab('comm')">Commercial Evaluation</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════
+         TAB 1 — RFQ DETAILS
+    ════════════════════════════════════════════════════ -->
+    <div id="tab-rfq" class="rfqd-inner tab-panel">
+
+      <!-- Page header -->
+      <div class="rfqd-header">
+        <div class="rfqd-title-row">
+          <h1 class="rfqd-title">RFQ-2026-038</h1>
+          <span class="badge badge-info">Technical Evaluation</span>
+        </div>
+        <div style="font-size:var(--fs-md); color:var(--fg-muted); margin-bottom:var(--s-3);">
+          Rotating Equipment Supply — Kakinada Offshore Phase II
+        </div>
+        <div class="rfqd-meta">
+          <span>Client <strong>Aker Energy</strong></span>
+          <span>Project <strong>Kakinada Offshore Phase II</strong></span>
+          <span>Category <strong>Rotating Equipment</strong></span>
+          <span>Created by <strong>A. Desai · Purchase</strong></span>
+          <span>Published <strong class="mono">02 Apr 2026</strong></span>
+        </div>
+      </div>
+
+      <!-- KPI strip -->
+      <div class="rfqd-kpi">
+        <div class="rfqd-kpi-tile">
+          <div class="rfqd-kpi-val">4</div>
+          <div class="rfqd-kpi-label">Vendors invited</div>
+        </div>
+        <div class="rfqd-kpi-tile">
+          <div class="rfqd-kpi-val amber">3</div>
+          <div class="rfqd-kpi-label">Bids submitted</div>
+        </div>
+        <div class="rfqd-kpi-tile">
+          <div class="rfqd-kpi-val green">2</div>
+          <div class="rfqd-kpi-label">Technically approved</div>
+        </div>
+        <div class="rfqd-kpi-tile">
+          <div class="rfqd-kpi-val red">1</div>
+          <div class="rfqd-kpi-label">Rejected</div>
+        </div>
+      </div>
+
+      <!-- RFQ Terms -->
+      <div class="rfqd-section">
+        <div class="rfqd-section-head">
+          <div class="rfqd-section-icon">⚖</div>
+          <span class="rfqd-section-title">RFQ Terms</span>
+        </div>
+        <div class="rfqd-section-body">
+          <div class="terms-grid">
+            <div class="term-field">
+              <label>Technical Deadline</label>
+              <div class="term-val mono" style="color:#EF4444;">14 May 2026 · Closed</div>
+            </div>
+            <div class="term-field">
+              <label>Commercial Deadline</label>
+              <div class="term-val mono">28 May 2026 · 17:00 IST</div>
+            </div>
+            <div class="term-field">
+              <label>Validity Period</label>
+              <div class="term-val">90 days from submission</div>
+            </div>
+            <div class="term-field">
+              <label>Inco Terms</label>
+              <div class="term-val">CIF — Kakinada Port, AP</div>
+            </div>
+            <div class="term-field">
+              <label>Payment Terms</label>
+              <div class="term-val">30% Advance · 60% on Dispatch · 10% DLP</div>
+            </div>
+            <div class="term-field">
+              <label>Delivery Required By</label>
+              <div class="term-val mono">16 weeks from PO date</div>
+            </div>
+            <div class="term-field">
+              <label>Terms &amp; Conditions</label>
+              <div class="term-val">Standard Engineering T&amp;C v3.2 · Liquidated Damages @ 0.5%/week · Warranty 18 months</div>
+            </div>
+            <div class="term-field">
+              <label>Inspection</label>
+              <div class="term-val">Stage inspection at vendor works + FAT mandatory</div>
+            </div>
+            <div class="term-field">
+              <label>Parent PR</label>
+              <div class="term-val"><a href="pr-detail.html" style="color:var(--info);text-decoration:none;font-family:var(--font-mono);">PR-2026-009</a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vendor Invite List -->
+      <div class="rfqd-section">
+        <div class="rfqd-section-head">
+          <div class="rfqd-section-icon">🏭</div>
+          <span class="rfqd-section-title">Vendor Invitations</span>
+          <span class="rfqd-section-hint">TXN_RFQ_VENDOR_INVITE</span>
+        </div>
+        <div class="rfqd-section-body" style="padding:0;">
+          <table class="invite-table">
+            <thead>
+              <tr>
+                <th>Vendor</th>
+                <th>Participation</th>
+                <th>Technical Bid</th>
+                <th>Last Activity</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="vendor-cell">
+                    <div class="vendor-av approved">FI</div>
+                    <div>
+                      <div class="vendor-name-val">Flowline Industrial Pvt. Ltd.</div>
+                      <div class="vendor-cat-val">Rotating Equipment</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="participation-chip chip-active">● Active</span></td>
+                <td><span class="badge badge-success">Approved</span></td>
+                <td><span class="last-activity">14 May 2026</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="vendor-cell">
+                    <div class="vendor-av approved">PF</div>
+                    <div>
+                      <div class="vendor-name-val">Precision Fabricators Ltd.</div>
+                      <div class="vendor-cat-val">Rotating Equipment · Heavy Engineering</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="participation-chip chip-active">● Active</span></td>
+                <td><span class="badge badge-success">Approved</span></td>
+                <td><span class="last-activity">13 May 2026</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="vendor-cell">
+                    <div class="vendor-av rejected">HE</div>
+                    <div>
+                      <div class="vendor-name-val">Horizon Engineering Works</div>
+                      <div class="vendor-cat-val">Rotating Equipment</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="participation-chip chip-active">● Active</span></td>
+                <td><span class="badge badge-danger">Rejected</span></td>
+                <td><span class="last-activity">12 May 2026</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="vendor-cell">
+                    <div class="vendor-av" style="opacity:0.5;">SI</div>
+                    <div>
+                      <div class="vendor-name-val" style="color:var(--fg-muted);">SteelTech Industries</div>
+                      <div class="vendor-cat-val">Heavy Forging</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="participation-chip chip-regret">✕ Regret to Quote</span></td>
+                <td><span class="badge badge-neutral">—</span></td>
+                <td><span class="last-activity">05 Apr 2026</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Line Items -->
+      <div class="rfqd-section">
+        <div class="rfqd-section-head">
+          <div class="rfqd-section-icon">📋</div>
+          <span class="rfqd-section-title">Line Items</span>
+          <span class="rfqd-section-hint">TXN_RFQ_LINE_ITEM · from PR-2026-009</span>
+        </div>
+        <div class="rfqd-section-body" style="padding:0;">
+          <table class="li-table">
+            <thead>
+              <tr>
+                <th style="width:32px;">#</th>
+                <th>Description</th>
+                <th class="r">Qty</th>
+                <th class="r">Unit</th>
+                <th>Spec Document</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="li-num" style="color:var(--fg-subtle);">01</td>
+                <td>
+                  <div class="li-desc">Centrifugal Pump — API 610 BB2</div>
+                  <div class="li-spec">MOC: SS316L · Seal: Mechanical Type-2 · Driver: 37kW IE3 Motor · Design Temp: 120°C</div>
+                </td>
+                <td class="li-num">4</td>
+                <td class="li-num" style="color:var(--fg-muted);">NOS</td>
+                <td><span class="li-doc">📎 Spec-MPL-038-pump.pdf</span></td>
+              </tr>
+              <tr>
+                <td class="li-num" style="color:var(--fg-subtle);">02</td>
+                <td>
+                  <div class="li-desc">Heat Exchanger Bundle — Shell &amp; Tube, TEMA-R</div>
+                  <div class="li-spec">Shell: CS · Tubes: SS304 · Design Press: 25 bar · Duty: 1.8 MW · TEMA Class R</div>
+                </td>
+                <td class="li-num">2</td>
+                <td class="li-num" style="color:var(--fg-muted);">NOS</td>
+                <td><span class="li-doc">📎 Spec-MPL-038-hex.pdf</span></td>
+              </tr>
+              <tr>
+                <td class="li-num" style="color:var(--fg-subtle);">03</td>
+                <td>
+                  <div class="li-desc">Gate Valve — Full Bore, Flanged End, Class 300</div>
+                  <div class="li-spec">DN150 · Body: A216 WCB · Trim: SS316 · OS&amp;Y · ASME B16.34</div>
+                </td>
+                <td class="li-num">12</td>
+                <td class="li-num" style="color:var(--fg-muted);">NOS</td>
+                <td><span class="li-doc">📎 Spec-MPL-038-valve.pdf</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Two-column: Documents + Activity -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--s-4); margin-bottom:var(--s-4);">
+        <div class="rfqd-section" style="margin-bottom:0;">
+          <div class="rfqd-section-head">
+            <div class="rfqd-section-icon">📎</div>
+            <span class="rfqd-section-title">Attached Documents</span>
+          </div>
+          <div class="rfqd-section-body">
+            <div class="doc-list">
+              <div class="doc-row"><div class="doc-icon">📄</div><div class="doc-name">RFQ-2026-038-Scope.pdf</div><div class="doc-meta">1.2 MB</div></div>
+              <div class="doc-row"><div class="doc-icon">📄</div><div class="doc-name">Material-Requisition-PR009.pdf</div><div class="doc-meta">480 KB</div></div>
+              <div class="doc-row"><div class="doc-icon">📊</div><div class="doc-name">Vendor-Bid-Template.xlsx</div><div class="doc-meta">94 KB</div></div>
+              <div class="doc-row"><div class="doc-icon">📄</div><div class="doc-name">Standard-TC-v3.2.pdf</div><div class="doc-meta">210 KB</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="rfqd-section" style="margin-bottom:0;">
+          <div class="rfqd-section-head">
+            <div class="rfqd-section-icon">🕐</div>
+            <span class="rfqd-section-title">Activity</span>
+          </div>
+          <div class="rfqd-section-body">
+            <div class="tl-list">
+              <div class="tl-item">
+                <div class="tl-dot tl-info">→</div>
+                <div class="tl-body">
+                  <div class="tl-label">Technical evaluation started</div>
+                  <div class="tl-sub">Tech deadline passed · 3 bids received for review</div>
+                  <div class="tl-date">14 May 2026</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot tl-warn">?</div>
+                <div class="tl-body">
+                  <div class="tl-label">TQ raised — Precision Fabricators</div>
+                  <div class="tl-sub">Clarification on impeller material for H2S service</div>
+                  <div class="tl-date">10 May 2026</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot tl-done">✓</div>
+                <div class="tl-body">
+                  <div class="tl-label">RFQ published to 4 vendors</div>
+                  <div class="tl-sub">Invitation emails dispatched · Tech window opened</div>
+                  <div class="tl-date">02 Apr 2026</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot tl-done">✓</div>
+                <div class="tl-body">
+                  <div class="tl-label">RFQ drafted from PR-2026-009</div>
+                  <div class="tl-sub">Created by A. Desai · Purchase</div>
+                  <div class="tl-date">28 Mar 2026</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-rfq -->
+
+
+    <!-- ════════════════════════════════════════════════════
+         TAB 2 — TECHNICAL EVALUATION
+    ════════════════════════════════════════════════════ -->
+    <div id="tab-tech" class="tech-inner tab-panel" style="display:none;">
+
+      <!-- Page header -->
+      <div style="margin-bottom:var(--s-4);">
+        <div style="display:flex; align-items:center; gap:var(--s-3); margin-bottom:var(--s-2);">
+          <h1 style="font-size:var(--fs-2xl); font-weight:var(--fw-semibold); letter-spacing:-0.01em;">Technical Evaluation</h1>
+          <span class="badge badge-warning">In Progress</span>
+        </div>
+        <div style="display:flex; gap:var(--s-5); font-size:var(--fs-sm); color:var(--fg-muted); flex-wrap:wrap;">
+          <span><strong style="color:var(--fg); font-weight:var(--fw-medium);">RFQ-2026-038</strong></span>
+          <span>Project: <strong style="color:var(--fg); font-weight:var(--fw-medium);">Aker Alpha — Phase 2</strong></span>
+          <span>Category: <strong style="color:var(--fg); font-weight:var(--fw-medium);">Instrumentation &amp; Control</strong></span>
+          <span>Tech Deadline: <strong style="color:var(--fg); font-weight:var(--fw-medium);">14 May 2026</strong></span>
+        </div>
+      </div>
+
+      <!-- KPI strip (5 tiles) -->
+      <div class="eval-strip">
+        <div class="eval-stat">
+          <div class="eval-stat-value">3</div>
+          <div class="eval-stat-label">Total vendors</div>
+        </div>
+        <div class="eval-stat color-info">
+          <div class="eval-stat-value">1</div>
+          <div class="eval-stat-label">Submitted</div>
+        </div>
+        <div class="eval-stat color-warn">
+          <div class="eval-stat-value">1</div>
+          <div class="eval-stat-label">Query raised</div>
+        </div>
+        <div class="eval-stat color-success">
+          <div class="eval-stat-value" id="approved-count">0</div>
+          <div class="eval-stat-label">Approved</div>
+        </div>
+        <div class="eval-stat color-danger">
+          <div class="eval-stat-value">1</div>
+          <div class="eval-stat-label">Rejected</div>
+        </div>
+      </div>
+
+      <!-- ── VENDOR 1: Flowline Industries Ltd — Submitted ── -->
+      <div class="vendor-card state-submitted" id="card-flowline">
+        <div class="vendor-card-header" onclick="togglePanel('flowline')">
+          <div class="vendor-avatar">FI</div>
+          <div>
+            <div class="vendor-name">Flowline Industries Ltd</div>
+            <div class="vendor-meta-row">
+              <span><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="4" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M2 10c0-2.21 1.79-4 4-4s4 1.79 4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> GST: 27AAACF1234P1Z5</span>
+              <span><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1a3.5 3.5 0 1 0 0 7A3.5 3.5 0 0 0 6 1Z" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 11c.6-1.7 2.1-2.8 4.5-2.8s3.9 1.1 4.5 2.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> Instrumentation &amp; Control</span>
+              <span><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="2" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1v2M8 1v2M1 5h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> Submitted: 12 May 2026, 14:32</span>
+            </div>
+          </div>
+          <span class="badge badge-info" style="margin-left:auto;">Submitted</span>
+          <div class="header-actions" onclick="event.stopPropagation()">
+            <button class="btn btn-ghost btn-sm" onclick="openTQCompose('flowline')">Raise TQ</button>
+            <button class="btn btn-danger btn-sm" onclick="openRejectModal('Flowline Industries Ltd')">Reject</button>
+            <button class="btn btn-primary btn-sm" onclick="approveVendor('flowline')">Approve</button>
+          </div>
+          <button class="panel-chevron" onclick="event.stopPropagation(); togglePanel('flowline')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="vendor-card-body" style="display:none;">
+          <div class="card-section-label">Vendor submission note</div>
+          <div class="bid-comment-block">"All gate valves comply with API 600 Class 300. Material test certificates (MTCs) for A216 WCB bodies are attached per line item. We have accounted for hydrostatic test requirements per MSS SP-61."</div>
+          <div class="li-section">
+            <div class="card-section-label">Line items &amp; technical documents</div>
+            <table class="li-table-v">
+              <thead><tr><th style="width:40px;">#</th><th>Item Description</th><th style="width:80px;text-align:right;">Qty</th><th style="width:60px;text-align:center;">Unit</th><th>Documents</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">01</td><td class="item-name">Gate Valve, 2" DN50 ANSI 300, A216 WCB, Flanged</td><td style="text-align:right;" class="mono">24</td><td style="text-align:center;" class="mono">EA</td><td><a class="doc-chip" href="#"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 1h4.5L8 2.5V9H2V1Z" stroke="currentColor" stroke-width="1.2"/><path d="M6 1v2h2" stroke="currentColor" stroke-width="1.2"/></svg> MTC_GV_DN50.pdf</a><a class="doc-chip" href="#"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 1h4.5L8 2.5V9H2V1Z" stroke="currentColor" stroke-width="1.2"/><path d="M6 1v2h2" stroke="currentColor" stroke-width="1.2"/></svg> Hydro_Test_Cert.pdf</a></td></tr>
+                <tr><td class="mono">02</td><td class="item-name">Globe Valve, 3" DN80 ANSI 150, SS316, BW ends</td><td style="text-align:right;" class="mono">12</td><td style="text-align:center;" class="mono">EA</td><td><a class="doc-chip" href="#"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 1h4.5L8 2.5V9H2V1Z" stroke="currentColor" stroke-width="1.2"/><path d="M6 1v2h2" stroke="currentColor" stroke-width="1.2"/></svg> MTC_GlV_DN80.pdf</a></td></tr>
+                <tr><td class="mono">03</td><td class="item-name">Check Valve, 2" DN50 ANSI 300, Swing type, A216 WCB</td><td style="text-align:right;" class="mono">18</td><td style="text-align:center;" class="mono">EA</td><td><a class="doc-chip" href="#"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 1h4.5L8 2.5V9H2V1Z" stroke="currentColor" stroke-width="1.2"/><path d="M6 1v2h2" stroke="currentColor" stroke-width="1.2"/></svg> MTC_CV_DN50.pdf</a></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="tq-section" id="tq-compose-flowline" style="display:none;">
+            <div class="card-section-label">Raise a technical query</div>
+            <div class="tq-thread">
+              <div class="tq-compose">
+                <textarea placeholder="Enter your technical query for Flowline Industries…"></textarea>
+                <div class="tq-compose-row">
+                  <label class="tq-broadcast-toggle"><div class="toggle-pill" id="toggle-flowline" onclick="toggleBroadcast(this)"></div> Broadcast as anonymous FAQ to all vendors</label>
+                  <div style="display:flex;gap:var(--s-2);"><button class="btn btn-ghost btn-sm" onclick="closeTQCompose('flowline')">Cancel</button><button class="btn btn-secondary btn-sm">Send TQ</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Evaluation comments ── -->
+          <div class="panel-comment-section">
+            <div class="card-section-label">Evaluation comments</div>
+            <div class="panel-comment-area">
+              <button class="panel-comment-trigger" onclick="expandComment('flowline')">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Add evaluation comment…
+              </button>
+              <div class="panel-comment-expand" id="comment-expand-flowline">
+                <textarea class="panel-comment-ta" placeholder="Add your evaluation notes, concerns, or observations about this vendor's technical submission…"></textarea>
+                <div class="panel-comment-footer">
+                  <button class="attach-btn-sm">
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M12 7.5l-5.5 5.5a3.5 3.5 0 0 1-4.95-4.95l6.36-6.36a2 2 0 0 1 2.83 2.83L5.1 9.56a.5.5 0 0 1-.7-.7l5.5-5.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                    Attach file
+                  </button>
+                  <label class="internal-toggle-wrap">
+                    <div class="int-pill" id="int-flowline" onclick="this.classList.toggle('on')"></div>
+                    Internal only
+                  </label>
+                  <div style="margin-left:auto;display:flex;gap:var(--s-2);">
+                    <button class="btn btn-ghost btn-sm" onclick="collapseComment('flowline')">Cancel</button>
+                    <button class="btn btn-secondary btn-sm">Post Comment</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /card-flowline -->
+
+      <!-- ── VENDOR 2: Precision Valves Ltd — Query Raised ── -->
+      <div class="vendor-card state-tq" id="card-precision">
+        <div class="vendor-card-header" onclick="togglePanel('precision')">
+          <div class="vendor-avatar">PV</div>
+          <div>
+            <div class="vendor-name">Precision Valves Ltd</div>
+            <div class="vendor-meta-row">
+              <span><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="4" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M2 10c0-2.21 1.79-4 4-4s4 1.79 4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> GST: 29AABCP5678Q2Z1</span>
+              <span><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1a3.5 3.5 0 1 0 0 7A3.5 3.5 0 0 0 6 1Z" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 11c.6-1.7 2.1-2.8 4.5-2.8s3.9 1.1 4.5 2.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> Instrumentation &amp; Control</span>
+              <span><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="2" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1v2M8 1v2M1 5h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> Submitted: 11 May 2026, 09:15</span>
+            </div>
+          </div>
+          <span class="badge badge-warning" style="margin-left:auto;">Query Raised</span>
+          <div class="header-actions" onclick="event.stopPropagation()">
+            <button class="btn btn-ghost btn-sm" disabled style="opacity:0.4;cursor:not-allowed;">Raise TQ</button>
+            <button class="btn btn-danger btn-sm" disabled style="opacity:0.4;cursor:not-allowed;">Reject</button>
+            <button class="btn btn-primary btn-sm" disabled style="opacity:0.4;cursor:not-allowed;" title="Resolve open TQ first">Approve</button>
+          </div>
+          <button class="panel-chevron" onclick="event.stopPropagation(); togglePanel('precision')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="vendor-card-body" style="display:none;">
+          <div class="card-section-label">Vendor submission note</div>
+          <div class="bid-comment-block">"Gate valves are API 600 compliant. API 610 material certification documentation is currently being sourced from our mill supplier and will be provided upon clarification response."</div>
+          <div class="li-section">
+            <div class="card-section-label">Line items &amp; technical documents</div>
+            <table class="li-table-v" style="opacity:0.55;">
+              <thead><tr><th style="width:40px;">#</th><th>Item Description</th><th style="width:80px;text-align:right;">Qty</th><th style="width:60px;text-align:center;">Unit</th><th>Documents</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">01</td><td class="item-name">Gate Valve, 2" DN50 ANSI 300, A216 WCB, Flanged</td><td style="text-align:right;" class="mono">24</td><td style="text-align:center;" class="mono">EA</td><td><a class="doc-chip" href="#">Tech_Spec_GV.pdf</a></td></tr>
+                <tr><td class="mono">02</td><td class="item-name">Globe Valve, 3" DN80 ANSI 150, SS316, BW ends</td><td style="text-align:right;" class="mono">12</td><td style="text-align:center;" class="mono">EA</td><td><a class="doc-chip" href="#">Tech_Spec_GLV.pdf</a></td></tr>
+                <tr><td class="mono">03</td><td class="item-name">Check Valve, 2" DN50 ANSI 300, Swing type, A216 WCB</td><td style="text-align:right;" class="mono">18</td><td style="text-align:center;" class="mono">EA</td><td><span style="font-size:var(--fs-xs);color:var(--fg-subtle);font-style:italic;">No documents attached</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card-divider"></div>
+          <div class="tq-section">
+            <div class="card-section-label">Technical query thread</div>
+            <div class="tq-thread">
+              <div class="tq-thread-header">
+                <div class="tq-thread-title"><div class="tq-dot"></div> TQ-038-02 · Awaiting vendor response</div>
+                <span class="tq-broadcast-tag">Private · not broadcast</span>
+              </div>
+              <div class="tq-message">
+                <div class="tq-msg-meta"><span class="tq-author">S. Mehta (Engineering Lead)</span><span class="tq-time">12 May 2026, 10:04</span></div>
+                <div class="tq-msg-body">Please provide the API 610 material certification for all gate valve bodies. The project specification mandates A182 F316 SS for bodies in corrosive service. The submitted catalogue references A216 WCB which does not meet the design envelope. Clarify with mill test reports or revise the material specification accordingly.</div>
+              </div>
+              <div class="tq-message">
+                <div class="tq-msg-meta"><span class="tq-author vendor">Precision Valves Ltd · R. Kapoor (BD Manager)</span><span class="tq-time">13 May 2026, 16:41</span></div>
+                <div class="tq-msg-body">Thank you for raising this. We confirm all gate valve bodies will be supplied in A182 F316 SS as required by the project specification. MTCs are attached. The original catalogue reference to A216 WCB was an administrative error — actual production will use F316 SS throughout.</div>
+                <div style="margin-top:var(--s-3);display:flex;gap:var(--s-2);flex-wrap:wrap;">
+                  <a class="doc-chip" href="#"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 1h4.5L8 2.5V9H2V1Z" stroke="currentColor" stroke-width="1.2"/><path d="M6 1v2h2" stroke="currentColor" stroke-width="1.2"/></svg> MTC_F316_GV_DN50_Batch22.pdf</a>
+                  <a class="doc-chip" href="#"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 1h4.5L8 2.5V9H2V1Z" stroke="currentColor" stroke-width="1.2"/><path d="M6 1v2h2" stroke="currentColor" stroke-width="1.2"/></svg> Revised_Techbid_PVL_May13.pdf</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Evaluation comments ── -->
+          <div class="panel-comment-section">
+            <div class="card-section-label">Evaluation comments</div>
+            <div class="panel-comment-area">
+              <button class="panel-comment-trigger" onclick="expandComment('precision')">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Add evaluation comment…
+              </button>
+              <div class="panel-comment-expand" id="comment-expand-precision">
+                <textarea class="panel-comment-ta" placeholder="Add your evaluation notes, MTC review observations, or clarifications about this vendor's response…"></textarea>
+                <div class="panel-comment-footer">
+                  <button class="attach-btn-sm">
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M12 7.5l-5.5 5.5a3.5 3.5 0 0 1-4.95-4.95l6.36-6.36a2 2 0 0 1 2.83 2.83L5.1 9.56a.5.5 0 0 1-.7-.7l5.5-5.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                    Attach file
+                  </button>
+                  <label class="internal-toggle-wrap">
+                    <div class="int-pill" id="int-precision" onclick="this.classList.toggle('on')"></div>
+                    Internal only
+                  </label>
+                  <div style="margin-left:auto;display:flex;gap:var(--s-2);">
+                    <button class="btn btn-ghost btn-sm" onclick="collapseComment('precision')">Cancel</button>
+                    <button class="btn btn-secondary btn-sm">Post Comment</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /card-precision -->
+
+      <!-- ── VENDOR 3: Horizon Piping Co — Rejected ── -->
+      <div class="vendor-card state-rejected" id="card-horizon">
+        <div class="vendor-card-header" onclick="togglePanel('horizon')">
+          <div class="vendor-avatar" style="opacity:0.6;">HP</div>
+          <div>
+            <div class="vendor-name" style="color:var(--fg-muted);">Horizon Piping Co</div>
+            <div class="vendor-meta-row">
+              <span>GST: 06AABCH2233R1Z8</span>
+              <span>Instrumentation &amp; Control</span>
+              <span>Submitted: 10 May 2026, 17:45</span>
+            </div>
+          </div>
+          <span class="badge badge-danger" style="margin-left:auto;">Rejected</span>
+          <button class="panel-chevron" onclick="event.stopPropagation(); togglePanel('horizon')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="collapsed-body" style="display:none;">
+          <div class="rejection-block">
+            <div class="rejection-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1a6 6 0 1 0 0 12A6 6 0 0 0 7 1Z" stroke="currentColor" stroke-width="1.4"/><path d="M4.5 4.5l5 5M9.5 4.5l-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+            <div>
+              <div class="rejection-label">Technically disqualified</div>
+              <div class="rejection-comment">Vendor failed to provide required API 610 material certification. Submitted documents show generic BS EN 1092 flange standard, which does not meet the project-specific design envelope for high-pressure corrosive service.</div>
+              <div class="rejection-meta">Rejected by S. Mehta · 13 May 2026, 09:22 · Internal comment logged</div>
+            </div>
+          </div>
+          <div style="font-size:var(--fs-xs);color:var(--fg-subtle);">This vendor's commercial bid remains sealed and inaccessible. Soft-deleted with mandatory internal comment. Vendor has been notified via the system.</div>
+
+          <!-- ── Evaluation comments ── -->
+          <div class="panel-comment-section">
+            <div class="card-section-label">Evaluation comments</div>
+            <div class="panel-comment-area">
+              <button class="panel-comment-trigger" onclick="expandComment('horizon')">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Add evaluation comment…
+              </button>
+              <div class="panel-comment-expand" id="comment-expand-horizon">
+                <textarea class="panel-comment-ta" placeholder="Add notes about this rejection — e.g. future vendor suitability, lessons learned…"></textarea>
+                <div class="panel-comment-footer">
+                  <button class="attach-btn-sm">
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M12 7.5l-5.5 5.5a3.5 3.5 0 0 1-4.95-4.95l6.36-6.36a2 2 0 0 1 2.83 2.83L5.1 9.56a.5.5 0 0 1-.7-.7l5.5-5.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                    Attach file
+                  </button>
+                  <label class="internal-toggle-wrap">
+                    <div class="int-pill on" id="int-horizon" onclick="this.classList.toggle('on')"></div>
+                    Internal only
+                  </label>
+                  <div style="margin-left:auto;display:flex;gap:var(--s-2);">
+                    <button class="btn btn-ghost btn-sm" onclick="collapseComment('horizon')">Cancel</button>
+                    <button class="btn btn-secondary btn-sm">Post Comment</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /card-horizon -->
+
+    </div><!-- /tab-tech -->
+
+
+    <!-- ════════════════════════════════════════════════════
+         TAB 2b — PRE-BID QUERIES
+    ════════════════════════════════════════════════════ -->
+    <div id="tab-prebid" class="rfqd-inner tab-panel" style="display:none; padding-bottom:80px;">
+
+      <!-- Header -->
+      <div style="margin-bottom:var(--s-5);">
+        <div style="display:flex;align-items:center;gap:var(--s-3);margin-bottom:var(--s-2);">
+          <h1 style="font-size:var(--fs-2xl);font-weight:var(--fw-semibold);letter-spacing:-0.01em;">Pre-Bid Queries</h1>
+          <span class="badge badge-warning">Open</span>
+        </div>
+        <div style="font-size:var(--fs-sm); color:var(--fg-muted);">
+          Vendors or Engineering may raise scope clarifications before submitting initial bids. All queries are audited and FAQs are broadcast anonymously to all invited vendors.
+        </div>
+      </div>
+
+      <!-- Context banner -->
+      <div style="display:flex;align-items:center;gap:var(--s-3);padding:var(--s-3) var(--s-4);background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.20);border-radius:var(--r-md);margin-bottom:var(--s-5);font-size:var(--fs-sm);color:var(--fg-muted);">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#F59E0B" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5l2 1"/></svg>
+        <span>Pre-Bid window closes with Technical Bid Deadline · <strong style="color:var(--fg);">16 Jun 2026, 17:00 IST</strong></span>
+        <span style="margin-left:auto;font-family:var(--font-mono);color:var(--fg-subtle);font-size:var(--fs-xs);">22 days remaining</span>
+      </div>
+
+      <!-- Query thread -->
+      <div class="tq-section">
+
+        <!-- PBQ-001 -->
+        <div class="tq-thread" style="margin-bottom:var(--s-4);">
+          <div style="display:flex;align-items:flex-start;gap:var(--s-3);margin-bottom:var(--s-3);">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);display:grid;place-items:center;flex-shrink:0;">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#F59E0B" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5.5a1.5 1.5 0 0 1 1.5 1.5c0 1-1.5 1.5-1.5 2.5"/><circle cx="8" cy="12" r=".5" fill="#F59E0B"/></svg>
+            </div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:var(--s-2);margin-bottom:4px;">
+                <span style="font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--fg);">Precision Fabricators Pvt Ltd</span>
+                <span style="font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--fg-subtle);">PBQ-001 · 12 May 2026, 11:20</span>
+                <span class="badge badge-warning" style="margin-left:auto;font-size:10px;">Awaiting Response</span>
+              </div>
+              <div style="font-size:var(--fs-sm);color:var(--fg-muted);line-height:1.6;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s-3) var(--s-4);">
+                Please confirm whether the centrifugal pump casing material can be SS316 in lieu of CF8M as per API 610 Annex K. Our current casting facility is qualified only for SS316. This will affect our technical bid scope significantly.
+              </div>
+            </div>
+          </div>
+          <!-- Response area -->
+          <div style="margin-left:40px;">
+            <div style="border-left:2px solid var(--border);padding-left:var(--s-4);">
+              <div style="font-size:var(--fs-xs);color:var(--fg-subtle);margin-bottom:var(--s-2);">Purchase response:</div>
+              <textarea style="width:100%;box-sizing:border-box;background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s-3);color:var(--fg);font-family:var(--font-sans);font-size:var(--fs-sm);resize:none;height:72px;outline:none;" placeholder="Type a response… (optionally broadcast as anonymous FAQ to all vendors)"></textarea>
+              <div style="display:flex;align-items:center;gap:var(--s-3);margin-top:var(--s-2);">
+                <label style="display:flex;align-items:center;gap:6px;font-size:var(--fs-xs);color:var(--fg-muted);cursor:pointer;">
+                  <div class="toggle-pill" style="width:28px;height:16px;border-radius:8px;background:var(--bg-elevated);border:1px solid var(--border);cursor:pointer;"></div>
+                  Broadcast as anonymous FAQ to all vendors
+                </label>
+                <div style="margin-left:auto;display:flex;gap:var(--s-2);">
+                  <button class="btn btn-secondary btn-sm">Cancel</button>
+                  <button class="btn btn-primary btn-sm">Send Response</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PBQ-002 — FAQed -->
+        <div class="tq-thread" style="margin-bottom:var(--s-4);">
+          <div style="display:flex;align-items:flex-start;gap:var(--s-3);margin-bottom:var(--s-3);">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(16,185,129,0.10);border:1px solid rgba(16,185,129,0.22);display:grid;place-items:center;flex-shrink:0;">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#10B981" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5.5a1.5 1.5 0 0 1 1.5 1.5c0 1-1.5 1.5-1.5 2.5"/><circle cx="8" cy="12" r=".5" fill="#10B981"/></svg>
+            </div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:var(--s-2);margin-bottom:4px;">
+                <span style="font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--fg);">Flowline Industries Ltd</span>
+                <span style="font-family:var(--font-mono);font-size:var(--fs-xs);color:var(--fg-subtle);">PBQ-002 · 13 May 2026, 09:45</span>
+                <span class="badge badge-success" style="margin-left:auto;font-size:10px;">Responded · FAQ issued</span>
+              </div>
+              <div style="font-size:var(--fs-sm);color:var(--fg-muted);line-height:1.6;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s-3) var(--s-4);">
+                Can the heat exchanger TEMA class be changed from B to C for non-critical cooling duty? This would allow a shorter lead time of 8 weeks vs 14 weeks for TEMA B.
+              </div>
+              <!-- FAQ response shown -->
+              <div style="margin-top:var(--s-3);padding:var(--s-3) var(--s-4);background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.18);border-radius:var(--r-md);">
+                <div style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:#10B981;margin-bottom:4px;">
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;"><path d="M2.5 8.5l3.5 3.5 7-7"/></svg>
+                  FAQ broadcast · Purchase · 14 May 2026
+                </div>
+                <div style="font-size:var(--fs-sm);color:var(--fg-muted);line-height:1.6;">
+                  TEMA class B is mandatory for this service as per the project design basis (Rev D). All vendors must quote TEMA B. TEMA C will not be accepted during technical evaluation.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- New PBQ compose -->
+        <div style="border:1px dashed var(--border);border-radius:var(--r-md);padding:var(--s-4);margin-top:var(--s-3);">
+          <div style="font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:var(--fg);margin-bottom:var(--s-3);">Raise a Pre-Bid Query</div>
+          <textarea style="width:100%;box-sizing:border-box;background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s-3);color:var(--fg);font-family:var(--font-sans);font-size:var(--fs-sm);resize:none;height:72px;outline:none;" placeholder="Describe the scope clarification needed before bid submission…"></textarea>
+          <div style="display:flex;justify-content:flex-end;gap:var(--s-2);margin-top:var(--s-2);">
+            <button class="btn btn-secondary btn-sm">Cancel</button>
+            <button class="btn btn-primary btn-sm">Submit Pre-Bid Query</button>
+          </div>
+        </div>
+
+      </div><!-- /.tq-section -->
+    </div>
+
+    <!-- ════════════════════════════════════════════════════
+         TAB 3 — COMMERCIAL EVALUATION
+    ════════════════════════════════════════════════════ -->
+    <div id="tab-comm" class="comm-inner tab-panel" style="display:none;">
+
+      <!-- Page header -->
+      <div style="margin-bottom:var(--s-5);">
+        <div style="display:flex;align-items:center;gap:var(--s-3);margin-bottom:var(--s-2);">
+          <h1 style="font-size:var(--fs-2xl);font-weight:var(--fw-semibold);letter-spacing:-0.01em;">Commercial Evaluation</h1>
+          <span class="badge badge-info">Envelope Open</span>
+        </div>
+        <div style="display:flex;gap:var(--s-5);font-size:var(--fs-sm);color:var(--fg-muted);flex-wrap:wrap;">
+          <span><strong style="color:var(--fg);font-weight:var(--fw-medium);">RFQ-2026-038</strong></span>
+          <span>Vendors eligible: <strong style="color:var(--fg);font-weight:var(--fw-medium);">2 of 3</strong></span>
+          <span>Comm. Deadline: <strong style="color:var(--fg);font-weight:var(--fw-medium);">28 May 2026 · 17:00 IST</strong></span>
+        </div>
+      </div>
+
+      <!-- Bid Comparison Matrix -->
+      <div class="comm-section">
+        <div class="normalize-strip">
+          <div class="normalize-strip-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M2 4h10M2 10h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <div class="normalize-label">Normalized bid comparison</div>
+            <div class="normalize-sub">All values in INR · Exclusive of GST · Basis: CIF Kakinada Port · Delivery 16 weeks · Stage inspection included</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" style="margin-left:auto;">Export Matrix</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="bid-matrix-table">
+            <thead>
+              <tr>
+                <th style="min-width:180px;">Vendor</th>
+                <th class="r">Sub-total (₹)</th>
+                <th class="r">Freight (₹)</th>
+                <th class="r">Add. Costs (₹)</th>
+                <th class="r">Grand Total (₹)</th>
+                <th class="r">Deviation vs L1</th>
+                <th>Delivery (wks)</th>
+                <th>Warranty</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:var(--s-3);">
+                    <div class="vendor-av approved" style="width:28px;height:28px;font-size:10px;">FI</div>
+                    <div>
+                      <div style="font-weight:var(--fw-medium);color:var(--fg);">Flowline Industrial Pvt. Ltd.</div>
+                      <div style="font-size:var(--fs-xs);color:var(--fg-subtle);">Technically Approved</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="price-val price-lowest">₹ 62,40,000</td>
+                <td class="price-val" style="color:var(--fg-muted);">₹ 1,80,000</td>
+                <td class="price-val" style="color:var(--fg-muted);">₹ 95,000</td>
+                <td class="price-total price-lowest">₹ 65,15,000</td>
+                <td><span class="deviation-tag deviation-low">L1</span></td>
+                <td style="font-family:var(--font-mono);font-size:var(--fs-sm);">14 wks</td>
+                <td style="font-size:var(--fs-sm);color:var(--fg-muted);">18 months</td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:var(--s-3);">
+                    <div class="vendor-av approved" style="width:28px;height:28px;font-size:10px;">PF</div>
+                    <div>
+                      <div style="font-weight:var(--fw-medium);color:var(--fg);">Precision Fabricators Ltd.</div>
+                      <div style="font-size:var(--fs-xs);color:var(--fg-subtle);">Technically Approved</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="price-val price-higher">₹ 67,80,000</td>
+                <td class="price-val" style="color:var(--fg-muted);">₹ 2,10,000</td>
+                <td class="price-val" style="color:var(--fg-muted);">₹ 1,20,000</td>
+                <td class="price-total price-higher">₹ 71,10,000</td>
+                <td><span class="deviation-tag deviation-high">+9.1%</span></td>
+                <td style="font-family:var(--font-mono);font-size:var(--fs-sm);">16 wks</td>
+                <td style="font-size:var(--fs-sm);color:var(--fg-muted);">24 months</td>
+              </tr>
+              <tr style="opacity:0.45;">
+                <td>
+                  <div style="display:flex;align-items:center;gap:var(--s-3);">
+                    <div class="vendor-av rejected" style="width:28px;height:28px;font-size:10px;">HE</div>
+                    <div>
+                      <div style="font-weight:var(--fw-medium);color:var(--fg-muted);">Horizon Engineering Works</div>
+                      <div style="font-size:var(--fs-xs);color:var(--fg-subtle);">Technically Rejected — excluded</div>
+                    </div>
+                  </div>
+                </td>
+                <td colspan="7" style="font-size:var(--fs-xs);color:var(--fg-subtle);font-style:italic;">Commercial envelope sealed — vendor is technically disqualified</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Negotiation / Remarks -->
+      <div class="comm-section">
+        <div class="comm-section-head">
+          <div class="rfqd-section-icon">📝</div>
+          <span class="comm-section-title">Purchase Remarks &amp; Negotiation Notes</span>
+        </div>
+        <div style="padding:var(--s-5);">
+          <div style="background:var(--bg-subtle);border-radius:var(--r-md);padding:var(--s-4);margin-bottom:var(--s-4);">
+            <div style="display:flex;align-items:center;gap:var(--s-2);margin-bottom:var(--s-2);">
+              <div style="width:26px;height:26px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border);display:grid;place-items:center;font-size:10px;font-weight:600;color:var(--fg-muted);flex-shrink:0;">AD</div>
+              <span style="font-size:var(--fs-xs);font-weight:var(--fw-semibold);color:var(--fg);">A. Desai (Purchase)</span>
+              <span style="font-size:var(--fs-xs);color:var(--fg-subtle);">20 May 2026, 15:30</span>
+            </div>
+            <div style="font-size:var(--fs-sm);color:var(--fg-muted);line-height:1.6;">Flowline is L1 by a comfortable margin. Their 14-week delivery also beats our 16-week requirement. Recommend proceeding with L1 negotiation — target a 2–3% reduction on their grand total before PO placement. Precision's 24-month warranty is a positive deviation but does not offset the 9.1% cost premium.</div>
+          </div>
+          <div style="display:flex;gap:var(--s-3);align-items:flex-start;">
+            <div style="width:26px;height:26px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border);display:grid;place-items:center;font-size:10px;font-weight:600;color:var(--fg-muted);flex-shrink:0;margin-top:2px;">SM</div>
+            <div style="flex:1;">
+              <textarea style="width:100%;background:var(--bg-base);border:1px solid var(--border);border-radius:var(--r-md);padding:var(--s-3);font-family:var(--font-sans);font-size:var(--fs-sm);color:var(--fg);resize:none;min-height:68px;line-height:1.5;" placeholder="Add a purchase note or negotiation comment…"></textarea>
+              <div style="display:flex;justify-content:flex-end;margin-top:var(--s-2);"><button class="btn btn-secondary btn-sm">Post Note</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommended action -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--s-4);padding:var(--s-4) var(--s-5);background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:var(--s-4);">
+        <div>
+          <div style="font-weight:var(--fw-semibold);color:var(--fg);margin-bottom:4px;">Proceed to Purchase Order</div>
+          <div style="font-size:var(--fs-sm);color:var(--fg-muted);">Award to Flowline Industrial Pvt. Ltd. (L1) · Grand Total ₹65,15,000 · Delivery 14 weeks from PO date</div>
+        </div>
+        <button class="btn btn-primary" onclick="openPOModal()" style="flex-shrink:0;display:inline-flex;align-items:center;gap:var(--s-2);">
+          Generate PO
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+
+    </div><!-- /tab-comm -->
+
+  </main>
+</div><!-- /app -->
+
+<!-- Generate PO modal — multi-step -->
+<div class="modal-overlay" id="po-modal">
+  <div class="modal-box" style="width:540px;">
+
+    <!-- Step indicator -->
+    <div style="display:flex;align-items:center;gap:var(--s-2);margin-bottom:var(--s-5);">
+      <div id="po-step-dot-1" style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;flex-shrink:0;">1</div>
+      <div style="flex:1;height:2px;background:var(--border);" id="po-step-line-1"></div>
+      <div id="po-step-dot-2" style="width:24px;height:24px;border-radius:50%;background:var(--border);color:var(--fg-muted);font-size:11px;font-weight:700;display:grid;place-items:center;flex-shrink:0;">2</div>
+      <div style="flex:1;height:2px;background:var(--border);"></div>
+      <div id="po-step-dot-3" style="width:24px;height:24px;border-radius:50%;background:var(--border);color:var(--fg-muted);font-size:11px;font-weight:700;display:grid;place-items:center;flex-shrink:0;">3</div>
+    </div>
+
+    <!-- ── STEP 1: Select vendor ── -->
+    <div id="po-step-1">
+      <div class="modal-title">Generate Purchase Order</div>
+      <div class="modal-sub">Select the vendor to award this RFQ to. Only technically approved vendors are shown.</div>
+
+      <div style="display:flex;flex-direction:column;gap:var(--s-3);margin-bottom:var(--s-5);">
+        <!-- Vendor option: Flowline (L1) -->
+        <label style="display:flex;align-items:center;gap:var(--s-3);padding:var(--s-4);background:var(--bg-subtle);border:2px solid var(--accent);border-radius:var(--r-md);cursor:pointer;" id="po-vendor-flowline">
+          <input type="radio" name="po-vendor" value="flowline" checked style="accent-color:var(--accent);width:16px;height:16px;" />
+          <div class="vendor-av approved" style="width:36px;height:36px;">FI</div>
+          <div style="flex:1;">
+            <div style="font-weight:var(--fw-semibold);color:var(--fg);">Flowline Industrial Pvt. Ltd.</div>
+            <div style="font-size:var(--fs-xs);color:var(--fg-muted);margin-top:2px;">Grand Total: <strong style="color:var(--success,#22C55E);font-family:var(--font-mono);">₹ 65,15,000</strong> · Delivery: 14 wks · <span style="background:rgba(34,197,94,0.12);color:var(--success,#22C55E);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;">L1 — Lowest Bid</span></div>
+          </div>
+        </label>
+        <!-- Vendor option: Precision (L2) -->
+        <label style="display:flex;align-items:center;gap:var(--s-3);padding:var(--s-4);background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);cursor:pointer;" id="po-vendor-precision">
+          <input type="radio" name="po-vendor" value="precision" style="accent-color:var(--accent);width:16px;height:16px;" />
+          <div class="vendor-av approved" style="width:36px;height:36px;">PF</div>
+          <div style="flex:1;">
+            <div style="font-weight:var(--fw-semibold);color:var(--fg);">Precision Fabricators Ltd.</div>
+            <div style="font-size:var(--fs-xs);color:var(--fg-muted);margin-top:2px;">Grand Total: <strong style="font-family:var(--font-mono);">₹ 71,10,000</strong> · Delivery: 16 wks · <span style="background:rgba(245,158,11,0.10);color:var(--warning,#F59E0B);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;">L2 · +9.1%</span></div>
+          </div>
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closePOModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="goToPOStep(2)">Next: PO Details →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: PO Details ── -->
+    <div id="po-step-2" style="display:none;">
+      <div class="modal-title">PO Details &amp; Contacts</div>
+      <div class="modal-sub" id="po-step2-sub">Awarding to <strong>Flowline Industrial Pvt. Ltd.</strong> · ₹ 65,15,000</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s-3);margin-bottom:var(--s-4);">
+        <div>
+          <div class="modal-label">PO NUMBER</div>
+          <input value="PO-2026-041" style="width:100%;padding:8px var(--s-3);background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);color:var(--fg);font-size:var(--fs-sm);font-family:var(--font-mono);" />
+        </div>
+        <div>
+          <div class="modal-label">PO DATE</div>
+          <input type="date" value="2026-05-26" style="width:100%;padding:8px var(--s-3);background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);color:var(--fg);font-size:var(--fs-sm);font-family:var(--font-sans);" />
+        </div>
+        <div>
+          <div class="modal-label">DELIVERY LOCATION</div>
+          <input value="Kakinada Port, AP" style="width:100%;padding:8px var(--s-3);background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);color:var(--fg);font-size:var(--fs-sm);font-family:var(--font-sans);" />
+        </div>
+        <div>
+          <div class="modal-label">DELIVERY DEADLINE</div>
+          <input type="date" value="2026-09-08" style="width:100%;padding:8px var(--s-3);background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);color:var(--fg);font-size:var(--fs-sm);font-family:var(--font-sans);" />
+        </div>
+      </div>
+
+      <div style="margin-bottom:var(--s-3);">
+        <div class="modal-label">VENDOR RECIPIENT EMAIL(S)</div>
+        <input value="procurement@flowlineindustrial.com" style="width:100%;padding:8px var(--s-3);background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);color:var(--fg);font-size:var(--fs-sm);font-family:var(--font-sans);margin-bottom:var(--s-2);" placeholder="Add email…" />
+        <div style="display:flex;gap:var(--s-2);flex-wrap:wrap;">
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:20px;font-size:var(--fs-xs);color:var(--fg-muted);">procurement@flowlineindustrial.com <span style="cursor:pointer;color:var(--fg-subtle);">✕</span></span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:20px;font-size:var(--fs-xs);color:var(--fg-muted);">r.sharma@flowlineindustrial.com <span style="cursor:pointer;color:var(--fg-subtle);">✕</span></span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:var(--s-4);">
+        <div class="modal-label">INTERNAL CC (OPTIONAL)</div>
+        <input value="a.desai@akerprocure.com, s.mehta@akerprocure.com" style="width:100%;padding:8px var(--s-3);background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);color:var(--fg);font-size:var(--fs-sm);font-family:var(--font-sans);" />
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="goToPOStep(1)">← Back</button>
+        <button class="btn btn-primary" onclick="goToPOStep(3)">Next: Notes &amp; Confirm →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: Notes + Send ── -->
+    <div id="po-step-3" style="display:none;">
+      <div class="modal-title">Notes &amp; Send PO</div>
+      <div class="modal-sub" id="po-step3-sub">Final review before sending to <strong>Flowline Industrial Pvt. Ltd.</strong></div>
+
+      <!-- Summary strip -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s-3);padding:var(--s-3) var(--s-4);background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:var(--s-4);font-size:var(--fs-xs);">
+        <div><div style="color:var(--fg-subtle);margin-bottom:2px;">PO Number</div><div style="font-family:var(--font-mono);font-weight:600;color:var(--fg);">PO-2026-041</div></div>
+        <div><div style="color:var(--fg-subtle);margin-bottom:2px;">Total Value</div><div style="font-family:var(--font-mono);font-weight:600;color:var(--success,#22C55E);">₹ 65,15,000</div></div>
+        <div><div style="color:var(--fg-subtle);margin-bottom:2px;">Delivery By</div><div style="font-family:var(--font-mono);font-weight:600;color:var(--fg);">08 Sep 2026</div></div>
+      </div>
+
+      <div style="margin-bottom:var(--s-3);">
+        <div class="modal-label">PURCHASE ORDER NOTES (OPTIONAL)</div>
+        <textarea class="modal-textarea" placeholder="Add any special instructions, delivery notes, or terms to include in the PO…">Please ensure all material test certificates are submitted along with the first delivery. Stage inspection to be scheduled at least 2 weeks prior at our nominated inspection agency.</textarea>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:var(--s-2);padding:var(--s-3);background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.2);border-radius:var(--r-md);margin-bottom:var(--s-4);">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="color:var(--info,#06B6D4);flex-shrink:0;"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M7 6v4M7 4.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span style="font-size:var(--fs-xs);color:var(--fg-muted);">Sending PO will notify the vendor, log it in the RFQ audit trail, and move this RFQ to <strong>PO Issued</strong> status.</span>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="goToPOStep(2)">← Back</button>
+        <button class="btn btn-primary" onclick="sendPO()" style="display:flex;align-items:center;gap:var(--s-2);">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 7l10.5-5-4 10-2-5-4.5-0z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          Send PO
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Reject modal -->
+<div class="modal-overlay" id="reject-modal">
+  <div class="modal-box">
+    <div class="modal-title">Reject Technical Bid</div>
+    <div class="modal-sub">Rejecting <strong id="reject-vendor-name"></strong> from this RFQ. This action requires a mandatory internal comment and cannot be undone without a new submission cycle.</div>
+    <div class="modal-label">INTERNAL COMMENT (REQUIRED)</div>
+    <textarea class="modal-textarea" placeholder="State the technical reason for rejection — this is logged and is not visible to the vendor…"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeRejectModal()">Cancel</button>
+      <button class="btn btn-danger">Confirm Rejection</button>
+    </div>
+  </div>
+</div>
+
+<div class="nav-backdrop" id="nav-backdrop" onclick="closeNav()"></div>
+
+<script>
+  /* ── Tab switching (single-page, no reload) ── */
+  const tabLabels = { rfq: 'RFQ Details', prebid: 'Pre-Bid Queries', tech: 'Technical Evaluation', comm: 'Commercial Evaluation' };
+
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+    document.getElementById('tab-' + tabId).style.display = '';
+    document.querySelectorAll('.rfqd-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.rfqd-tab[data-tab="' + tabId + '"]').classList.add('active');
+    document.getElementById('crumb-tab-label').textContent = tabLabels[tabId];
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  /* ── Vendor panel collapse/expand ── */
+  function togglePanel(vendor) {
+    const card = document.getElementById('card-' + vendor);
+    const body = card.querySelector('.vendor-card-body, .collapsed-body');
+    const bar = card.querySelector('.eval-action-bar');
+    const chevron = card.querySelector('.panel-chevron');
+    const header = card.querySelector('.vendor-card-header');
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : '';
+    if (bar) bar.style.display = isOpen ? 'none' : '';
+    header.style.borderBottom = isOpen ? 'none' : '';
+    chevron.classList.toggle('open', !isOpen);
+  }
+
+  /* ── Panel comments ── */
+  function expandComment(vendor) {
+    const el = document.getElementById('comment-expand-' + vendor);
+    if (el) {
+      el.classList.add('open');
+      el.querySelector('textarea').focus();
+    }
+  }
+  function collapseComment(vendor) {
+    const el = document.getElementById('comment-expand-' + vendor);
+    if (el) el.classList.remove('open');
+  }
+
+  /* ── TQ compose ── */
+  function openTQCompose(vendor) {
+    const el = document.getElementById('tq-compose-' + vendor);
+    if (el) el.style.display = 'block';
+  }
+  function closeTQCompose(vendor) {
+    const el = document.getElementById('tq-compose-' + vendor);
+    if (el) el.style.display = 'none';
+  }
+
+  /* ── Broadcast toggle ── */
+  function toggleBroadcast(pill) { pill.classList.toggle('on'); }
+
+  /* ── Reject modal ── */
+  function openRejectModal(vendorName) {
+    document.getElementById('reject-vendor-name').textContent = vendorName;
+    document.getElementById('reject-modal').classList.add('open');
+  }
+  function closeRejectModal() {
+    document.getElementById('reject-modal').classList.remove('open');
+  }
+
+  /* ── Approve (visual feedback) ── */
+  function approveVendor(vendor) {
+    const card = document.getElementById('card-' + vendor);
+    const badge = card.querySelector('.badge');
+    badge.className = 'badge badge-success';
+    badge.textContent = 'Approved';
+    card.classList.add('state-approved');
+    card.classList.remove('state-submitted');
+    card.querySelector('.header-actions').innerHTML =
+      '<span style="font-size:var(--fs-xs);color:var(--success,#22C55E);display:flex;align-items:center;gap:4px;">' +
+      '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7l3.5 3.5 5.5-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+      'Approved</span>';
+    const cnt = document.getElementById('approved-count');
+    if (cnt) cnt.textContent = String(parseInt(cnt.textContent) + 1);
+  }
+
+  /* ── Generate PO modal ── */
+  function openPOModal() {
+    goToPOStep(1);
+    document.getElementById('po-modal').classList.add('open');
+  }
+  function closePOModal() {
+    document.getElementById('po-modal').classList.remove('open');
+  }
+  function goToPOStep(step) {
+    [1,2,3].forEach(n => {
+      document.getElementById('po-step-' + n).style.display = (n === step) ? '' : 'none';
+      const dot = document.getElementById('po-step-dot-' + n);
+      if (dot) {
+        dot.style.background = n < step ? 'var(--success,#22C55E)' : n === step ? 'var(--accent)' : 'var(--border)';
+        dot.style.color = n <= step ? '#fff' : 'var(--fg-muted)';
+        dot.textContent = n < step ? '✓' : String(n);
+      }
+    });
+    // Update subtitle with selected vendor
+    const sel = document.querySelector('input[name="po-vendor"]:checked');
+    const vendor = sel ? sel.value : 'flowline';
+    const name = vendor === 'flowline' ? 'Flowline Industrial Pvt. Ltd.' : 'Precision Fabricators Ltd.';
+    const total = vendor === 'flowline' ? '₹ 65,15,000' : '₹ 71,10,000';
+    const sub2 = document.getElementById('po-step2-sub');
+    const sub3 = document.getElementById('po-step3-sub');
+    if (sub2) sub2.innerHTML = 'Awarding to <strong>' + name + '</strong> · ' + total;
+    if (sub3) sub3.innerHTML = 'Final review before sending to <strong>' + name + '</strong>';
+  }
+  function sendPO() {
+    closePOModal();
+    // Visual feedback — switch to PO tab (demo)
+    setTimeout(() => { window.location.href = 'purchase-orders.html'; }, 300);
+  }
+
+  // Highlight vendor card on radio change
+  document.addEventListener('change', function(e) {
+    if (e.target.name === 'po-vendor') {
+      document.querySelectorAll('[id^="po-vendor-"]').forEach(el => {
+        el.style.borderColor = 'var(--border)';
+        el.style.borderWidth = '1px';
+      });
+      const card = document.getElementById('po-vendor-' + e.target.value);
+      if (card) { card.style.borderColor = 'var(--accent)'; card.style.borderWidth = '2px'; }
+    }
+  });
+
+  // Close PO modal on backdrop click
+  document.getElementById('po-modal').addEventListener('click', function(e) {
+    if (e.target === this) closePOModal();
+  });
+
+  /* ── Nav ── */
+  function toggleNav() {
+    var nav = document.querySelector('.nav');
+    var bd = document.getElementById('nav-backdrop');
+    var open = nav.classList.toggle('open');
+    bd.classList.toggle('visible', open);
+  }
+  function closeNav() {
+    document.querySelector('.nav').classList.remove('open');
+    document.getElementById('nav-backdrop').classList.remove('visible');
+  }
+  window.addEventListener('resize', function() { if (window.innerWidth > 700) closeNav(); });
+</script>
+</body>
+</html>

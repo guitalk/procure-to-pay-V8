@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — Projects</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Shared modal chrome ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none; align-items: center; justify-content: center;
+      padding: var(--s-5);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      width: 100%; max-width: 480px;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: var(--s-5) var(--s-6);
+      border-bottom: 1px solid var(--border); gap: var(--s-3);
+    }
+    .modal-header-icon {
+      width: 36px; height: 36px; border-radius: var(--r-md);
+      background: var(--accent-soft); color: var(--accent);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .modal-title { font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+    .modal-sub   { font-size: var(--fs-sm); color: var(--fg-muted); margin-top: 2px; line-height: 1.4; }
+    .modal-close {
+      width: 28px; height: 28px; border-radius: var(--r-sm);
+      background: none; border: 1px solid var(--border);
+      color: var(--fg-muted); cursor: pointer;
+      display: grid; place-items: center; flex-shrink: 0; margin-top: 4px;
+    }
+    .modal-close:hover { background: var(--bg-elevated); color: var(--fg); }
+    .modal-body   { padding: var(--s-5) var(--s-6); }
+    .modal-footer {
+      display: flex; align-items: center; justify-content: flex-end; gap: var(--s-2);
+      padding: var(--s-4) var(--s-6);
+      border-top: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+    /* Fields */
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--s-4); }
+    .field:last-child { margin-bottom: 0; }
+    .field-label {
+      font-size: var(--fs-xs); font-weight: var(--fw-medium);
+      text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-muted);
+    }
+    .field-input {
+      width: 100%; padding: 9px var(--s-3);
+      background: var(--bg-base); border: 1px solid var(--border);
+      border-radius: var(--r-md); color: var(--fg);
+      font-size: var(--fs-md); font-family: var(--font-sans);
+      transition: border-color 0.12s;
+    }
+    .field-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+    .field-input::placeholder { color: var(--fg-subtle); }
+    select.field-input { cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 16 16' fill='none' stroke='%2371717a' stroke-width='1.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="nav">
+    <div class="nav-brand">
+      <button class="hamburger-btn" onclick="toggleNav()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
+      <div class="nav-brand-text">
+        <div class="nav-brand-name">Procure</div>
+        <div class="nav-brand-sub">Procurement</div>
+      </div>
+    </div>
+    <div class="nav-items">
+      <a class="nav-item" href="index.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded has-active" href="clients.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V7l6-4 6 4v7zM6 14V9h4v5"/></svg>
+          <span>Master Data</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="clients.html">Clients</a>
+          <a class="nav-item nav-sub-item active" href="projects.html">Projects</a>
+          <a class="nav-item nav-sub-item" href="vendor-categories.html">Categories</a>
+          <a class="nav-item nav-sub-item" href="terms-conditions.html">Terms &amp; Conditions</a>
+          <a class="nav-item nav-sub-item" href="payment-terms.html">Payment Terms</a>
+          <a class="nav-item nav-sub-item" href="inco-terms.html">Inco Terms</a>
+          <a class="nav-item nav-sub-item" href="vendors.html">Vendors</a>
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-requisitions.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Purchase Requisitions</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header" href="#">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+          <span>RFQs</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="rfq-list.html">All RFQs</a>
+          <a class="nav-item nav-sub-item" href="rfq-create.html">New RFQ</a>
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-orders.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l1.5 8.5a1 1 0 0 0 1 .85h7a1 1 0 0 0 1-.85L14 4"/><path d="M2 4h12M6 7v3M10 7v3"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+    </div>
+
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">AD</div>
+        <div>
+          <div class="user-name">Admin User</div>
+          <div class="user-email">admin@aker.com</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div>
+    <main class="main">
+
+      <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-end">
+        <div>
+          <div class="page-title">Projects</div>
+          <div class="page-subtitle">All project records across clients. Each project is linked to a client and scopes procurement RBAC.</div>
+        </div>
+        <div style="display:flex;gap:var(--s-2)">
+          <button class="btn btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 9h6M5 11h4M5 7h6"/></svg>
+            Import
+          </button>
+          <button class="btn btn-primary" onclick="openModal('modal-new-project')">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+            New Project
+          </button>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 0; overflow: hidden">
+        <div class="md-toolbar">
+          <div class="search-wrap-inline">
+            <span class="search-icon-inline"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5l3 3"/></svg></span>
+            <input class="search-input" type="text" placeholder="Search projects by name, client, location" />
+          </div>
+          <div class="filter-chips-inline">
+            <span class="chip active">All · 9</span>
+            <span class="chip">Active · 6</span>
+            <span class="chip">Planning · 3</span>
+            <span class="chip">On Hold · 0</span>
+          </div>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Project ID</th>
+              <th>Project Name</th>
+              <th>Client</th>
+              <th>Location</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr>
+              <td><span class="id-cell">PRJ-001</span></td>
+              <td>Biofuel Expansion Ph1</td>
+              <td><span class="id-cell">CL-001</span>&ensp;Client Delta Refineries</td>
+              <td>Vadodara</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+
+            <tr>
+              <td><span class="id-cell">PRJ-002</span></td>
+              <td>Biofuel Expansion Ph2</td>
+              <td><span class="id-cell">CL-001</span>&ensp;Client Delta Refineries</td>
+              <td>Vadodara</td>
+              <td><span class="badge warning">Planning</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+
+            <tr>
+              <td><span class="id-cell">PRJ-003</span></td>
+              <td>Kakinada Offshore Ph-II</td>
+              <td><span class="id-cell">CL-001</span>&ensp;Client Delta Refineries</td>
+              <td>Kakinada</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+
+            <tr>
+              <td><span class="id-cell">PRJ-004</span></td>
+              <td>Refinery Upgrade Phase I</td>
+              <td><span class="id-cell">CL-002</span>&ensp;OmniCorp Process</td>
+              <td>Mumbai</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+
+            <tr>
+              <td><span class="id-cell">PRJ-005</span></td>
+              <td>Polymer Plant Expansion</td>
+              <td><span class="id-cell">CL-002</span>&ensp;OmniCorp Process</td>
+              <td>Mumbai</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+
+            <tr>
+              <td><span class="id-cell">PRJ-006</span></td>
+              <td>Steel Rolling Mill Upgrade</td>
+              <td><span class="id-cell">CL-003</span>&ensp;SteelMin Holdings</td>
+              <td>Jamshedpur</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+
+            <tr>
+              <td><span class="id-cell">PRJ-007</span></td>
+              <td>Offshore Pipeline Integrity</td>
+              <td><span class="id-cell">CL-004</span>&ensp;PetroVar Engineering</td>
+              <td>Ahmedabad</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+
+            <tr>
+              <td><span class="id-cell">PRJ-008</span></td>
+              <td>Compression Station Build</td>
+              <td><span class="id-cell">CL-004</span>&ensp;PetroVar Engineering</td>
+              <td>Ahmedabad</td>
+              <td><span class="badge warning">Planning</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+
+            <tr>
+              <td><span class="id-cell">PRJ-009</span></td>
+              <td>Solar Module Procurement 2026</td>
+              <td><span class="id-cell">CL-005</span>&ensp;Greentech Solar Industries</td>
+              <td>Pune</td>
+              <td><span class="badge warning">Planning</span></td>
+              <td><button class="row-action"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="0.75" fill="currentColor"/><circle cx="8" cy="8" r="0.75" fill="currentColor"/><circle cx="12.5" cy="8" r="0.75" fill="currentColor"/></svg></button></td>
+            </tr>
+
+          </tbody>
+        </table>
+
+        <div class="md-table-footer">
+          <div>Showing 9 of 9 projects</div>
+          <div class="pager">
+            <button class="icon-btn" disabled><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 4l-4 4 4 4"/></svg></button>
+            <span style="padding: 0 var(--s-2)">1 / 1</span>
+            <button class="icon-btn" disabled><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+
+<!-- ── Modal: New Project ─────────────────────────────── -->
+<div class="modal-overlay" id="modal-new-project">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="display:flex;gap:var(--s-3);align-items:flex-start;flex:1;min-width:0;">
+        <div class="modal-header-icon">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M8 5v3M5 8h6"/></svg>
+        </div>
+        <div>
+          <div class="modal-title">New Project</div>
+          <div class="modal-sub">Links a project to a client and scopes it for procurement</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-new-project')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">Project Name</label>
+        <input class="field-input" placeholder="e.g. Wellhead Platform Phase III" />
+      </div>
+      <div class="field">
+        <label class="field-label">Client</label>
+        <select class="field-input">
+          <option value="">Select client…</option>
+          <option value="CL-001">CL-001 · Client Delta Refineries</option>
+          <option value="CL-002">CL-002 · OmniCorp Process</option>
+          <option value="CL-003">CL-003 · SteelMin Holdings</option>
+          <option value="CL-004">CL-004 · PetroVar Engineering</option>
+          <option value="CL-005">CL-005 · Greentech Solar Industries</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">Location</label>
+        <input class="field-input" placeholder="City, State" />
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label">Status</label>
+        <select class="field-input">
+          <option value="planning">Planning</option>
+          <option value="active">Active</option>
+          <option value="on_hold">On Hold</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-new-project')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-new-project')">Save Project</button>
+    </div>
+  </div>
+</div>
+
+<div class="nav-backdrop" id="nav-backdrop" onclick="closeNav()"></div>
+
+<script>
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
+  });
+  function toggleNav() {
+    const nav = document.querySelector('.nav');
+    const backdrop = document.getElementById('nav-backdrop');
+    const isOpen = nav.classList.toggle('open');
+    backdrop.classList.toggle('visible', isOpen);
+  }
+  function closeNav() {
+    document.querySelector('.nav').classList.remove('open');
+    document.getElementById('nav-backdrop').classList.remove('visible');
+  }
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 700) closeNav();
+  });
+</script>
+</body>
+</html>

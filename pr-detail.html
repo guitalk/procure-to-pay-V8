@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — PR-2026-009</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Layout ─────────────────────────────────────────────── */
+    .main.prd-main { padding: 0; max-width: 1040px; }
+    .prd-inner { padding: var(--s-5) var(--s-6); padding-bottom: 96px; }
+
+    /* ── Back bar ── */
+    .prd-back-bar {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-3) var(--s-6);
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 20;
+    }
+    .prd-back-btn {
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      padding: var(--s-2) var(--s-3);
+      background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--r-md); color: var(--fg-muted);
+      font-family: var(--font-sans); font-size: var(--fs-sm);
+      font-weight: var(--fw-medium); text-decoration: none;
+      cursor: pointer; transition: background 0.12s, color 0.12s;
+    }
+    .prd-back-btn:hover { background: var(--bg-elevated); color: var(--fg); }
+    .prd-back-div { width: 1px; height: 18px; background: var(--border); }
+    .prd-crumb { font-size: var(--fs-sm); color: var(--fg-subtle); display: flex; align-items: center; gap: var(--s-2); }
+    .prd-crumb a { color: var(--fg-muted); text-decoration: none; }
+    .prd-crumb a:hover { color: var(--info); }
+    .prd-crumb .sep { color: var(--border-strong); }
+    .prd-crumb .cur { color: var(--fg); font-weight: var(--fw-medium); font-family: var(--font-mono); }
+
+    /* ── Page header ── */
+    .prd-header { margin-bottom: var(--s-5); }
+    .prd-title-row { display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-2); flex-wrap: wrap; }
+    .prd-title { font-size: var(--fs-2xl); font-weight: var(--fw-semibold); letter-spacing: -0.01em; }
+    .prd-meta { display: flex; gap: var(--s-5); flex-wrap: wrap; font-size: var(--fs-sm); color: var(--fg-muted); }
+    .prd-meta strong { color: var(--fg); font-weight: var(--fw-medium); }
+
+    /* ── KPI strip ── */
+    .prd-kpi {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: var(--s-3); margin-bottom: var(--s-5);
+    }
+    .prd-kpi-tile {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: var(--s-4);
+    }
+    .prd-kpi-val { font-family: var(--font-mono); font-size: var(--fs-xl); font-weight: var(--fw-semibold); color: var(--fg); margin-bottom: 2px; }
+    .prd-kpi-val.amber { color: #F59E0B; }
+    .prd-kpi-val.red   { color: #EF4444; }
+    .prd-kpi-label { font-size: var(--fs-xs); color: var(--fg-subtle); }
+
+    /* ── Section card ── */
+    .prd-section {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); overflow: hidden; margin-bottom: var(--s-4);
+    }
+    .prd-section-head {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-4) var(--s-5); border-bottom: 1px solid var(--border-subtle);
+    }
+    .prd-section-icon {
+      width: 26px; height: 26px; border-radius: var(--r-sm);
+      background: var(--bg-subtle); display: grid; place-items: center;
+      font-size: 13px; flex-shrink: 0;
+    }
+    .prd-section-title { font-weight: var(--fw-semibold); font-size: var(--fs-md); }
+    .prd-section-hint  { margin-left: auto; font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .prd-section-body  { padding: var(--s-5); }
+
+    /* ── Line items table ── */
+    .li-table { width: 100%; border-collapse: collapse; }
+    .li-table th {
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--fg-subtle);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: var(--s-2) var(--s-3); text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .li-table th.r { text-align: right; }
+    .li-table td {
+      padding: var(--s-3); font-size: var(--fs-sm);
+      border-bottom: 1px solid var(--border-subtle); vertical-align: middle;
+    }
+    .li-table tr:last-child td { border-bottom: none; }
+    .li-desc { font-weight: var(--fw-medium); color: var(--fg); }
+    .li-spec { font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: 2px; }
+    .li-num  { font-family: var(--font-mono); font-size: var(--fs-sm); text-align: right; }
+    .li-total-row td { background: var(--bg-subtle); font-weight: var(--fw-semibold); }
+
+    /* ── Priority badge ── */
+    .priority-high {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 20px; font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+      background: rgba(239,68,68,0.10); color: #EF4444; border: 1px solid rgba(239,68,68,0.22);
+    }
+
+    /* ── Per-line-item doc badge ── */
+    .li-doc-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 7px; border-radius: 20px; font-size: 11px; font-weight: var(--fw-semibold);
+      font-family: var(--font-mono); cursor: default;
+      white-space: nowrap;
+    }
+    .li-doc-ok   { background: rgba(16,185,129,0.10); color: #10B981; border: 1px solid rgba(16,185,129,0.22); }
+    .li-doc-warn { background: rgba(245,158,11,0.10); color: #F59E0B; border: 1px solid rgba(245,158,11,0.25); }
+
+    /* ── RFQ scope modal extras ── */
+    .scope-option {
+      border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--s-4);
+      margin-bottom: var(--s-3); cursor: pointer; transition: border-color 0.15s, background 0.15s;
+      display: flex; gap: var(--s-3); align-items: flex-start;
+    }
+    .scope-option:hover { border-color: var(--info); background: rgba(6,182,212,0.04); }
+    .scope-option.selected { border-color: var(--info); background: rgba(6,182,212,0.07); }
+    .scope-radio {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid var(--border-strong); background: var(--bg-subtle);
+      flex-shrink: 0; margin-top: 2px; transition: border-color 0.15s;
+      display: grid; place-items: center;
+    }
+    .scope-option.selected .scope-radio { border-color: var(--info); }
+    .scope-radio-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--info); display: none;
+    }
+    .scope-option.selected .scope-radio-dot { display: block; }
+    .scope-title { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--fg); }
+    .scope-sub   { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 2px; }
+    .scope-sub-items { margin-top: var(--s-3); display: none; flex-direction: column; gap: var(--s-2); }
+    .scope-option.selected .scope-sub-items { display: flex; }
+    .scope-check-row {
+      display: flex; align-items: center; gap: var(--s-2);
+      font-size: var(--fs-sm); color: var(--fg-muted);
+    }
+    .scope-check-row input[type="checkbox"] { accent-color: var(--info); width: 14px; height: 14px; }
+    .scope-split-row { margin-top: var(--s-3); display: none; }
+    .scope-option.selected .scope-split-row { display: block; }
+    .scope-select {
+      width: 100%; box-sizing: border-box;
+      background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: var(--s-2) var(--s-3);
+      color: var(--fg); font-family: var(--font-sans); font-size: var(--fs-sm);
+      margin-bottom: var(--s-2); outline: none;
+    }
+    .scope-qty-row { display: flex; align-items: center; gap: var(--s-2); margin-top: var(--s-2); }
+    .scope-qty-label { font-size: var(--fs-xs); color: var(--fg-subtle); white-space: nowrap; }
+    .scope-qty-input {
+      width: 72px; background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: var(--s-2) var(--s-3);
+      color: var(--fg); font-family: var(--font-mono); font-size: var(--fs-sm); outline: none;
+      text-align: right;
+    }
+    .scope-qty-uom { font-size: var(--fs-xs); color: var(--fg-subtle); }
+
+    /* ── Documents ── */
+    .doc-list { display: flex; flex-direction: column; gap: var(--s-2); }
+    .doc-row {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-3) var(--s-4); background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle); border-radius: var(--r-md);
+    }
+    .doc-icon { font-size: 16px; flex-shrink: 0; }
+    .doc-name { font-size: var(--fs-sm); font-weight: var(--fw-medium); flex: 1; }
+    .doc-meta { font-size: var(--fs-xs); color: var(--fg-subtle); font-family: var(--font-mono); }
+
+    /* ── Comments thread ── */
+    .comment-list { display: flex; flex-direction: column; gap: var(--s-4); }
+    .comment-item { display: flex; gap: var(--s-3); }
+    .comment-av {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      display: grid; place-items: center;
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--fg-muted);
+      flex-shrink: 0;
+    }
+    .comment-av.system { background: var(--bg-subtle); color: var(--fg-subtle); font-size: 10px; }
+    .comment-body { flex: 1; }
+    .comment-header { display: flex; align-items: center; gap: var(--s-2); margin-bottom: var(--s-1); }
+    .comment-author { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--fg); }
+    .comment-time   { font-size: var(--fs-xs); color: var(--fg-subtle); font-family: var(--font-mono); }
+    .comment-role   { font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .comment-text   { font-size: var(--fs-sm); color: var(--fg-muted); line-height: 1.6; }
+    .comment-text.system-msg { font-style: italic; color: var(--fg-subtle); }
+    .comment-divider { border: none; border-top: 1px solid var(--border-subtle); margin: var(--s-2) 0; }
+
+    /* comment input */
+    .comment-input-row { display: flex; gap: var(--s-3); margin-top: var(--s-4); }
+    .comment-input-av {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.25);
+      display: grid; place-items: center;
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--info);
+      flex-shrink: 0;
+    }
+    .comment-input-wrap { flex: 1; }
+    .comment-input-field {
+      width: 100%; box-sizing: border-box;
+      background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: var(--s-3) var(--s-4);
+      color: var(--fg); font-family: var(--font-sans); font-size: var(--fs-sm);
+      resize: none; min-height: 68px; outline: none;
+      transition: border-color 0.15s;
+    }
+    .comment-input-field:focus { border-color: var(--info); }
+    .comment-input-field::placeholder { color: var(--fg-subtle); }
+    .comment-input-actions { display: flex; justify-content: flex-end; margin-top: var(--s-2); }
+
+    /* ── Info grid ── */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); }
+    .info-field label {
+      display: block; font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+      color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--s-1);
+    }
+    .info-val { font-size: var(--fs-sm); color: var(--fg); }
+    .info-val.mono { font-family: var(--font-mono); }
+
+    /* ── RFQ link banner ── */
+    .rfq-link-banner {
+      display: flex; align-items: center; justify-content: space-between; gap: var(--s-4);
+      padding: var(--s-4) var(--s-5);
+      background: linear-gradient(90deg, rgba(6,182,212,0.07), rgba(99,102,241,0.04));
+      border: 1px solid rgba(6,182,212,0.20); border-radius: var(--r-lg); margin-bottom: var(--s-4);
+    }
+    .rfq-link-label { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--fg); }
+    .rfq-link-sub   { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 2px; }
+    .btn-rfq-link {
+      padding: var(--s-2) var(--s-4);
+      background: none; border: 1px solid var(--info); border-radius: var(--r-md);
+      color: var(--info); font-family: var(--font-sans); font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold); cursor: pointer; white-space: nowrap;
+      text-decoration: none; display: inline-flex; align-items: center; gap: var(--s-2);
+      transition: background 0.15s;
+    }
+    .btn-rfq-link:hover { background: rgba(6,182,212,0.10); }
+
+    /* ── Sticky action bar ── */
+    .prd-action-bar {
+      position: fixed; bottom: 0; left: 240px; right: 0;
+      background: var(--bg-card); border-top: 1px solid var(--border);
+      padding: var(--s-4) var(--s-6);
+      display: flex; align-items: center; gap: var(--s-3);
+      z-index: 30;
+    }
+    .prd-action-bar .action-label {
+      font-size: var(--fs-sm); color: var(--fg-muted); flex: 1;
+    }
+    .action-label strong { color: var(--fg); }
+    .btn-approve {
+      padding: var(--s-2) var(--s-5);
+      background: #10B981; border: none; border-radius: var(--r-md);
+      color: #fff; font-family: var(--font-sans); font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold); cursor: pointer;
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      transition: background 0.15s;
+    }
+    .btn-approve:hover { background: #059669; }
+    .btn-query {
+      padding: var(--s-2) var(--s-5);
+      background: none; border: 1px solid #F59E0B; border-radius: var(--r-md);
+      color: #F59E0B; font-family: var(--font-sans); font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold); cursor: pointer;
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      transition: background 0.15s;
+    }
+    .btn-query:hover { background: rgba(245,158,11,0.10); }
+    .btn-reject {
+      padding: var(--s-2) var(--s-5);
+      background: none; border: 1px solid var(--danger); border-radius: var(--r-md);
+      color: var(--danger); font-family: var(--font-sans); font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold); cursor: pointer;
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      transition: background 0.15s;
+    }
+    .btn-reject:hover { background: rgba(239,68,68,0.08); }
+
+    /* ── Action bar state variants ── */
+    .prd-action-bar.bar-approved {
+      background: linear-gradient(90deg, rgba(16,185,129,0.07) 0%, var(--bg-card) 60%);
+      border-top-color: rgba(16,185,129,0.28);
+    }
+    .prd-action-bar.bar-rejected {
+      background: linear-gradient(90deg, rgba(239,68,68,0.06) 0%, var(--bg-card) 60%);
+      border-top-color: rgba(239,68,68,0.22);
+    }
+    .prd-action-bar.bar-query {
+      background: linear-gradient(90deg, rgba(245,158,11,0.06) 0%, var(--bg-card) 60%);
+      border-top-color: rgba(245,158,11,0.22);
+    }
+    .btn-create-rfq {
+      padding: var(--s-2) var(--s-5);
+      background: #10B981; border: none; border-radius: var(--r-md);
+      color: #fff; font-family: var(--font-sans); font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold); cursor: pointer;
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-create-rfq:hover { background: #059669; }
+
+    /* ── Approved state ── */
+    .prd-approved-banner {
+      display: none; align-items: center; gap: var(--s-3);
+      padding: var(--s-4) var(--s-5);
+      background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25);
+      border-radius: var(--r-lg); margin-bottom: var(--s-4);
+    }
+    .prd-approved-banner.visible { display: flex; }
+    .approved-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(16,185,129,0.15); border: 2px solid #10B981;
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .btn-raise-rfq {
+      margin-left: auto; flex-shrink: 0;
+      padding: var(--s-2) var(--s-5);
+      background: #10B981; border: none; border-radius: var(--r-md);
+      color: #fff; font-family: var(--font-sans); font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold); cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      transition: background 0.15s;
+    }
+    .btn-raise-rfq:hover { background: #059669; }
+
+    /* ── Modal overlay ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px); z-index: 100;
+      display: none; align-items: center; justify-content: center; padding: var(--s-5);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--r-xl); width: 100%; max-width: 480px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: var(--s-5) var(--s-6); border-bottom: 1px solid var(--border); gap: var(--s-3);
+    }
+    .modal-header-icon {
+      width: 36px; height: 36px; border-radius: var(--r-md);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .modal-header-icon.query { background: rgba(245,158,11,0.12); color: #F59E0B; }
+    .modal-header-icon.reject { background: rgba(239,68,68,0.10); color: var(--danger); }
+    .modal-header-icon.approve { background: rgba(16,185,129,0.12); color: #10B981; }
+    .modal-title { font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+    .modal-sub   { font-size: var(--fs-sm); color: var(--fg-muted); margin-top: 2px; }
+    .modal-close {
+      width: 28px; height: 28px; border-radius: var(--r-sm);
+      background: none; border: 1px solid var(--border);
+      color: var(--fg-muted); cursor: pointer; display: grid; place-items: center; flex-shrink: 0;
+    }
+    .modal-body { padding: var(--s-5) var(--s-6); }
+    .modal-label {
+      display: block; font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+      color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--s-2);
+    }
+    .modal-required { color: var(--danger); }
+    .modal-textarea {
+      width: 100%; box-sizing: border-box;
+      background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: var(--s-3) var(--s-4);
+      color: var(--fg); font-family: var(--font-sans); font-size: var(--fs-sm);
+      resize: none; height: 100px; outline: none; margin-bottom: var(--s-3);
+      transition: border-color 0.15s;
+    }
+    .modal-textarea:focus { border-color: var(--info); }
+    .modal-textarea::placeholder { color: var(--fg-subtle); }
+    .modal-hint { font-size: var(--fs-xs); color: var(--fg-subtle); margin-bottom: var(--s-4); }
+    .modal-footer {
+      padding: var(--s-4) var(--s-6); border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: var(--s-3);
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ══════════════════════════════════════════════ NAV ══ -->
+  <aside class="nav">
+    <div class="nav-brand">
+      <button class="hamburger-btn" onclick="toggleNav()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
+      <div class="nav-brand-text">
+        <div class="nav-brand-name">Procure</div>
+        <div class="nav-brand-sub">Procurement</div>
+      </div>
+    </div>
+    <div class="nav-items">
+      <a class="nav-item" href="index.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded" href="clients.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V7l6-4 6 4v7zM6 14V9h4v5"/></svg>
+          <span>Master Data</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="clients.html">Clients</a>
+          <a class="nav-item nav-sub-item" href="projects.html">Projects</a>
+          <a class="nav-item nav-sub-item" href="vendor-categories.html">Categories</a>
+          <a class="nav-item nav-sub-item" href="terms-conditions.html">Terms &amp; Conditions</a>
+          <a class="nav-item nav-sub-item" href="payment-terms.html">Payment Terms</a>
+          <a class="nav-item nav-sub-item" href="inco-terms.html">Inco Terms</a>
+          <a class="nav-item nav-sub-item" href="vendors.html">Vendors</a>
+        </div>
+      </div>
+      <a class="nav-item active" href="purchase-requisitions.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Purchase Requisitions</span>
+      </a>
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded" href="#">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+          <span>RFQs</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="rfq-list.html">All RFQs</a>
+          <a class="nav-item nav-sub-item" href="rfq-create.html">New RFQ</a>
+        </div>
+      </div>
+      <a class="nav-item" href="purchase-orders.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l1.5 8.5a1 1 0 0 0 1 .85h7a1 1 0 0 0 1-.85L14 4"/><path d="M2 4h12M6 7v3M10 7v3"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+    </div>
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">SM</div>
+        <div>
+          <div class="user-name">S. Mehta</div>
+          <div class="user-email">Engineering Lead</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════ MAIN ══ -->
+  <main class="main prd-main">
+    <button class="topbar-hamburger" onclick="toggleNav()">☰</button>
+
+    <!-- ── Back bar ── -->
+    <div class="prd-back-bar">
+      <a class="prd-back-btn" href="purchase-requisitions.html">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
+        Purchase Requisitions
+      </a>
+      <div class="prd-back-div"></div>
+      <div class="prd-crumb">
+        <a href="purchase-requisitions.html">Purchase Requisitions</a>
+        <span class="sep">/</span>
+        <span class="cur">PR-2026-009</span>
+      </div>
+    </div>
+
+    <div class="prd-inner">
+
+      <!-- ── Approved state banner (hidden until action) ── -->
+      <div class="prd-approved-banner" id="approved-banner">
+        <div class="approved-icon">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#10B981" stroke-width="2.5"><path d="M2.5 8.5l3.5 3.5 7-7"/></svg>
+        </div>
+        <div>
+          <div style="font-size:var(--fs-sm); font-weight:var(--fw-semibold); color:#10B981;">PR Approved — <span class="mono" style="font-family:var(--font-mono);">PR-2026-009</span></div>
+          <div style="font-size:var(--fs-xs); color:var(--fg-muted); margin-top:2px;">Approved by S. Mehta · Engineering Lead · Just now · Procurement team can now raise an RFQ</div>
+        </div>
+        <button class="btn-raise-rfq" onclick="openModal('modal-rfq-scope')">
+          Raise RFQ
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8h12M8 3l5 5-5 5"/></svg>
+        </button>
+      </div>
+
+      <!-- ── Page header ── -->
+      <div class="prd-header">
+        <div class="prd-title-row">
+          <h1 class="prd-title">PR-2026-009</h1>
+          <span class="badge badge-warning" id="pr-status-badge">Pending Approval</span>
+        </div>
+        <div style="font-size:var(--fs-md); color:var(--fg-muted); margin-bottom:var(--s-3);">
+          Rotating Equipment Supply — Kakinada Offshore Phase II
+        </div>
+        <div class="prd-meta">
+          <span>Requested by <strong>R. Singh · Mechanical Engg.</strong></span>
+          <span>Project <strong>Kakinada Offshore Ph-II</strong></span>
+          <span>Category <strong>Rotating Equipment</strong></span>
+          <span>Submitted <strong class="mono">23 Apr 2026</strong></span>
+        </div>
+      </div>
+
+      <!-- ── KPI strip ── -->
+      <div class="prd-kpi">
+        <div class="prd-kpi-tile">
+          <div class="prd-kpi-val">3</div>
+          <div class="prd-kpi-label">Line items</div>
+        </div>
+        <div class="prd-kpi-tile">
+          <div class="prd-kpi-val" style="font-size:var(--fs-md); padding-top:3px;">
+            <span class="badge badge-warning" style="font-size:var(--fs-xs);" id="kpi-status">Awaiting Approval</span>
+          </div>
+          <div class="prd-kpi-label">Approval status</div>
+        </div>
+      </div>
+
+      <!-- ── RFQ link banner ── -->
+      <div class="rfq-link-banner">
+        <div>
+          <div class="rfq-link-label">RFQ raised from this PR</div>
+          <div class="rfq-link-sub">RFQ-2026-038 · Rotating Equipment · Technical Evaluation in progress</div>
+        </div>
+        <a class="btn-rfq-link" href="rfq-detail.html">
+          View RFQ-2026-038
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M8 3l5 5-5 5"/></svg>
+        </a>
+      </div>
+
+      <!-- ── Line items ── -->
+      <div class="prd-section">
+        <div class="prd-section-head">
+          <div class="prd-section-icon">📦</div>
+          <div class="prd-section-title">Line Items</div>
+          <div class="prd-section-hint">TXN_PR_LINE_ITEM · 3 items</div>
+        </div>
+        <div class="prd-section-body" style="padding:0;">
+          <table class="li-table">
+            <thead>
+              <tr>
+                <th style="width:36px; padding-left:var(--s-5);">#</th>
+                <th>Description</th>
+                <th style="width:80px;">UOM</th>
+                <th class="r" style="width:60px;">Qty</th>
+                <th style="width:110px; text-align:center;">Documents</th>
+                <th style="width:36px; padding-right:var(--s-5);"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">01</td>
+                <td>
+                  <div class="li-desc">Centrifugal Pump</div>
+                  <div class="li-spec">API 610, 75 kW, SS316L impeller, ANSI flanges</div>
+                </td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td>
+                <td class="li-num">4</td>
+                <td style="text-align:center;">
+                  <span class="li-doc-badge li-doc-ok" title="Technical_Specification_Pumps.pdf">
+                    <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6l-3-4z"/><path d="M10 2v4h4"/></svg>
+                    1 doc
+                  </span>
+                </td>
+                <td style="padding-right:var(--s-5);">
+                  <button class="btn btn-secondary btn-sm" style="padding:2px 8px; font-size:11px;" title="Attach document">+</button>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">02</td>
+                <td>
+                  <div class="li-desc">Heat Exchanger</div>
+                  <div class="li-spec">TEMA B, Shell &amp; Tube, 450 m², CS shell / SS316 tubes</div>
+                </td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td>
+                <td class="li-num">2</td>
+                <td style="text-align:center;">
+                  <span class="li-doc-badge li-doc-ok" title="HeatExchanger_Datasheet.pdf">
+                    <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6l-3-4z"/><path d="M10 2v4h4"/></svg>
+                    1 doc
+                  </span>
+                </td>
+                <td style="padding-right:var(--s-5);">
+                  <button class="btn btn-secondary btn-sm" style="padding:2px 8px; font-size:11px;" title="Attach document">+</button>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">03</td>
+                <td>
+                  <div class="li-desc">Gate Valve</div>
+                  <div class="li-spec">BS 1414, 6" Class 300, CF8M body, Flanged ends</div>
+                </td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td>
+                <td class="li-num">12</td>
+                <td style="text-align:center;">
+                  <span class="li-doc-badge li-doc-warn" title="No document attached — required before submission">
+                    <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2L1.5 13.5h13L8 2z"/><path d="M8 6.5v3"/><circle cx="8" cy="11.5" r=".5" fill="currentColor"/></svg>
+                    No doc
+                  </span>
+                </td>
+                <td style="padding-right:var(--s-5);">
+                  <button class="btn btn-secondary btn-sm" style="padding:2px 8px; font-size:11px; border-color:#F59E0B; color:#F59E0B;" title="Attach required document">+</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Two-column: Request Details + Documents ── -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--s-4); margin-bottom:var(--s-4);">
+
+        <!-- Request Details -->
+        <div class="prd-section" style="margin-bottom:0;">
+          <div class="prd-section-head">
+            <div class="prd-section-icon">📋</div>
+            <div class="prd-section-title">Request Details</div>
+          </div>
+          <div class="prd-section-body">
+            <div class="info-grid">
+              <div class="info-field">
+                <label>Client</label>
+                <div class="info-val">Aker Energy Ltd.</div>
+              </div>
+              <div class="info-field">
+                <label>Project</label>
+                <div class="info-val">Kakinada Offshore Phase II</div>
+              </div>
+              <div class="info-field">
+                <label>Category</label>
+                <div class="info-val">Rotating Equipment</div>
+              </div>
+              <div class="info-field">
+                <label>Department</label>
+                <div class="info-val">Mechanical Engineering</div>
+              </div>
+              <div class="info-field">
+                <label>Required by</label>
+                <div class="info-val mono" style="color:#F59E0B;">30 Jun 2026</div>
+              </div>
+              <div class="info-field">
+                <label>Requested by</label>
+                <div class="info-val">R. Singh</div>
+              </div>
+              <div class="info-field" style="grid-column:1/-1;">
+                <label>Justification</label>
+                <div class="info-val" style="line-height:1.6; color:var(--fg-muted);">
+                  Phase II platform requires rotating equipment for produced water handling and process cooling loops. Equipment is on critical path — procurement delay will impact commissioning schedule by Q3 2026.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Documents -->
+        <div class="prd-section" style="margin-bottom:0;">
+          <div class="prd-section-head">
+            <div class="prd-section-icon">📎</div>
+            <div class="prd-section-title">Attached Documents</div>
+            <div class="prd-section-hint">4 files</div>
+          </div>
+          <div class="prd-section-body">
+            <div class="doc-list">
+              <div class="doc-row">
+                <div class="doc-icon">📄</div>
+                <div>
+                  <div class="doc-name">Technical_Specification_Pumps.pdf</div>
+                  <div class="doc-meta">PDF · 2.1 MB · R. Singh · 23 Apr 2026</div>
+                </div>
+              </div>
+              <div class="doc-row">
+                <div class="doc-icon">📄</div>
+                <div>
+                  <div class="doc-name">HeatExchanger_Datasheet.pdf</div>
+                  <div class="doc-meta">PDF · 870 KB · R. Singh · 23 Apr 2026</div>
+                </div>
+              </div>
+              <div class="doc-row">
+                <div class="doc-icon">📊</div>
+                <div>
+                  <div class="doc-name">Vendor_Shortlist_Rotating.xlsx</div>
+                  <div class="doc-meta">XLSX · 44 KB · R. Singh · 24 Apr 2026</div>
+                </div>
+              </div>
+              <div class="doc-row">
+                <div class="doc-icon">📄</div>
+                <div>
+                  <div class="doc-name">Budget_Approval_Note_009.pdf</div>
+                  <div class="doc-meta">PDF · 310 KB · A. Kapoor · 25 Apr 2026</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Comments & Notes ── -->
+      <div class="prd-section">
+        <div class="prd-section-head">
+          <div class="prd-section-icon">💬</div>
+          <div class="prd-section-title">Comments &amp; Notes</div>
+          <div class="prd-section-hint">Internal thread</div>
+        </div>
+        <div class="prd-section-body">
+          <div class="comment-list" id="comment-list">
+
+            <!-- System: created -->
+            <div class="comment-item">
+              <div class="comment-av system">⚙</div>
+              <div class="comment-body">
+                <div class="comment-header">
+                  <span class="comment-author" style="color:var(--fg-subtle); font-weight:var(--fw-medium); font-size:var(--fs-xs);">System</span>
+                  <span class="comment-time">23 Apr 2026, 10:14</span>
+                </div>
+                <div class="comment-text system-msg">PR-2026-009 created by R. Singh (Mechanical Engineering). Status: Draft.</div>
+              </div>
+            </div>
+
+            <hr class="comment-divider" />
+
+            <!-- Rahul comment -->
+            <div class="comment-item">
+              <div class="comment-av">RS</div>
+              <div class="comment-body">
+                <div class="comment-header">
+                  <span class="comment-author">R. Singh</span>
+                  <span class="comment-role">Mechanical Engg.</span>
+                  <span class="comment-time">24 Apr 2026, 14:32</span>
+                </div>
+                <div class="comment-text">
+                  Added technical specifications and vendor shortlist. The centrifugal pump spec is per the FEED document (Rev C). Heat exchanger sizing is based on process simulation output from the licensor. Please note the valve quantity (12 Nos.) includes 10% contingency as agreed in the project review.
+                </div>
+              </div>
+            </div>
+
+            <hr class="comment-divider" />
+
+            <!-- System: submitted for approval -->
+            <div class="comment-item">
+              <div class="comment-av system">⚙</div>
+              <div class="comment-body">
+                <div class="comment-header">
+                  <span class="comment-author" style="color:var(--fg-subtle); font-weight:var(--fw-medium); font-size:var(--fs-xs);">System</span>
+                  <span class="comment-time">27 Apr 2026, 09:00</span>
+                </div>
+                <div class="comment-text system-msg">PR submitted for approval. Assigned to S. Mehta (Engineering Lead).</div>
+              </div>
+            </div>
+
+            <hr class="comment-divider" />
+
+            <!-- Dynamic comments added by actions -->
+            <div id="dynamic-comments"></div>
+
+          </div>
+
+          <!-- Approver comment input -->
+          <div class="comment-input-row" id="comment-input-area">
+            <div class="comment-input-av">SM</div>
+            <div class="comment-input-wrap">
+              <textarea class="comment-input-field" id="approver-comment" placeholder="Add a note or query for the requester…"></textarea>
+              <div class="comment-input-actions">
+                <button class="btn btn-secondary btn-sm" onclick="postComment()">Post Note</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /prd-inner -->
+  </main>
+
+</div><!-- /app -->
+
+<!-- ── Sticky action bar ── -->
+<div class="prd-action-bar" id="action-bar">
+  <div class="action-label">Reviewing as <strong>S. Mehta</strong> · Engineering Lead · PR-2026-009</div>
+  <button class="btn-reject" onclick="openModal('modal-reject')">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5"/></svg>
+    Reject
+  </button>
+  <button class="btn-query" onclick="openModal('modal-query')">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5.5a1.5 1.5 0 0 1 1.5 1.5c0 1-1.5 1.5-1.5 2.5"/><circle cx="8" cy="12" r=".5" fill="currentColor"/></svg>
+    Raise Query
+  </button>
+  <button class="btn-approve" onclick="openModal('modal-approve')">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2.5 8.5l3.5 3.5 7-7"/></svg>
+    Approve
+  </button>
+</div>
+
+<!-- ══════════════════════════════════════════════ MODALS ══ -->
+
+<!-- Approve modal -->
+<div class="modal-overlay" id="modal-approve">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-header-icon approve">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2.5 8.5l3.5 3.5 7-7"/></svg>
+      </div>
+      <div style="flex:1;">
+        <div class="modal-title">Approve PR-2026-009</div>
+        <div class="modal-sub">This will allow an RFQ to be raised against this requisition</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-approve')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <label class="modal-label">Approval note <span style="color:var(--fg-subtle); font-style:italic; text-transform:none; letter-spacing:0;">(optional)</span></label>
+      <textarea class="modal-textarea" id="approve-note" placeholder="Add any conditions or remarks for the requester…"></textarea>
+      <div style="background:var(--bg-subtle); border:1px solid var(--border-subtle); border-radius:var(--r-md); padding:var(--s-3) var(--s-4); font-size:var(--fs-xs); color:var(--fg-muted);">
+        Approving will notify R. Singh and allow the procurement team to raise an RFQ against this requisition.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-approve')">Cancel</button>
+      <button class="btn btn-primary" style="background:#10B981; border-color:#10B981;" onclick="confirmApprove()">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2.5 8.5l3.5 3.5 7-7"/></svg>
+        Confirm Approval
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Raise Query modal -->
+<div class="modal-overlay" id="modal-query">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-header-icon query">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5.5a1.5 1.5 0 0 1 1.5 1.5c0 1-1.5 1.5-1.5 2.5"/><circle cx="8" cy="12" r=".5" fill="currentColor"/></svg>
+      </div>
+      <div style="flex:1;">
+        <div class="modal-title">Raise Query</div>
+        <div class="modal-sub">PR will be sent back to R. Singh for clarification</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-query')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <label class="modal-label">Query <span class="modal-required">*</span></label>
+      <textarea class="modal-textarea" id="query-text" placeholder="Describe what needs to be clarified before you can approve…"></textarea>
+      <div class="modal-hint">R. Singh will be notified and the PR will be placed in "Query Raised" status until they respond.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-query')">Cancel</button>
+      <button class="btn btn-primary" style="background:#F59E0B; border-color:#F59E0B;" onclick="confirmQuery()">Send Query</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reject modal -->
+<div class="modal-overlay" id="modal-reject">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-header-icon reject">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5"/></svg>
+      </div>
+      <div style="flex:1;">
+        <div class="modal-title">Reject PR-2026-009</div>
+        <div class="modal-sub">This action cannot be undone — requester will need to raise a new PR</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-reject')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <label class="modal-label">Rejection reason <span class="modal-required">*</span></label>
+      <textarea class="modal-textarea" id="reject-reason" placeholder="Provide a reason — this will be visible to the requester and audit log…"></textarea>
+      <div class="modal-hint">A mandatory reason is required for all rejections per procurement policy.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-reject')">Cancel</button>
+      <button class="btn btn-primary" style="background:var(--danger); border-color:var(--danger);" onclick="confirmReject()">Confirm Rejection</button>
+    </div>
+  </div>
+</div>
+
+<!-- RFQ Scope Selection modal -->
+<div class="modal-overlay" id="modal-rfq-scope">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-header-icon" style="background:rgba(6,182,212,0.12); color:var(--info);">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+      </div>
+      <div style="flex:1;">
+        <div class="modal-title">Generate RFQ</div>
+        <div class="modal-sub">Choose scope — which line items to float to vendors</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-rfq-scope')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Option A: Full PR -->
+      <div class="scope-option selected" id="scope-full" onclick="selectScope('full')">
+        <div class="scope-radio"><div class="scope-radio-dot"></div></div>
+        <div style="flex:1;">
+          <div class="scope-title">Full PR — all line items</div>
+          <div class="scope-sub">RFQ will include all 3 line items: Centrifugal Pump, Heat Exchanger, Gate Valve</div>
+        </div>
+      </div>
+
+      <!-- Option B: Selected Line Items -->
+      <div class="scope-option" id="scope-select" onclick="selectScope('select')">
+        <div class="scope-radio"><div class="scope-radio-dot"></div></div>
+        <div style="flex:1;">
+          <div class="scope-title">Selected line items</div>
+          <div class="scope-sub">Choose specific items — RFQ inherits only those items' documents and specs</div>
+          <div class="scope-sub-items" id="scope-select-items">
+            <label class="scope-check-row">
+              <input type="checkbox" checked onclick="event.stopPropagation()" /> 01 · Centrifugal Pump (4 Nos.)
+            </label>
+            <label class="scope-check-row">
+              <input type="checkbox" checked onclick="event.stopPropagation()" /> 02 · Heat Exchanger (2 Nos.)
+            </label>
+            <label class="scope-check-row">
+              <input type="checkbox" onclick="event.stopPropagation()" /> 03 · Gate Valve (12 Nos.) <span style="color:#F59E0B; font-size:10px; margin-left:4px;">⚠ doc missing</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Option C: Split Quantity -->
+      <div class="scope-option" id="scope-split" onclick="selectScope('split')">
+        <div class="scope-radio"><div class="scope-radio-dot"></div></div>
+        <div style="flex:1;">
+          <div class="scope-title">Split quantity of a single line item</div>
+          <div class="scope-sub">Float a partial quantity — remaining stays on PR for a separate RFQ later</div>
+          <div class="scope-split-row" id="scope-split-detail">
+            <select class="scope-select" onclick="event.stopPropagation()">
+              <option>01 · Centrifugal Pump (4 Nos.)</option>
+              <option>02 · Heat Exchanger (2 Nos.)</option>
+              <option>03 · Gate Valve (12 Nos.)</option>
+            </select>
+            <div class="scope-qty-row">
+              <span class="scope-qty-label">Quantity to float:</span>
+              <input class="scope-qty-input" type="number" value="2" min="1" onclick="event.stopPropagation()" />
+              <span class="scope-qty-uom">of 4 Nos.</span>
+              <span style="font-size:var(--fs-xs); color:var(--fg-subtle); margin-left:4px;">· 2 remain on PR</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-rfq-scope')">Cancel</button>
+      <a href="rfq-create.html" class="btn btn-primary">
+        Continue to RFQ Setup
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8h12M8 3l5 5-5 5"/></svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+
+<div class="nav-backdrop" id="nav-backdrop" onclick="closeNav()"></div>
+
+<script>
+  // Modal
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  // RFQ scope selection
+  function selectScope(mode) {
+    ['full','select','split'].forEach(function(m) {
+      document.getElementById('scope-' + m).classList.toggle('selected', m === mode);
+    });
+  }
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); });
+  });
+
+  // Approve action
+  function confirmApprove() {
+    closeModal('modal-approve');
+    var note = document.getElementById('approve-note').value.trim();
+
+    // Flip header badge
+    var badge = document.getElementById('pr-status-badge');
+    badge.className = 'badge badge-success';
+    badge.textContent = 'Approved';
+
+    // KPI badge
+    var kpiBadge = document.getElementById('kpi-status');
+    kpiBadge.className = 'badge badge-success';
+    kpiBadge.textContent = 'Approved';
+
+    // Show green approved banner
+    document.getElementById('approved-banner').classList.add('visible');
+
+    // Add comment to thread
+    var commentHTML = '<hr class="comment-divider" /><div class="comment-item"><div class="comment-av" style="background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.25);color:#10B981;">SM</div><div class="comment-body"><div class="comment-header"><span class="comment-author" style="color:#10B981;">S. Mehta</span><span class="comment-role">Engineering Lead</span><span class="comment-time">Just now</span></div><div class="comment-text">' +
+      (note ? note : 'PR-2026-009 approved. RFQ can now be raised by the procurement team.') +
+      '</div></div></div>';
+    document.getElementById('dynamic-comments').innerHTML += commentHTML;
+
+    // Switch action bar → "Create RFQ" state (Purchase CTA)
+    var bar = document.getElementById('action-bar');
+    bar.className = 'prd-action-bar bar-approved';
+    bar.innerHTML =
+      '<div style="display:flex;align-items:center;gap:var(--s-2);flex:1;min-width:0;">' +
+        '<div style="width:28px;height:28px;border-radius:50%;background:rgba(16,185,129,0.14);border:1.5px solid #10B981;display:grid;place-items:center;flex-shrink:0;">' +
+          '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#10B981" stroke-width="2.5"><path d="M2.5 8.5l3.5 3.5 7-7"/></svg>' +
+        '</div>' +
+        '<div>' +
+          '<div style="font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:#10B981;">PR-2026-009 Approved</div>' +
+          '<div style="font-size:var(--fs-xs);color:var(--fg-subtle);margin-top:1px;">Purchase can now raise an RFQ against this requisition</div>' +
+        '</div>' +
+      '</div>' +
+      '<button class="btn-create-rfq" onclick="openModal(\'modal-rfq-scope\')">' +
+        '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>' +
+        'Create RFQ' +
+        '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8h12M8 3l5 5-5 5"/></svg>' +
+      '</button>';
+    document.getElementById('comment-input-area').style.display = 'none';
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Query action
+  function confirmQuery() {
+    var q = document.getElementById('query-text').value.trim();
+    if (!q) { document.getElementById('query-text').style.borderColor = 'var(--danger)'; return; }
+    closeModal('modal-query');
+
+    // Flip badge
+    var badge = document.getElementById('pr-status-badge');
+    badge.className = 'badge badge-warning';
+    badge.textContent = 'Query Raised';
+
+    var kpiBadge = document.getElementById('kpi-status');
+    kpiBadge.className = 'badge badge-warning';
+    kpiBadge.textContent = 'Query Raised';
+
+    // Add comment
+    var commentHTML = '<hr class="comment-divider" /><div class="comment-item"><div class="comment-av" style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.25);color:#F59E0B;">SM</div><div class="comment-body"><div class="comment-header"><span class="comment-author" style="color:#F59E0B;">S. Mehta</span><span class="comment-role">Engineering Lead · Query raised</span><span class="comment-time">Just now</span></div><div class="comment-text">' + q + '</div></div></div>';
+    document.getElementById('dynamic-comments').innerHTML += commentHTML;
+
+    // Switch action bar → "Query Raised" state
+    var bar = document.getElementById('action-bar');
+    bar.className = 'prd-action-bar bar-query';
+    bar.innerHTML =
+      '<div style="display:flex;align-items:center;gap:var(--s-2);flex:1;min-width:0;">' +
+        '<div style="width:28px;height:28px;border-radius:50%;background:rgba(245,158,11,0.12);border:1.5px solid #F59E0B;display:grid;place-items:center;flex-shrink:0;">' +
+          '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#F59E0B" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5.5a1.5 1.5 0 0 1 1.5 1.5c0 1-1.5 1.5-1.5 2.5"/><circle cx="8" cy="12" r=".5" fill="#F59E0B"/></svg>' +
+        '</div>' +
+        '<div>' +
+          '<div style="font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:#F59E0B;">Query Raised — Awaiting Response</div>' +
+          '<div style="font-size:var(--fs-xs);color:var(--fg-subtle);margin-top:1px;">Sent to <strong style="color:var(--fg);">R. Singh</strong> · Cannot approve until clarification is received</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  // Reject action
+  function confirmReject() {
+    var r = document.getElementById('reject-reason').value.trim();
+    if (!r) { document.getElementById('reject-reason').style.borderColor = 'var(--danger)'; return; }
+    closeModal('modal-reject');
+
+    // Flip badge
+    var badge = document.getElementById('pr-status-badge');
+    badge.className = 'badge badge-danger';
+    badge.textContent = 'Rejected';
+
+    var kpiBadge = document.getElementById('kpi-status');
+    kpiBadge.className = 'badge badge-danger';
+    kpiBadge.textContent = 'Rejected';
+
+    // Add comment
+    var commentHTML = '<hr class="comment-divider" /><div class="comment-item"><div class="comment-av" style="background:rgba(239,68,68,0.10);border-color:rgba(239,68,68,0.25);color:#EF4444;">SM</div><div class="comment-body"><div class="comment-header"><span class="comment-author" style="color:#EF4444;">S. Mehta</span><span class="comment-role">Engineering Lead · PR Rejected</span><span class="comment-time">Just now</span></div><div class="comment-text">' + r + '</div></div></div>';
+    document.getElementById('dynamic-comments').innerHTML += commentHTML;
+
+    // Switch action bar → "Rejected" state
+    var bar = document.getElementById('action-bar');
+    bar.className = 'prd-action-bar bar-rejected';
+    bar.innerHTML =
+      '<div style="display:flex;align-items:center;gap:var(--s-2);flex:1;min-width:0;">' +
+        '<div style="width:28px;height:28px;border-radius:50%;background:rgba(239,68,68,0.10);border:1.5px solid #EF4444;display:grid;place-items:center;flex-shrink:0;">' +
+          '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#EF4444" stroke-width="2"><circle cx="8" cy="8" r="6"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5"/></svg>' +
+        '</div>' +
+        '<div>' +
+          '<div style="font-size:var(--fs-sm);font-weight:var(--fw-semibold);color:#EF4444;">PR Rejected</div>' +
+          '<div style="font-size:var(--fs-xs);color:var(--fg-subtle);margin-top:1px;">R. Singh has been notified · A new PR must be raised to restart the process</div>' +
+        '</div>' +
+      '</div>';
+    document.getElementById('comment-input-area').style.display = 'none';
+  }
+
+  // Post inline note
+  function postComment() {
+    var text = document.getElementById('approver-comment').value.trim();
+    if (!text) return;
+    var commentHTML = '<hr class="comment-divider" /><div class="comment-item"><div class="comment-av" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.25);color:var(--info);">SM</div><div class="comment-body"><div class="comment-header"><span class="comment-author">S. Mehta</span><span class="comment-role">Engineering Lead</span><span class="comment-time">Just now</span></div><div class="comment-text">' + text + '</div></div></div>';
+    document.getElementById('dynamic-comments').innerHTML += commentHTML;
+    document.getElementById('approver-comment').value = '';
+  }
+
+  // Nav group toggle
+  document.querySelectorAll('.nav-group-header').forEach(h => {
+    h.addEventListener('click', function(e) {
+      if (e.target.closest('a') && !e.target.closest('.chevron')) return;
+      this.classList.toggle('expanded');
+    });
+  });
+
+  // Mobile nav
+  function toggleNav() {
+    document.querySelector('.nav').classList.toggle('open');
+    document.getElementById('nav-backdrop').classList.toggle('open');
+  }
+  function closeNav() {
+    document.querySelector('.nav').classList.remove('open');
+    document.getElementById('nav-backdrop').classList.remove('open');
+  }
+  window.addEventListener('resize', () => { if (window.innerWidth > 700) closeNav(); });
+</script>
+</body>
+</html>

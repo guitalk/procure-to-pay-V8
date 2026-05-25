@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — RFQs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── RFQ list page ─────────────────────────────────────────── */
+    .rfq-table-wrap {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+
+    /* Kebab dropdown */
+    .row-action-wrap { position: relative; }
+    .kebab-menu {
+      position: absolute; right: 0; top: 28px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      min-width: 180px; z-index: 30;
+      padding: 4px 0; display: none;
+    }
+    .kebab-menu.open { display: block; }
+    .kebab-menu-item {
+      display: flex; align-items: center; gap: var(--s-2);
+      padding: 8px var(--s-3);
+      font-size: var(--fs-sm); color: var(--fg-muted);
+      cursor: pointer; transition: background 0.1s, color 0.1s;
+    }
+    .kebab-menu-item:hover { background: var(--bg-hover); color: var(--fg); }
+    .kebab-menu-item.primary { color: var(--accent); }
+    .kebab-menu-item.primary:hover { background: var(--accent-soft); }
+    .kebab-menu-item.danger { color: var(--danger); }
+    .kebab-menu-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .kebab-divider { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none; align-items: center; justify-content: center;
+      padding: var(--s-5);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      width: 100%; max-width: 560px;
+      max-height: 85vh; overflow-y: auto;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: var(--s-5) var(--s-6);
+      border-bottom: 1px solid var(--border); gap: var(--s-3);
+    }
+    .modal-header-icon {
+      width: 36px; height: 36px; border-radius: var(--r-md);
+      background: var(--accent-soft); color: var(--accent);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .modal-title { font-size: var(--fs-lg); font-weight: var(--fw-semibold); }
+    .modal-sub { font-size: var(--fs-sm); color: var(--fg-muted); margin-top: 2px; line-height:1.4; }
+    .modal-close {
+      width: 28px; height: 28px; border-radius: var(--r-sm);
+      background: none; border: 1px solid var(--border);
+      color: var(--fg-muted); cursor: pointer; display: grid; place-items: center;
+      flex-shrink: 0; margin-top: 4px;
+    }
+    .modal-close:hover { background: var(--bg-elevated); color: var(--fg); }
+    .modal-body { padding: var(--s-5) var(--s-6); }
+    .modal-footer {
+      display: flex; align-items: center; justify-content: flex-end; gap: var(--s-2);
+      padding: var(--s-4) var(--s-6);
+      border-top: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+
+    /* PR select list in modal */
+    .pr-select-list { display: flex; flex-direction: column; gap: var(--s-2); }
+    .pr-select-item {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-3) var(--s-4);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-md);
+      cursor: pointer;
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .pr-select-item:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .pr-select-item.selected { border-color: var(--accent); background: var(--accent-soft); }
+    .pr-select-radio {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 1.5px solid var(--border-strong);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .pr-select-item.selected .pr-select-radio { border-color: var(--accent); background: var(--accent); }
+    .pr-select-item.selected .pr-select-radio::after {
+      content: "";
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: white;
+    }
+    .pr-select-body { flex: 1; min-width: 0; }
+    .pr-select-id { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--accent); }
+    .pr-select-title { font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--fg); }
+    .pr-select-meta { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 1px; }
+
+    /* Add invitees slide-over pill */
+    .invitees-panel {
+      position: fixed; right: 0; top: 0; bottom: 0;
+      width: 380px;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border);
+      z-index: 50;
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.25s ease;
+      box-shadow: -8px 0 24px rgba(0,0,0,0.3);
+    }
+    .invitees-panel.open { transform: translateX(0); }
+    .invitees-header {
+      padding: var(--s-5); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .invitees-body { flex: 1; overflow-y: auto; padding: var(--s-4) var(--s-5); }
+    .invitees-footer {
+      padding: var(--s-4) var(--s-5); border-top: 1px solid var(--border);
+      background: var(--bg-elevated);
+      display: flex; gap: var(--s-2); justify-content: flex-end;
+    }
+
+    /* Vendor invite row */
+    .vendor-invite-row {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-3) 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .vendor-invite-row:last-child { border-bottom: none; }
+    .vendor-checkbox {
+      width: 16px; height: 16px;
+      border: 1.5px solid var(--border-strong);
+      border-radius: var(--r-sm);
+      display: grid; place-items: center; cursor: pointer; flex-shrink: 0;
+    }
+    .vendor-checkbox.checked { background: var(--accent); border-color: var(--accent); }
+    .vendor-checkbox.checked::after {
+      content: "";
+      display: block;
+      width: 8px; height: 5px;
+      border-left: 1.5px solid white;
+      border-bottom: 1.5px solid white;
+      transform: rotate(-45deg) translateY(-1px);
+    }
+
+    /* Toolbar */
+    .rfq-toolbar {
+      display: flex; align-items: center; gap: var(--s-3);
+      margin-bottom: var(--s-5); flex-wrap: wrap;
+    }
+
+    /* Deadline progress */
+    .deadline-bar {
+      display: flex; align-items: center; gap: var(--s-2);
+    }
+    .deadline-track {
+      width: 56px; height: 3px;
+      background: var(--bg-elevated); border-radius: 999px; overflow: hidden;
+    }
+    .deadline-fill {
+      height: 100%; border-radius: 999px; background: var(--accent);
+    }
+    .deadline-fill.warn { background: var(--warning); }
+    .deadline-fill.done { background: var(--success); }
+
+    /* ── Row action group — button + kebab ── */
+    .row-actions { display: flex; align-items: center; gap: var(--s-2); justify-content: flex-end; }
+    .btn-phase {
+      padding: 4px 10px;
+      border-radius: var(--r-md);
+      font-family: var(--font-sans); font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+      cursor: pointer; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 5px;
+      text-decoration: none; border: 1px solid;
+      transition: background 0.15s;
+    }
+    .btn-phase.technical {
+      background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.35); color: #F59E0B;
+    }
+    .btn-phase.technical:hover { background: rgba(245,158,11,0.18); }
+    .btn-phase.commercial {
+      background: rgba(6,182,212,0.10); border-color: rgba(6,182,212,0.35); color: var(--info);
+    }
+    .btn-phase.commercial:hover { background: rgba(6,182,212,0.18); }
+    .btn-phase.view {
+      background: var(--bg-subtle); border-color: var(--border); color: var(--fg-muted);
+    }
+    .btn-phase.view:hover { background: var(--bg-elevated); color: var(--fg); }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ======================================================
+       LEFT NAV
+       ====================================================== -->
+  <aside class="nav">
+    <div class="nav-brand">
+      <button class="hamburger-btn" onclick="toggleNav()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
+      <div class="nav-brand-text">
+        <div class="nav-brand-name">Procure</div>
+        <div class="nav-brand-sub">Procurement</div>
+      </div>
+    </div>
+    <div class="nav-items">
+      <a class="nav-item" href="index.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded" href="clients.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V7l6-4 6 4v7zM6 14V9h4v5"/></svg>
+          <span>Master Data</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="clients.html">Clients</a>
+          <a class="nav-item nav-sub-item" href="projects.html">Projects</a>
+          <a class="nav-item nav-sub-item" href="vendor-categories.html">Categories</a>
+          <a class="nav-item nav-sub-item" href="terms-conditions.html">Terms &amp; Conditions</a>
+          <a class="nav-item nav-sub-item" href="payment-terms.html">Payment Terms</a>
+          <a class="nav-item nav-sub-item" href="inco-terms.html">Inco Terms</a>
+          <a class="nav-item nav-sub-item" href="vendors.html">Vendors</a>
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-requisitions.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Purchase Requisitions</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded has-active" href="rfq-list.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+          <span>RFQs</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item active" href="rfq-list.html">All RFQs</a>
+          <a class="nav-item nav-sub-item" href="rfq-create.html">New RFQ</a>
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-orders.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l1.5 8.5a1 1 0 0 0 1 .85h7a1 1 0 0 0 1-.85L14 4"/><path d="M2 4h12M6 7v3M10 7v3"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+    </div>
+
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">NP</div>
+        <div>
+          <div class="user-name">Neha Patel</div>
+          <div class="user-email">Purchase Manager</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ======================================================
+       MAIN AREA
+       ====================================================== -->
+  <div style="display:flex; flex-direction:column; min-height:100vh; overflow:hidden;">
+
+    <!-- MAIN CONTENT -->
+    <div style="flex:1; overflow-y:auto;">
+      <main class="main">
+
+        <!-- Page header -->
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:var(--s-6);">
+          <div class="page-header" style="margin-bottom:0;">
+            <div class="page-title">RFQs</div>
+            <div class="page-subtitle">Wellhead Platform Phase II · Request for Quotations</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('modal-select-pr')">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v12M2 8h12"/></svg>
+            New RFQ
+          </button>
+        </div>
+
+        <!-- KPI strip -->
+        <div class="kpi-grid" style="margin-bottom:var(--s-5);">
+          <div class="kpi">
+            <div class="kpi-head">
+              <div class="kpi-label">Total RFQs</div>
+              <div class="kpi-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg></div>
+            </div>
+            <div class="kpi-value">12</div>
+            <div class="kpi-meta">FY 2025–26</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-head">
+              <div class="kpi-label">Active / Published</div>
+              <div class="kpi-icon success"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg></div>
+            </div>
+            <div class="kpi-value">4</div>
+            <div class="kpi-meta">Vendors bidding</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-head">
+              <div class="kpi-label">In Evaluation</div>
+              <div class="kpi-icon warning"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l2 4 4 .6-3 2.8.7 4.1-3.7-2-3.7 2 .7-4.1-3-2.8 4-.6z"/></svg></div>
+            </div>
+            <div class="kpi-value">3</div>
+            <div class="kpi-meta">Tech + Commercial</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-head">
+              <div class="kpi-label">PO Awarded</div>
+              <div class="kpi-icon info"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l4 4 6-7"/></svg></div>
+            </div>
+            <div class="kpi-value">5</div>
+            <div class="kpi-meta">Closed this year</div>
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="rfq-toolbar">
+          <div class="search-wrap-inline" style="flex: 0 0 280px;">
+            <svg class="search-icon-inline" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5l3 3"/></svg>
+            <input class="search-input" placeholder="Search RFQs…" />
+          </div>
+          <div class="filter-chips-inline">
+            <div class="chip active">All</div>
+            <div class="chip">Draft</div>
+            <div class="chip">Published / Active</div>
+            <div class="chip">Under Tech Review</div>
+            <div class="chip">Under Comm. Review</div>
+            <div class="chip">PO Awarded</div>
+            <div class="chip">Cancelled</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" style="margin-left:auto;">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M5 8h6M8 12h0"/></svg>
+            Filter
+          </button>
+        </div>
+
+        <!-- RFQ table -->
+        <div class="rfq-table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>RFQ Number</th>
+                <th>From PR</th>
+                <th>Category</th>
+                <th>Tech Deadline</th>
+                <th>Vendors</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Row 1 — Technical Evaluation -->
+              <tr onclick="goToRFQ(event)" style="cursor:pointer;">
+                <td>
+                  <div><span class="id-cell">RFQ-2026-012</span></div>
+                  <div style="font-size:var(--fs-xs); color:var(--fg-subtle); margin-top:1px;">Safety Sensors Package</div>
+                </td>
+                <td><span class="mono" style="font-size:var(--fs-xs); color:var(--accent);">PR-2026-018</span></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Instrumentation &amp; Control</span></td>
+                <td>
+                  <div style="font-size:var(--fs-sm);">28 May 2026</div>
+                  <div class="deadline-bar" style="margin-top:3px;">
+                    <div class="deadline-track"><div class="deadline-fill warn" style="width:82%"></div></div>
+                    <span style="font-size:10px; color:var(--warning);">5 days left</span>
+                  </div>
+                </td>
+                <td>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span class="mono">6</span>
+                    <span style="font-size:var(--fs-xs); color:var(--fg-subtle);">invited</span>
+                    <span class="badge success" style="font-size:9px; padding:1px 5px;">4 submitted</span>
+                  </div>
+                </td>
+                <td><span class="badge warning">Under Tech Review</span></td>
+                <td>
+                  <div class="row-actions">
+                    <div class="row-action-wrap">
+                      <button class="row-action" onclick="toggleKebab(this)"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="3" r="1" fill="currentColor"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="13" r="1" fill="currentColor"/></svg></button>
+                      <div class="kebab-menu">
+                        <div class="kebab-menu-item primary" onclick="openInvitees('RFQ-2026-012')">
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2"/><path d="M1 13s1-4 5-4 5 4 5 4"/><path d="M12 8v3M10.5 9.5h3"/></svg>
+                          Add Invitees
+                        </div>
+                        <div class="kebab-menu-item" onclick="window.location='rfq-detail.html'">
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8a6 6 0 1 0 12 0 6 6 0 0 0-12 0zM8 5v3l2 2"/></svg>
+                          View RFQ Details
+                        </div>
+                        <hr class="kebab-divider"/>
+                        <div class="kebab-menu-item danger">Cancel RFQ</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <!-- Row 2 — Published / Active -->
+              <tr onclick="goToRFQ(event)" style="cursor:pointer;">
+                <td>
+                  <div><span class="id-cell">RFQ-2026-011</span></div>
+                  <div style="font-size:var(--fs-xs); color:var(--fg-subtle); margin-top:1px;">MCC Panels &amp; Distribution</div>
+                </td>
+                <td><span class="mono" style="font-size:var(--fs-xs); color:var(--accent);">PR-2026-016</span></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Electrical</span></td>
+                <td>
+                  <div style="font-size:var(--fs-sm);">10 Jun 2026</div>
+                  <div class="deadline-bar" style="margin-top:3px;">
+                    <div class="deadline-track"><div class="deadline-fill" style="width:38%"></div></div>
+                    <span style="font-size:10px; color:var(--fg-subtle);">18 days left</span>
+                  </div>
+                </td>
+                <td>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span class="mono">5</span>
+                    <span style="font-size:var(--fs-xs); color:var(--fg-subtle);">invited</span>
+                    <span class="badge info" style="font-size:9px; padding:1px 5px;">2 submitted</span>
+                  </div>
+                </td>
+                <td><span class="badge accent">Published / Active</span></td>
+                <td>
+                  <div class="row-actions">
+                    <div class="row-action-wrap">
+                      <button class="row-action" onclick="toggleKebab(this)"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="3" r="1" fill="currentColor"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="13" r="1" fill="currentColor"/></svg></button>
+                      <div class="kebab-menu">
+                        <div class="kebab-menu-item primary" onclick="openInvitees('RFQ-2026-011')">
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2"/><path d="M1 13s1-4 5-4 5 4 5 4"/><path d="M12 8v3M10.5 9.5h3"/></svg>
+                          Add Invitees
+                        </div>
+                        <div class="kebab-menu-item">Issue Amendment</div>
+                        <hr class="kebab-divider"/>
+                        <div class="kebab-menu-item danger">Cancel RFQ</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <!-- Row 3 — Commercial Evaluation -->
+              <tr onclick="goToRFQ(event)" style="cursor:pointer;">
+                <td>
+                  <div><span class="id-cell">RFQ-2026-009</span></div>
+                  <div style="font-size:var(--fs-xs); color:var(--fg-subtle); margin-top:1px;">SS Fittings &amp; Valves</div>
+                </td>
+                <td><span class="mono" style="font-size:var(--fs-xs); color:var(--accent);">PR-2026-017</span></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Mechanical — Piping</span></td>
+                <td>
+                  <div style="font-size:var(--fs-sm);">10 May 2026</div>
+                  <div class="deadline-bar" style="margin-top:3px;">
+                    <div class="deadline-track"><div class="deadline-fill done" style="width:100%"></div></div>
+                    <span style="font-size:10px; color:var(--success);">Closed</span>
+                  </div>
+                </td>
+                <td>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span class="mono">8</span>
+                    <span style="font-size:var(--fs-xs); color:var(--fg-subtle);">invited</span>
+                    <span class="badge success" style="font-size:9px; padding:1px 5px;">7 evaluated</span>
+                  </div>
+                </td>
+                <td><span class="badge info">Under Comm. Review</span></td>
+                <td>
+                  <div class="row-actions">
+                    <div class="row-action-wrap">
+                      <button class="row-action" onclick="toggleKebab(this)"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="3" r="1" fill="currentColor"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="13" r="1" fill="currentColor"/></svg></button>
+                      <div class="kebab-menu">
+                        <div class="kebab-menu-item" onclick="window.location='rfq-detail.html'">
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8a6 6 0 1 0 12 0 6 6 0 0 0-12 0zM8 5v3l2 2"/></svg>
+                          View RFQ Details
+                        </div>
+                        <div class="kebab-menu-item" onclick="window.location='technical-bid.html'">
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h12v12H2z"/><path d="M5 5h6M5 8h6M5 11h4"/></svg>
+                          View Technical Evaluation
+                        </div>
+                        <hr class="kebab-divider"/>
+                        <div class="kebab-menu-item danger">Cancel RFQ</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <!-- Row 4 — Draft -->
+              <tr onclick="goToRFQ(event)" style="cursor:pointer;">
+                <td>
+                  <div><span class="id-cell">RFQ-2026-013</span></div>
+                  <div style="font-size:var(--fs-xs); color:var(--fg-subtle); margin-top:1px;">Gas Detectors Package</div>
+                </td>
+                <td><span class="mono" style="font-size:var(--fs-xs); color:var(--accent);">PR-2026-014</span></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Fire &amp; Gas Systems</span></td>
+                <td>
+                  <div style="font-size:var(--fs-sm); color:var(--fg-subtle);">—</div>
+                </td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-subtle);">—</span></td>
+                <td><span class="badge muted">Draft</span></td>
+                <td>
+                  <div class="row-actions">
+                    <div class="row-action-wrap">
+                      <button class="row-action" onclick="toggleKebab(this)"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="3" r="1" fill="currentColor"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="13" r="1" fill="currentColor"/></svg></button>
+                      <div class="kebab-menu">
+                        <div class="kebab-menu-item primary" onclick="openInvitees('RFQ-2026-013')">
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2"/><path d="M1 13s1-4 5-4 5 4 5 4"/><path d="M12 8v3M10.5 9.5h3"/></svg>
+                          Add Invitees
+                        </div>
+                        <hr class="kebab-divider"/>
+                        <div class="kebab-menu-item danger">Delete Draft</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <!-- Row 5 — PO Awarded -->
+              <tr onclick="goToRFQ(event)" style="cursor:pointer;">
+                <td>
+                  <div><span class="id-cell">RFQ-2026-007</span></div>
+                  <div style="font-size:var(--fs-xs); color:var(--fg-subtle); margin-top:1px;">Platform Grating &amp; Handrails</div>
+                </td>
+                <td><span class="mono" style="font-size:var(--fs-xs); color:var(--accent);">PR-2026-015</span></td>
+                <td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Civil &amp; Structural</span></td>
+                <td>
+                  <div style="font-size:var(--fs-sm);">14 Apr 2026</div>
+                  <div class="deadline-bar" style="margin-top:3px;">
+                    <div class="deadline-track"><div class="deadline-fill done" style="width:100%"></div></div>
+                    <span style="font-size:10px; color:var(--success);">Awarded</span>
+                  </div>
+                </td>
+                <td>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span class="mono">5</span>
+                    <span style="font-size:var(--fs-xs); color:var(--fg-subtle);">invited</span>
+                  </div>
+                </td>
+                <td><span class="badge success">PO Awarded</span></td>
+                <td>
+                  <div class="row-actions">
+                    <div class="row-action-wrap">
+                      <button class="row-action" onclick="toggleKebab(this)"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="3" r="1" fill="currentColor"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="13" r="1" fill="currentColor"/></svg></button>
+                      <div class="kebab-menu">
+                        <div class="kebab-menu-item" onclick="window.location='rfq-detail.html'">View RFQ Details</div>
+                        <div class="kebab-menu-item" onclick="window.location='bid-matrix.html'">View Commercial Evaluation</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="md-table-footer">
+            <span>Showing 5 of 12 RFQs</span>
+            <div class="pager">
+              <button class="icon-btn"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 4L6 8l4 4"/></svg></button>
+              <span style="padding:0 6px; font-family:var(--font-mono); font-size:var(--fs-sm);">1 / 3</span>
+              <button class="icon-btn"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div><!-- /main area -->
+
+</div><!-- /.app -->
+
+<!-- ================================================================
+     MODAL: Select PR to create new RFQ
+     ================================================================ -->
+<div class="modal-overlay" id="modal-select-pr">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="display:flex; gap:var(--s-3); align-items:flex-start; flex:1; min-width:0;">
+        <div class="modal-header-icon">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+        </div>
+        <div>
+          <div class="modal-title">Select a Purchase Requisition</div>
+          <div class="modal-sub">Choose an approved PR to source with this RFQ. Only PRs with status Approved or Partial are shown.</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-select-pr')">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:var(--s-4);">
+        <div class="search-wrap-inline">
+          <svg class="search-icon-inline" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5l3 3"/></svg>
+          <input class="search-input" placeholder="Search PRs…" />
+        </div>
+      </div>
+      <div class="pr-select-list">
+        <!-- PR option 1 -->
+        <div class="pr-select-item selected" onclick="selectPR(this)">
+          <div class="pr-select-radio"></div>
+          <div class="pr-select-body">
+            <div class="pr-select-id">PR-2026-018</div>
+            <div class="pr-select-title">Instrumentation &amp; Control — Safety Sensors &amp; Transmitters</div>
+            <div class="pr-select-meta">8 line items · 0 assigned to RFQ · Rahul Singh · 22 May 2026</div>
+          </div>
+          <span class="badge success" style="font-size:10px;">Approved</span>
+        </div>
+        <!-- PR option 2 -->
+        <div class="pr-select-item" onclick="selectPR(this)">
+          <div class="pr-select-radio"></div>
+          <div class="pr-select-body">
+            <div class="pr-select-id">PR-2026-017</div>
+            <div class="pr-select-title">Mechanical — Piping — High-pressure SS Fittings &amp; Valves</div>
+            <div class="pr-select-meta">14 line items · 8 assigned to RFQ · Arjun Mehta · 19 May 2026</div>
+          </div>
+          <span class="badge info" style="font-size:10px;">Partial</span>
+        </div>
+        <!-- PR option 3 -->
+        <div class="pr-select-item" onclick="selectPR(this)">
+          <div class="pr-select-radio"></div>
+          <div class="pr-select-body">
+            <div class="pr-select-id">PR-2026-014</div>
+            <div class="pr-select-title">Fire &amp; Gas Systems — Detectors, Smoke Heads, Flame Scanners</div>
+            <div class="pr-select-meta">9 line items · 6 assigned to RFQ · Rahul Singh · 05 May 2026</div>
+          </div>
+          <span class="badge info" style="font-size:10px;">Partial</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-select-pr')">Cancel</button>
+      <button class="btn btn-primary" onclick="window.location='rfq-create.html'">
+        Start New RFQ
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M8 3l5 5-5 5"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     SLIDE-OVER: Add Invitees
+     ================================================================ -->
+<div class="invitees-panel" id="invitees-panel">
+  <div class="invitees-header">
+    <div>
+      <div style="font-size:var(--fs-md); font-weight:var(--fw-semibold);">Add Invitees</div>
+      <div style="font-size:var(--fs-sm); color:var(--fg-muted);" id="invitees-rfq-label">RFQ-2026-012</div>
+    </div>
+    <button class="modal-close" onclick="closeInvitees()">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+    </button>
+  </div>
+  <div class="invitees-body">
+    <div style="margin-bottom:var(--s-4);">
+      <div class="search-wrap-inline">
+        <svg class="search-icon-inline" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5l3 3"/></svg>
+        <input class="search-input" placeholder="Search approved vendors…" />
+      </div>
+    </div>
+    <div style="font-size:var(--fs-xs); color:var(--fg-subtle); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:var(--s-3);">Instrumentation &amp; Control · 8 matches</div>
+    <!-- Vendor rows -->
+    <div class="vendor-invite-row">
+      <div class="vendor-checkbox checked"></div>
+      <div style="flex:1;">
+        <div style="font-size:var(--fs-sm); font-weight:var(--fw-medium);">Emerson Electric India</div>
+        <div style="font-size:var(--fs-xs); color:var(--fg-muted);">Instrumentation · Already invited</div>
+      </div>
+      <span class="badge success" style="font-size:9px; padding:1px 6px;">Invited</span>
+    </div>
+    <div class="vendor-invite-row">
+      <div class="vendor-checkbox checked"></div>
+      <div style="flex:1;">
+        <div style="font-size:var(--fs-sm); font-weight:var(--fw-medium);">Honeywell Process Solutions</div>
+        <div style="font-size:var(--fs-xs); color:var(--fg-muted);">Instrumentation · Already invited</div>
+      </div>
+      <span class="badge success" style="font-size:9px; padding:1px 6px;">Invited</span>
+    </div>
+    <div class="vendor-invite-row">
+      <div class="vendor-checkbox"></div>
+      <div style="flex:1;">
+        <div style="font-size:var(--fs-sm); font-weight:var(--fw-medium);">Yokogawa India Ltd</div>
+        <div style="font-size:var(--fs-xs); color:var(--fg-muted);">Instrumentation, Control</div>
+      </div>
+      <span class="badge muted" style="font-size:9px; padding:1px 6px;">Not invited</span>
+    </div>
+    <div class="vendor-invite-row">
+      <div class="vendor-checkbox"></div>
+      <div style="flex:1;">
+        <div style="font-size:var(--fs-sm); font-weight:var(--fw-medium);">ABB India Ltd</div>
+        <div style="font-size:var(--fs-xs); color:var(--fg-muted);">Instrumentation, Electrical</div>
+      </div>
+      <span class="badge muted" style="font-size:9px; padding:1px 6px;">Not invited</span>
+    </div>
+    <div class="vendor-invite-row">
+      <div class="vendor-checkbox"></div>
+      <div style="flex:1;">
+        <div style="font-size:var(--fs-sm); font-weight:var(--fw-medium);">Siemens India Ltd</div>
+        <div style="font-size:var(--fs-xs); color:var(--fg-muted);">Instrumentation, Electrical</div>
+      </div>
+      <span class="badge muted" style="font-size:9px; padding:1px 6px;">Not invited</span>
+    </div>
+    <div class="vendor-invite-row">
+      <div class="vendor-checkbox"></div>
+      <div style="flex:1;">
+        <div style="font-size:var(--fs-sm); font-weight:var(--fw-medium);">Endress+Hauser India</div>
+        <div style="font-size:var(--fs-xs); color:var(--fg-muted);">Instrumentation</div>
+      </div>
+      <span class="badge muted" style="font-size:9px; padding:1px 6px;">Not invited</span>
+    </div>
+  </div>
+  <div class="invitees-footer">
+    <button class="btn btn-secondary" onclick="closeInvitees()">Cancel</button>
+    <button class="btn btn-primary" onclick="closeInvitees()">
+      Send Invites
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M8 3l5 5-5 5"/></svg>
+    </button>
+  </div>
+</div>
+<div class="nav-backdrop" id="nav-backdrop" onclick="closeNav()"></div>
+
+<!-- ── Demo presenter strip ──────────────────────────────── -->
+<div class="demo-strip">
+  <span class="step-num">Step 4</span>
+  <span>RFQ List</span>
+  <span style="width:1px;height:14px;background:var(--border);"></span>
+  <a href="purchase-requisitions.html">← Purchase Requisitions</a>
+  <a href="rfq-create.html">New RFQ →</a>
+  <a href="rfq-detail.html">RFQ Detail →</a>
+</div>
+
+<script>
+  // Modal
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); });
+  });
+
+  // PR select
+  function selectPR(item) {
+    document.querySelectorAll('.pr-select-item').forEach(i => i.classList.remove('selected'));
+    item.classList.add('selected');
+  }
+
+  // Invitees slide-over
+  function openInvitees(rfqId) {
+    document.getElementById('invitees-rfq-label').textContent = rfqId;
+    document.getElementById('invitees-panel').classList.add('open');
+    document.querySelectorAll('.kebab-menu').forEach(m => m.classList.remove('open'));
+  }
+  function closeInvitees() {
+    document.getElementById('invitees-panel').classList.remove('open');
+  }
+
+  // Vendor checkbox toggle
+  document.querySelectorAll('.vendor-checkbox').forEach(cb => {
+    cb.addEventListener('click', function() { this.classList.toggle('checked'); });
+  });
+
+  // Kebab menus
+  function toggleKebab(btn) {
+    const menu = btn.nextElementSibling;
+    const isOpen = menu.classList.contains('open');
+    document.querySelectorAll('.kebab-menu').forEach(m => m.classList.remove('open'));
+    if (!isOpen) menu.classList.add('open');
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.row-action-wrap') && !e.target.closest('.invitees-panel')) {
+      document.querySelectorAll('.kebab-menu').forEach(m => m.classList.remove('open'));
+    }
+  });
+
+  // Nav group toggle
+  document.querySelectorAll('.nav-group-header').forEach(h => {
+    h.addEventListener('click', function(e) {
+      if (e.target.closest('a') && !e.target.closest('.chevron')) return;
+      this.classList.toggle('expanded');
+    });
+  });
+
+  // Chip filter toggle
+  document.querySelectorAll('.chip').forEach(c => {
+    c.addEventListener('click', function() {
+      document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // Row click → RFQ detail
+  function goToRFQ(event) {
+    if (event.target.closest('.row-action-wrap') || event.target.closest('.kebab-menu')) return;
+    window.location.href = 'rfq-detail.html';
+  }
+
+  // Mobile nav
+  function toggleNav() {
+    document.querySelector('.nav').classList.toggle('open');
+    document.getElementById('nav-backdrop').classList.toggle('open');
+  }
+  function closeNav() {
+    document.querySelector('.nav').classList.remove('open');
+    document.getElementById('nav-backdrop').classList.remove('open');
+  }
+  window.addEventListener('resize', () => { if (window.innerWidth > 700) closeNav(); });
+</script>
+</body>
+</html>

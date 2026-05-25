@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — PR-2026-014</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .main.prd-main { padding: 0; max-width: 1040px; }
+    .prd-inner { padding: var(--s-5) var(--s-6); padding-bottom: 100px; }
+
+    /* Back bar */
+    .prd-back-bar {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-3) var(--s-6);
+      background: var(--bg-card); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 20;
+    }
+    .prd-back-btn {
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      padding: var(--s-2) var(--s-3);
+      background: var(--bg-subtle); border: 1px solid var(--border);
+      border-radius: var(--r-md); color: var(--fg-muted);
+      font-family: var(--font-sans); font-size: var(--fs-sm);
+      font-weight: var(--fw-medium); text-decoration: none;
+      cursor: pointer; transition: background 0.12s, color 0.12s;
+    }
+    .prd-back-btn:hover { background: var(--bg-elevated); color: var(--fg); }
+    .prd-back-div { width: 1px; height: 18px; background: var(--border); }
+    .prd-crumb { font-size: var(--fs-sm); color: var(--fg-subtle); display: flex; align-items: center; gap: var(--s-2); }
+    .prd-crumb a { color: var(--fg-muted); text-decoration: none; }
+    .prd-crumb a:hover { color: var(--info); }
+    .prd-crumb .sep { color: var(--border-strong); }
+    .prd-crumb .cur { color: var(--fg); font-weight: var(--fw-medium); font-family: var(--font-mono); }
+
+    /* Page header */
+    .prd-header { margin-bottom: var(--s-5); }
+    .prd-title-row { display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-2); flex-wrap: wrap; }
+    .prd-title { font-size: var(--fs-2xl); font-weight: var(--fw-semibold); letter-spacing: -0.01em; }
+    .prd-meta { display: flex; gap: var(--s-5); flex-wrap: wrap; font-size: var(--fs-sm); color: var(--fg-muted); }
+    .prd-meta strong { color: var(--fg); font-weight: var(--fw-medium); }
+
+    /* Correction banner */
+    .correction-banner {
+      display: flex; align-items: flex-start; gap: var(--s-4);
+      padding: var(--s-5);
+      background: linear-gradient(135deg, rgba(245,158,11,0.09), rgba(245,158,11,0.03));
+      border: 1px solid rgba(245,158,11,0.32); border-radius: var(--r-lg); margin-bottom: var(--s-5);
+    }
+    .correction-icon {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(245,158,11,0.15); border: 2px solid #F59E0B;
+      display: grid; place-items: center; flex-shrink: 0; margin-top: 2px;
+    }
+    .correction-title { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: #F59E0B; margin-bottom: var(--s-3); }
+    .correction-items { display: flex; flex-direction: column; gap: var(--s-2); }
+    .correction-item {
+      display: flex; align-items: flex-start; gap: var(--s-3);
+      padding: var(--s-3) var(--s-4);
+      background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.18);
+      border-radius: var(--r-md);
+    }
+    .correction-num {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(245,158,11,0.20); border: 1px solid rgba(245,158,11,0.40);
+      display: grid; place-items: center; flex-shrink: 0; margin-top: 1px;
+      font-size: 10px; font-weight: var(--fw-semibold); color: #F59E0B; font-family: var(--font-mono);
+    }
+    .correction-text { font-size: var(--fs-sm); color: var(--fg-muted); line-height: 1.55; }
+    .correction-meta { font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: var(--s-3); font-family: var(--font-mono); }
+
+    /* KPI strip */
+    .prd-kpi {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: var(--s-3); margin-bottom: var(--s-5);
+    }
+    .prd-kpi-tile {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: var(--s-4);
+    }
+    .prd-kpi-val { font-family: var(--font-mono); font-size: var(--fs-xl); font-weight: var(--fw-semibold); color: var(--fg); margin-bottom: 2px; }
+    .prd-kpi-val.amber { color: #F59E0B; }
+    .prd-kpi-label { font-size: var(--fs-xs); color: var(--fg-subtle); }
+
+    /* Section card */
+    .prd-section {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); overflow: hidden; margin-bottom: var(--s-4);
+    }
+    .prd-section-head {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-4) var(--s-5); border-bottom: 1px solid var(--border-subtle);
+    }
+    .prd-section-icon {
+      width: 26px; height: 26px; border-radius: var(--r-sm);
+      background: var(--bg-subtle); display: grid; place-items: center;
+      font-size: 13px; flex-shrink: 0;
+    }
+    .prd-section-title { font-weight: var(--fw-semibold); font-size: var(--fs-md); }
+    .prd-section-hint  { margin-left: auto; font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .prd-section-body  { padding: var(--s-5); }
+
+    /* Line items table */
+    .li-table { width: 100%; border-collapse: collapse; }
+    .li-table th {
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--fg-subtle);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      padding: var(--s-2) var(--s-3); text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .li-table th.r { text-align: right; }
+    .li-table td {
+      padding: var(--s-3); font-size: var(--fs-sm);
+      border-bottom: 1px solid var(--border-subtle); vertical-align: middle;
+    }
+    .li-table tr:last-child td { border-bottom: none; }
+    .li-desc { font-weight: var(--fw-medium); color: var(--fg); }
+    .li-spec { font-size: var(--fs-xs); color: var(--fg-subtle); margin-top: 2px; }
+    .li-num  { font-family: var(--font-mono); font-size: var(--fs-sm); text-align: right; }
+
+    /* Correction flag badge on row */
+    .li-flag {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 6px; border-radius: 20px; font-size: 10px; font-weight: var(--fw-semibold);
+      font-family: var(--font-mono); white-space: nowrap;
+      background: rgba(245,158,11,0.12); color: #F59E0B; border: 1px solid rgba(245,158,11,0.28);
+    }
+
+    /* Info grid */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); }
+    .info-field label {
+      display: block; font-size: var(--fs-xs); font-weight: var(--fw-semibold);
+      color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--s-1);
+    }
+    .info-val { font-size: var(--fs-sm); color: var(--fg); }
+    .info-val.mono { font-family: var(--font-mono); }
+
+    /* Documents */
+    .doc-list { display: flex; flex-direction: column; gap: var(--s-2); }
+    .doc-row {
+      display: flex; align-items: center; gap: var(--s-3);
+      padding: var(--s-3) var(--s-4); background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle); border-radius: var(--r-md);
+    }
+    .doc-icon { font-size: 16px; flex-shrink: 0; }
+    .doc-name { font-size: var(--fs-sm); font-weight: var(--fw-medium); flex: 1; }
+    .doc-meta { font-size: var(--fs-xs); color: var(--fg-subtle); font-family: var(--font-mono); }
+
+    /* Comments */
+    .comment-list { display: flex; flex-direction: column; gap: var(--s-4); }
+    .comment-item { display: flex; gap: var(--s-3); }
+    .comment-av {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      display: grid; place-items: center;
+      font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--fg-muted);
+      flex-shrink: 0;
+    }
+    .comment-av.system { background: var(--bg-subtle); color: var(--fg-subtle); font-size: 10px; }
+    .comment-av.amber { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.30); color: #F59E0B; }
+    .comment-body { flex: 1; }
+    .comment-header { display: flex; align-items: center; gap: var(--s-2); margin-bottom: var(--s-1); }
+    .comment-author { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--fg); }
+    .comment-time   { font-size: var(--fs-xs); color: var(--fg-subtle); font-family: var(--font-mono); }
+    .comment-role   { font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .comment-text   { font-size: var(--fs-sm); color: var(--fg-muted); line-height: 1.6; }
+    .comment-text.system-msg { font-style: italic; color: var(--fg-subtle); }
+    .comment-divider { border: none; border-top: 1px solid var(--border-subtle); margin: var(--s-2) 0; }
+
+    /* Sticky action bar — Sent for Correction */
+    .prd-action-bar {
+      position: fixed; bottom: 0; left: 240px; right: 0;
+      background: linear-gradient(90deg, rgba(245,158,11,0.08) 0%, var(--bg-card) 60%);
+      border-top: 1px solid rgba(245,158,11,0.30);
+      padding: var(--s-4) var(--s-6);
+      display: flex; align-items: center; gap: var(--s-4);
+      z-index: 30;
+    }
+    .bar-correction-icon {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(245,158,11,0.15); border: 1.5px solid #F59E0B;
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .bar-correction-text { font-size: var(--fs-sm); color: var(--fg-muted); flex: 1; }
+    .bar-correction-text strong { color: #F59E0B; }
+    .btn-resubmit {
+      padding: var(--s-2) var(--s-5);
+      background: #F59E0B; border: none; border-radius: var(--r-md);
+      color: #000; font-family: var(--font-sans); font-size: var(--fs-sm);
+      font-weight: var(--fw-semibold); cursor: pointer; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: var(--s-2);
+      transition: background 0.15s;
+    }
+    .btn-resubmit:hover { background: #D97706; color: #fff; }
+    .btn-back-muted {
+      padding: var(--s-2) var(--s-4);
+      background: none; border: 1px solid var(--border); border-radius: var(--r-md);
+      color: var(--fg-muted); font-family: var(--font-sans); font-size: var(--fs-sm);
+      font-weight: var(--fw-medium); cursor: pointer; white-space: nowrap;
+      text-decoration: none; display: inline-flex; align-items: center; gap: var(--s-2);
+      transition: background 0.15s;
+    }
+    .btn-back-muted:hover { background: var(--bg-elevated); color: var(--fg); }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: var(--bg-elevated); border: 1px solid rgba(245,158,11,0.40);
+      border-radius: var(--r-lg); padding: var(--s-3) var(--s-5);
+      font-size: var(--fs-sm); color: var(--fg); font-family: var(--font-sans);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 200;
+      display: flex; align-items: center; gap: var(--s-2);
+      animation: toastIn 0.2s ease;
+    }
+    @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(8px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- NAV -->
+  <aside class="nav">
+    <div class="nav-brand">
+      <button class="hamburger-btn" onclick="toggleNav()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
+      <div class="nav-brand-text">
+        <div class="nav-brand-name">Procure</div>
+        <div class="nav-brand-sub">Procurement</div>
+      </div>
+    </div>
+    <div class="nav-items">
+      <a class="nav-item" href="index.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded" href="clients.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V7l6-4 6 4v7zM6 14V9h4v5"/></svg>
+          <span>Master Data</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="clients.html">Clients</a>
+          <a class="nav-item nav-sub-item" href="projects.html">Projects</a>
+          <a class="nav-item nav-sub-item" href="vendor-categories.html">Categories</a>
+          <a class="nav-item nav-sub-item" href="terms-conditions.html">Terms &amp; Conditions</a>
+          <a class="nav-item nav-sub-item" href="payment-terms.html">Payment Terms</a>
+          <a class="nav-item nav-sub-item" href="inco-terms.html">Inco Terms</a>
+          <a class="nav-item nav-sub-item" href="vendors.html">Vendors</a>
+        </div>
+      </div>
+      <a class="nav-item active" href="purchase-requisitions.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Purchase Requisitions</span>
+      </a>
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded" href="#">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+          <span>RFQs</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="rfq-list.html">All RFQs</a>
+          <a class="nav-item nav-sub-item" href="rfq-create.html">New RFQ</a>
+        </div>
+      </div>
+      <a class="nav-item" href="purchase-orders.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l1.5 8.5a1 1 0 0 0 1 .85h7a1 1 0 0 0 1-.85L14 4"/><path d="M2 4h12M6 7v3M10 7v3"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+    </div>
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">RS</div>
+        <div>
+          <div class="user-name">R. Singh</div>
+          <div class="user-email">F&amp;G Engineer</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main prd-main">
+    <button class="topbar-hamburger" onclick="toggleNav()">☰</button>
+
+    <div class="prd-back-bar">
+      <a class="prd-back-btn" href="purchase-requisitions.html">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
+        Purchase Requisitions
+      </a>
+      <div class="prd-back-div"></div>
+      <div class="prd-crumb">
+        <a href="purchase-requisitions.html">Purchase Requisitions</a>
+        <span class="sep">/</span>
+        <span class="cur">PR-2026-014</span>
+      </div>
+    </div>
+
+    <div class="prd-inner">
+
+      <!-- Correction banner -->
+      <div class="correction-banner">
+        <div class="correction-icon">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M8 2L1.5 13.5h13L8 2z"/><path d="M8 6.5v3"/><circle cx="8" cy="11.5" r=".5" fill="#F59E0B"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div class="correction-title">Sent for Correction — Action Required by Requester</div>
+          <div class="correction-items">
+            <div class="correction-item">
+              <div class="correction-num">1</div>
+              <div class="correction-text"><strong style="color:var(--fg);">Missing SIL certification level</strong> — All flame scanners and gas detectors must specify their SIL rating (SIL 2 minimum per project hazard study HS-2024-07). Update line items 04, 05, 06, 08 with SIL classification.</div>
+            </div>
+            <div class="correction-item">
+              <div class="correction-num">2</div>
+              <div class="correction-text"><strong style="color:var(--fg);">Incorrect quantity for smoke detectors</strong> — Line item 07 shows 12 Nos. but zone layout drawing ZL-KOF-003 Rev 5 requires 18 Nos. for Zone C coverage. Verify and correct.</div>
+            </div>
+            <div class="correction-item">
+              <div class="correction-num">3</div>
+              <div class="correction-text"><strong style="color:var(--fg);">No ATEX zone classification stated</strong> — F&amp;G equipment must declare ATEX zone (Zone 1 / Zone 2). Supplier cannot bid without this. Add ATEX zone for all line items.</div>
+            </div>
+          </div>
+          <div class="correction-meta">Sent for correction by S. Mehta · Engineering Lead &nbsp;·&nbsp; 07 May 2026 · 16:14 &nbsp;·&nbsp; Deadline to resubmit: 12 May 2026</div>
+        </div>
+      </div>
+
+      <!-- Page header -->
+      <div class="prd-header">
+        <div class="prd-title-row">
+          <h1 class="prd-title">PR-2026-014</h1>
+          <span class="badge badge-warning">Sent for Correction</span>
+        </div>
+        <div style="font-size:var(--fs-md); color:var(--fg-muted); margin-bottom:var(--s-3);">
+          Fire &amp; Gas Systems · Gas Detectors, Smoke Heads &amp; Flame Scanners
+        </div>
+        <div class="prd-meta">
+          <span>Requested by <strong>R. Singh · F&amp;G Engg.</strong></span>
+          <span>Project <strong>Kakinada Offshore Ph-II</strong></span>
+          <span>Category <strong>Fire &amp; Gas Systems</strong></span>
+          <span>Submitted <strong class="mono">05 May 2026</strong></span>
+          <span>Returned <strong class="mono">07 May 2026</strong></span>
+        </div>
+      </div>
+
+      <!-- KPI strip -->
+      <div class="prd-kpi">
+        <div class="prd-kpi-tile">
+          <div class="prd-kpi-val">9</div>
+          <div class="prd-kpi-label">Line items</div>
+        </div>
+        <div class="prd-kpi-tile">
+          <div class="prd-kpi-val amber">3</div>
+          <div class="prd-kpi-label">Corrections needed</div>
+        </div>
+        <div class="prd-kpi-tile">
+          <div class="prd-kpi-val amber">0</div>
+          <div class="prd-kpi-label">RFQs raised</div>
+        </div>
+        <div class="prd-kpi-tile">
+          <div class="prd-kpi-val" style="font-size:var(--fs-xs); padding-top:6px;">
+            <span class="badge badge-warning" style="font-size:var(--fs-xs);">Correction</span>
+          </div>
+          <div class="prd-kpi-label">PR status</div>
+        </div>
+      </div>
+
+      <!-- Line items -->
+      <div class="prd-section">
+        <div class="prd-section-head">
+          <div class="prd-section-icon">📦</div>
+          <div class="prd-section-title">Line Items</div>
+          <div class="prd-section-hint">9 items · Corrections flagged on 4 items</div>
+        </div>
+        <div class="prd-section-body" style="padding:0;">
+          <table class="li-table">
+            <thead>
+              <tr>
+                <th style="width:36px; padding-left:var(--s-5);">#</th>
+                <th>Description</th>
+                <th style="width:70px;">UOM</th>
+                <th class="r" style="width:60px;">Qty</th>
+                <th style="width:130px; text-align:center;">Flag</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">01</td><td><div class="li-desc">Control Panel — F&amp;G Master</div><div class="li-spec">Honeywell XLS3000 or equiv., 16-zone, UL listed</div></td><td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td><td class="li-num">1</td><td style="text-align:center;">—</td></tr>
+              <tr><td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">02</td><td><div class="li-desc">Junction Box — F&amp;G</div><div class="li-spec">SS316, IP66, Weatherproof, 24-way</div></td><td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td><td class="li-num">4</td><td style="text-align:center;">—</td></tr>
+              <tr><td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">03</td><td><div class="li-desc">Sounder &amp; Beacon Unit</div><div class="li-spec">Ex-rated, 110dB, Red beacon, IP66</div></td><td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td><td class="li-num">8</td><td style="text-align:center;">—</td></tr>
+              <tr style="background:rgba(245,158,11,0.03)"><td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">04</td><td><div class="li-desc">Catalytic Gas Detector — CH₄</div><div class="li-spec">Pellistor type, 0–100% LEL, 4–20mA, IP66</div></td><td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td><td class="li-num">12</td><td style="text-align:center;"><span class="li-flag">⚠ SIL missing</span></td></tr>
+              <tr style="background:rgba(245,158,11,0.03)"><td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">05</td><td><div class="li-desc">IR Point Gas Detector — HC</div><div class="li-spec">Infrared, 0–100% LEL, dual range, IP66</div></td><td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td><td class="li-num">6</td><td style="text-align:center;"><span class="li-flag">⚠ SIL + ATEX</span></td></tr>
+              <tr style="background:rgba(245,158,11,0.03)"><td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">06</td><td><div class="li-desc">UV/IR Flame Detector</div><div class="li-spec">Triple-spectrum IR, 0–40m range, SIL rated</div></td><td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td><td class="li-num">4</td><td style="text-align:center;"><span class="li-flag">⚠ ATEX zone</span></td></tr>
+              <tr style="background:rgba(245,158,11,0.05)"><td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">07</td><td><div class="li-desc">Smoke Detector — Ionisation</div><div class="li-spec">Addressable, 360° sensing, IP44, Base included</div></td><td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td><td class="li-num" style="color:#F59E0B;">12 ⚠</td><td style="text-align:center;"><span class="li-flag">⚠ Qty incorrect</span></td></tr>
+              <tr style="background:rgba(245,158,11,0.03)"><td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">08</td><td><div class="li-desc">H₂S Gas Detector</div><div class="li-spec">Electrochemical, 0–100 ppm, 4–20mA, IP66</div></td><td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td><td class="li-num">6</td><td style="text-align:center;"><span class="li-flag">⚠ SIL + ATEX</span></td></tr>
+              <tr><td style="padding-left:var(--s-5); color:var(--fg-subtle); font-family:var(--font-mono); font-size:var(--fs-xs);">09</td><td><div class="li-desc">Manual Call Point</div><div class="li-spec">Ex-rated, SS housing, glass break, IP66</div></td><td><span style="font-size:var(--fs-sm); color:var(--fg-muted);">Nos.</span></td><td class="li-num">14</td><td style="text-align:center;">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PR Details -->
+      <div class="prd-section">
+        <div class="prd-section-head">
+          <div class="prd-section-icon">📋</div>
+          <div class="prd-section-title">PR Details</div>
+        </div>
+        <div class="prd-section-body">
+          <div class="info-grid">
+            <div class="info-field"><label>PR Number</label><div class="info-val mono">PR-2026-014</div></div>
+            <div class="info-field"><label>Status</label><div class="info-val"><span class="badge badge-warning">Sent for Correction</span></div></div>
+            <div class="info-field"><label>Requested By</label><div class="info-val">R. Singh · F&amp;G Engineering</div></div>
+            <div class="info-field"><label>Returned By</label><div class="info-val">S. Mehta · Engineering Lead · 07 May 2026</div></div>
+            <div class="info-field"><label>Project</label><div class="info-val">Kakinada Offshore Phase II</div></div>
+            <div class="info-field"><label>Category</label><div class="info-val">Fire &amp; Gas Systems</div></div>
+            <div class="info-field"><label>Required by Date</label><div class="info-val mono">15 Jun 2026</div></div>
+            <div class="info-field"><label>Resubmission Deadline</label><div class="info-val mono" style="color:#F59E0B;">12 May 2026</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents -->
+      <div class="prd-section">
+        <div class="prd-section-head">
+          <div class="prd-section-icon">📎</div>
+          <div class="prd-section-title">Supporting Documents</div>
+          <div class="prd-section-hint">2 files</div>
+        </div>
+        <div class="prd-section-body">
+          <div class="doc-list">
+            <div class="doc-row"><div class="doc-icon">📄</div><div class="doc-name">FG_Detector_Schedule_PR014_Rev1.pdf</div><div class="doc-meta">540 KB · 05 May 2026</div></div>
+            <div class="doc-row"><div class="doc-icon">📄</div><div class="doc-name">Zone_Layout_KOF_003_Rev4.pdf</div><div class="doc-meta">1.8 MB · 05 May 2026</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comments -->
+      <div class="prd-section">
+        <div class="prd-section-head">
+          <div class="prd-section-icon">💬</div>
+          <div class="prd-section-title">Comments &amp; Activity</div>
+        </div>
+        <div class="prd-section-body">
+          <div class="comment-list">
+            <div class="comment-item">
+              <div class="comment-av system">⚙</div>
+              <div class="comment-body">
+                <div class="comment-header"><span class="comment-author">System</span><span class="comment-time">05 May 2026 · 10:05</span></div>
+                <div class="comment-text system-msg">PR-2026-014 submitted by R. Singh for Engineering Lead approval.</div>
+              </div>
+            </div>
+            <hr class="comment-divider"/>
+            <div class="comment-item">
+              <div class="comment-av amber">SM</div>
+              <div class="comment-body">
+                <div class="comment-header"><span class="comment-author">S. Mehta</span><span class="comment-role">Engineering Lead</span><span class="comment-time">07 May 2026 · 16:14</span></div>
+                <div class="comment-text">Returning for corrections. Three mandatory items: (1) SIL rating missing on gas detectors and flame scanners — refer hazard study HS-2024-07, SIL 2 minimum required. (2) Smoke detector count is wrong — Zone C per ZL-KOF-003 Rev 5 needs 18, not 12. (3) ATEX zone classification must be specified for all field devices. Resubmit by 12 May.</div>
+              </div>
+            </div>
+            <hr class="comment-divider"/>
+            <div class="comment-item">
+              <div class="comment-av system">⚙</div>
+              <div class="comment-body">
+                <div class="comment-header"><span class="comment-author">System</span><span class="comment-time">07 May 2026 · 16:14</span></div>
+                <div class="comment-text system-msg">PR-2026-014 returned to R. Singh (requester) for correction. Status set to "Sent for Correction".</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ACTION BAR — Sent for Correction (requester view) -->
+  <div class="prd-action-bar">
+    <div class="bar-correction-icon">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M8 2L1.5 13.5h13L8 2z"/><path d="M8 6.5v3"/><circle cx="8" cy="11.5" r=".5" fill="#F59E0B"/></svg>
+    </div>
+    <div class="bar-correction-text">
+      <strong>3 corrections required</strong> &nbsp;·&nbsp; Address all flagged items above, then resubmit for Engineering Lead approval
+    </div>
+    <a class="btn-back-muted" href="purchase-requisitions.html">← PR List</a>
+    <button class="btn-resubmit" onclick="showResubmitToast()">
+      Resubmit for Approval →
+    </button>
+  </div>
+
+</div>
+
+<script>
+  function toggleNav() { document.querySelector('.app').classList.toggle('nav-collapsed'); }
+  function showResubmitToast() {
+    var t = document.createElement('div');
+    t.className = 'toast';
+    t.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M8 2L1.5 13.5h13L8 2z"/><path d="M8 6.5v3"/></svg> Please address all 3 flagged corrections before resubmitting.';
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 3500);
+  }
+</script>
+</body>
+</html>

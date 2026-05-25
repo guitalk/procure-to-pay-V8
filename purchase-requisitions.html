@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aker Procurement — Purchase Requisitions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── PR list page ─────────────────────────────────────────── */
+    .pr-toolbar {
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+      margin-bottom: var(--s-5);
+    }
+    .pr-table-wrap {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+    .pr-table-wrap tbody tr { cursor: pointer; transition: background 0.12s; }
+    .pr-table-wrap tbody tr:hover td { background: var(--bg-subtle); }
+
+    /* ── New PR form ──────────────────────────────────────────── */
+    .form-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      margin-bottom: var(--s-5);
+    }
+    .form-section-head {
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+      padding: var(--s-4) var(--s-5);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+    .form-section-head-icon {
+      width: 28px; height: 28px;
+      border-radius: var(--r-sm);
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+    .form-section-title { font-size: var(--fs-md); font-weight: var(--fw-semibold); }
+    .form-section-sub { font-size: var(--fs-sm); color: var(--fg-muted); margin-top: 1px; }
+    .form-body { padding: var(--s-5); }
+
+    /* Form grid */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--s-4);
+    }
+    .form-grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .form-grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .col-span-2 { grid-column: span 2; }
+    .col-span-3 { grid-column: span 3; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field-label {
+      font-size: var(--fs-xs);
+      font-weight: var(--fw-medium);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--fg-muted);
+    }
+    .field-input {
+      width: 100%;
+      padding: 8px var(--s-3);
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      color: var(--fg);
+      font-size: var(--fs-md);
+      font-family: var(--font-sans);
+      transition: border-color 0.12s;
+    }
+    .field-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+    .field-input::placeholder { color: var(--fg-subtle); }
+    .field-input.select-input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 16 16' fill='none' stroke='%2371717a' stroke-width='1.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+    textarea.field-input { resize: vertical; min-height: 80px; line-height: var(--lh-base); }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--r-md);
+      padding: var(--s-5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--s-3);
+      cursor: pointer;
+      transition: border-color 0.12s, background 0.12s;
+      text-align: center;
+    }
+    .upload-zone:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .upload-zone-icon {
+      width: 40px; height: 40px;
+      border-radius: var(--r-md);
+      background: var(--bg-elevated);
+      color: var(--fg-muted);
+      display: grid; place-items: center;
+    }
+    .upload-zone-text { font-size: var(--fs-sm); color: var(--fg-muted); }
+    .upload-zone-hint { font-size: var(--fs-xs); color: var(--fg-subtle); }
+
+    .file-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--s-2);
+      padding: 6px var(--s-3);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      font-size: var(--fs-sm);
+      color: var(--fg-muted);
+    }
+    .file-pill-name { color: var(--fg); font-weight: var(--fw-medium); }
+    .file-pill-size { color: var(--fg-subtle); font-size: var(--fs-xs); }
+    .file-pill-remove { color: var(--fg-subtle); cursor: pointer; margin-left: 2px; }
+    .file-pill-remove:hover { color: var(--danger); }
+
+    /* ── Comments section ──────────────────────────────────────── */
+    .comment-list { display: flex; flex-direction: column; gap: var(--s-3); margin-bottom: var(--s-4); }
+    .comment-item {
+      display: flex; gap: var(--s-3); align-items: flex-start;
+    }
+    .comment-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      color: var(--fg-muted); font-size: 10px; font-weight: var(--fw-semibold);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .comment-bubble {
+      flex: 1; min-width: 0;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 0 var(--r-md) var(--r-md) var(--r-md);
+      padding: var(--s-3) var(--s-4);
+    }
+    .comment-meta {
+      display: flex; align-items: center; gap: var(--s-2);
+      margin-bottom: 4px;
+    }
+    .comment-author { font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--fg); }
+    .comment-time { font-size: var(--fs-xs); color: var(--fg-subtle); }
+    .comment-text { font-size: var(--fs-sm); color: var(--fg-muted); line-height: 1.5; }
+    .comment-compose {
+      display: flex; gap: var(--s-3); align-items: flex-start;
+    }
+    .comment-textarea {
+      flex: 1;
+      padding: 8px var(--s-3);
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      color: var(--fg);
+      font-size: var(--fs-sm);
+      font-family: var(--font-sans);
+      resize: none;
+      min-height: 68px;
+      line-height: 1.5;
+      transition: border-color 0.12s;
+    }
+    .comment-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+    .comment-textarea::placeholder { color: var(--fg-subtle); }
+
+    /* ── Add line row ──────────────────────────────────────────── */
+    .add-line-row td {
+      background: var(--bg-elevated) !important;
+      border-top: 1px dashed var(--border-strong) !important;
+    }
+    .add-line-input {
+      width: 100%;
+      padding: 6px 8px;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--fg);
+      font-size: var(--fs-sm);
+      font-family: var(--font-sans);
+    }
+    .add-line-input:focus { outline: none; border-color: var(--accent); }
+    .add-line-input::placeholder { color: var(--fg-subtle); }
+
+    /* placeholder — keep for compat */
+    .ai-banner-action {
+      align-self: center;
+      padding: 6px var(--s-4);
+      border-radius: var(--r-md);
+      background: var(--accent);
+      color: white;
+      font-size: var(--fs-sm);
+      font-weight: var(--fw-medium);
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      border: none;
+    }
+    .ai-banner-action:hover { background: var(--accent-hover); }
+
+    /* ── Line items table ──────────────────────────────────────── */
+    .line-table-wrap {
+      overflow-x: auto;
+      border-radius: 0 0 var(--r-lg) var(--r-lg);
+    }
+    .line-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--fs-sm);
+    }
+    .line-table th {
+      text-align: left;
+      font-size: 10px;
+      font-weight: var(--fw-medium);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--fg-muted);
+      padding: var(--s-3) var(--s-4);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-base);
+      white-space: nowrap;
+    }
+    .line-table td {
+      padding: var(--s-3) var(--s-4);
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--fg);
+      vertical-align: middle;
+    }
+    .line-table tr:hover td { background: var(--bg-hover); }
+    .line-table tr:last-child td { border-bottom: none; }
+    .line-no {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      color: var(--fg-subtle);
+      width: 32px;
+      text-align: center;
+    }
+    .ai-dot {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: rgba(59,130,246,0.12);
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .line-desc { font-weight: var(--fw-medium); color: var(--fg); }
+    .line-spec { color: var(--fg-muted); font-size: var(--fs-xs); margin-top: 2px; max-width: 280px; }
+    .qty-input {
+      width: 64px;
+      padding: 4px 8px;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--fg);
+      font-size: var(--fs-sm);
+      font-family: var(--font-mono);
+      text-align: right;
+    }
+    .qty-input:focus { outline: none; border-color: var(--accent); }
+    .unit-tag {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      font-size: var(--fs-xs);
+      color: var(--fg-muted);
+      font-family: var(--font-mono);
+    }
+    .attach-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 8px;
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--r-sm);
+      font-size: var(--fs-xs);
+      color: var(--fg-subtle);
+      cursor: pointer;
+      transition: border-color 0.12s, color 0.12s;
+    }
+    .attach-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .attach-file {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 8px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      font-size: var(--fs-xs);
+      color: var(--fg-muted);
+    }
+    .line-table-footer {
+      padding: var(--s-3) var(--s-5);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-base);
+    }
+
+    /* ── Form action bar ──────────────────────────────────────── */
+    .action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--s-4) var(--s-6);
+      background: var(--bg-elevated);
+      border-top: 1px solid var(--border);
+      position: sticky;
+      bottom: 0;
+      z-index: 20;
+    }
+
+    /* ── Breadcrumb ───────────────────────────────────────────── */
+    .breadcrumb {
+      display: flex; align-items: center; gap: 6px;
+      font-size: var(--fs-sm); color: var(--fg-subtle);
+      margin-bottom: var(--s-1);
+    }
+    .breadcrumb a { color: var(--fg-muted); }
+    .breadcrumb a:hover { color: var(--fg); }
+    .breadcrumb-sep { color: var(--fg-subtle); }
+
+    /* ── PR list row ──────────────────────────────────────────── */
+    .pr-progress-bar {
+      display: flex; align-items: center; gap: var(--s-2);
+    }
+    .pr-progress-track {
+      width: 60px; height: 4px;
+      background: var(--bg-elevated);
+      border-radius: 999px; overflow: hidden;
+    }
+    .pr-progress-fill {
+      height: 100%; border-radius: 999px;
+      background: var(--accent);
+    }
+    .pr-progress-fill.done { background: var(--success); }
+    .pr-progress-fill.warn { background: var(--warning); }
+
+    /* ── Row action group ── */
+    .row-actions { display: flex; align-items: center; gap: var(--s-2); }
+    .btn-create-rfq {
+      padding: 4px var(--s-3);
+      background: rgba(6,182,212,0.10);
+      border: 1px solid rgba(6,182,212,0.35);
+      border-radius: var(--r-md);
+      color: var(--info);
+      font-family: var(--font-sans); font-size: var(--fs-sm); font-weight: var(--fw-semibold);
+      cursor: pointer; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 5px;
+      text-decoration: none;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-create-rfq:hover { background: rgba(6,182,212,0.18); border-color: rgba(6,182,212,0.55); }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ======================================================
+       LEFT NAV
+       ====================================================== -->
+  <aside class="nav">
+        <div class="nav-brand">
+      <button class="hamburger-btn" onclick="toggleNav()" aria-label="Toggle menu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
+      <div class="nav-brand-text">
+        <div class="nav-brand-name">Procure</div>
+        <div class="nav-brand-sub">Procurement</div>
+      </div>
+    </div>
+    <div class="nav-items">
+      <a class="nav-item" href="index.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header expanded" href="clients.html">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14V7l6-4 6 4v7zM6 14V9h4v5"/></svg>
+          <span>Master Data</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="clients.html">Clients</a>
+          <a class="nav-item nav-sub-item" href="projects.html">Projects</a>
+          <a class="nav-item nav-sub-item" href="vendor-categories.html">Categories</a>
+          <a class="nav-item nav-sub-item" href="terms-conditions.html">Terms &amp; Conditions</a>
+          <a class="nav-item nav-sub-item" href="payment-terms.html">Payment Terms</a>
+          <a class="nav-item nav-sub-item" href="inco-terms.html">Inco Terms</a>
+          <a class="nav-item nav-sub-item" href="vendors.html">Vendors</a>
+        </div>
+      </div>
+
+      <a class="nav-item active" href="purchase-requisitions.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M5 8h6M5 11h4"/></svg>
+        <span>Purchase Requisitions</span>
+      </a>
+
+      <div class="nav-group">
+        <a class="nav-item nav-group-header" href="#">
+          <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+          <span>RFQs</span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+        </a>
+        <div class="nav-sub">
+          <a class="nav-item nav-sub-item" href="rfq-list.html">All RFQs</a>
+          <a class="nav-item nav-sub-item" href="rfq-create.html">New RFQ</a>
+        </div>
+      </div>
+
+      <a class="nav-item" href="purchase-orders.html">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l1.5 8.5a1 1 0 0 0 1 .85h7a1 1 0 0 0 1-.85L14 4"/><path d="M2 4h12M6 7v3M10 7v3"/></svg>
+        <span>Purchase Orders</span>
+      </a>
+    </div>
+
+    <div class="nav-footer">
+      <div class="user-card">
+        <div class="avatar">RS</div>
+        <div>
+          <div class="user-name">Rahul Singh</div>
+          <div class="user-email">Engineering Lead</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ======================================================
+       MAIN AREA — two views toggled by JS
+       ====================================================== -->
+  <div style="display:flex; flex-direction:column; min-height:100vh; overflow:hidden;">
+
+    <!-- ── VIEW 1: PR LIST ──────────────────────────────────── -->
+    <div id="view-list" style="flex:1; overflow-y:auto; display:flex; flex-direction:column;">
+      <main class="main">
+
+        <!-- Page header -->
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:var(--s-6);">
+          <div class="page-header" style="margin-bottom:0;">
+            <div class="page-title">Purchase Requisitions</div>
+            <div class="page-subtitle">Wellhead Platform Phase II · Instrumentation &amp; Control</div>
+          </div>
+          <button class="btn btn-primary" onclick="showNewPR()">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v12M2 8h12"/></svg>
+            New Requisition
+          </button>
+        </div>
+
+        <!-- KPI strip -->
+        <div class="kpi-grid" style="margin-bottom:var(--s-5);">
+          <div class="kpi">
+            <div class="kpi-head">
+              <div class="kpi-label">Total PRs</div>
+              <div class="kpi-icon">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value">18</div>
+            <div class="kpi-meta">FY 2025–26</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-head">
+              <div class="kpi-label">Pending Approval</div>
+              <div class="kpi-icon warning">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3M8 11v.5"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value">4</div>
+            <div class="kpi-meta">Awaiting Eng. Lead</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-head">
+              <div class="kpi-label">Approved / Active</div>
+              <div class="kpi-icon success">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l4 4 6-7"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value">9</div>
+            <div class="kpi-meta">Handed to Purchase</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-head">
+              <div class="kpi-label">Converted to RFQ</div>
+              <div class="kpi-icon info">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v8H2z"/><path d="M2 4l6 5 6-5"/></svg>
+              </div>
+            </div>
+            <div class="kpi-value">11</div>
+            <div class="kpi-meta">5 fully completed</div>
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="pr-toolbar">
+          <div class="search-wrap-inline" style="flex: 0 0 300px;">
+            <svg class="search-icon-inline" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5l3 3"/></svg>
+            <input class="search-input" placeholder="Search PRs…" />
+          </div>
+          <div class="filter-chips-inline">
+            <div class="chip active">All</div>
+            <div class="chip">Draft</div>
+            <div class="chip">Pending Approval</div>
+            <div class="chip">Approved</div>
+            <div class="chip">Partial</div>
+            <div class="chip">Completed</div>
+            <div class="chip">Rejected</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" style="margin-left:auto;">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M5 8h6M8 12h0"/></svg>
+            Filter
+          </button>
+        </div>
+
+        <!-- Table -->
+        <div class="pr-table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>PR Number</th>
+                <th>Title / Category</th>
+                <th>Raised By</th>
+                <th>Date</th>
+                <th>Items</th>
+                <th>RFQ Progress</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr data-href="pr-detail.html">
+                <td><span class="id-cell">PR-2026-018</span></td>
+                <td>
+                  <div style="font-weight:var(--fw-medium);">Instrumentation &amp; Control</div>
+                  <div style="font-size:var(--fs-xs); color:var(--fg-subtle); margin-top:2px;">Wellhead safety sensors &amp; transmitters</div>
+                </td>
+                <td><span class="muted">Rahul Singh</span></td>
+                <td><span class="muted">22 May 2026</span></td>
+                <td><span class="mono">8</span></td>
+                <td>
+                  <div class="pr-progress-bar">
+                    <div class="pr-progress-track"><div class="pr-progress-fill" style="width:0%"></div></div>
+                    <span style="font-size:var(--fs-xs);color:var(--fg-subtle);">0/8</span>
+                  </div>
+                </td>
+                <td><span class="badge warning">Pending Approval</span></td>
+                <td>
+                  <button class="btn btn-secondary btn-sm" onclick="window.location.href='pr-detail.html'">View</button>
+                </td>
+              </tr>
+              <tr data-href="pr-detail-partial.html">
+                <td><span class="id-cell">PR-2026-017</span></td>
+                <td>
+                  <div style="font-weight:var(--fw-medium);">Mechanical — Piping</div>
+                  <div style="font-size:var(--fs-xs); color:var(--fg-subtle); margin-top:2px;">High-pressure SS fittings &amp; valves</div>
+                </td>
+                <td><span class="muted">Arjun Mehta</span></td>
+                <td><span class="muted">19 May 2026</span></td>
+                <td><span class="mono">14</span></td>
+                <td>
+                  <div class="pr-progress-bar">
+                    <div class="pr-progress-track"><div class="pr-progress-fill warn" style="width:57%"></div></div>
+                    <span style="font-size:var(--fs-xs);color:var(--fg-subtle);">8/14</span>
+                  </div>
+                </td>
+                <td><span class="badge info">Partial</span></td>
+                <td>
+                  <button class="btn btn-secondary btn-sm" onclick="window.location.href='pr-detail-partial.html'">View</button>
+                </td>
+              </tr>
+              <tr data-href="pr-detail-completed.html">
+                <td><span class="id-cell">PR-2026-016</span></td>
+                <td>
+                  <div style="font-weight:var(--fw-medium);">Electrical — LV Panels</div>
+                  <div style="font-size:var(--fs-xs); color:var(--fg-subtle); margin-top:2px;">MCC panels &amp; distribution boards</div>
+                </td>
+                <td><span class="muted">Rahul Singh</span></td>
+                <td><span class="muted">14 May 2026</span></td>
+                <td><span class="mono">6</span></td>
+                <td>
+                  <div class="pr-progress-bar">
+                    <div class="pr-progress-track"><div class="pr-progress-fill done" style="width:100%"></div></div>
+                    <span style="font-size:var(--fs-xs);color:var(--fg-subtle);">6/6</span>
+                  </div>
+                </td>
+                <td><span class="badge success">Completed</span></td>
+                <td>
+                  <button class="btn btn-secondary btn-sm" onclick="window.location.href='pr-detail-completed.html'">View</button>
+                </td>
+              </tr>
+              <tr data-href="pr-detail-rejected.html">
+                <td><span class="id-cell">PR-2026-015</span></td>
+                <td>
+                  <div style="font-weight:var(--fw-medium);">Civil — Structural Steel</div>
+                  <div style="font-size:var(--fs-xs); color:var(--fg-subtle); margin-top:2px;">Platform grating &amp; handrails</div>
+                </td>
+                <td><span class="muted">Vikram Nair</span></td>
+                <td><span class="muted">09 May 2026</span></td>
+                <td><span class="mono">11</span></td>
+                <td>
+                  <div class="pr-progress-bar">
+                    <div class="pr-progress-track"><div class="pr-progress-fill" style="width:0%; background:#EF4444;"></div></div>
+                    <span style="font-size:var(--fs-xs);color:#EF4444;">Rejected</span>
+                  </div>
+                </td>
+                <td><span class="badge danger">Rejected</span></td>
+                <td>
+                  <button class="btn btn-secondary btn-sm" onclick="window.location.href='pr-detail-rejected.html'">View</button>
+                </td>
+              </tr>
+              <tr data-href="pr-detail-correction.html">
+                <td><span class="id-cell">PR-2026-014</span></td>
+                <td>
+                  <div style="font-weight:var(--fw-medium);">Fire &amp; Gas Systems</div>
+                  <div style="font-size:var(--fs-xs); color:var(--fg-subtle); margin-top:2px;">Gas detectors, smoke heads, flame scanners</div>
+                </td>
+                <td><span class="muted">Rahul Singh</span></td>
+                <td><span class="muted">05 May 2026</span></td>
+                <td><span class="mono">9</span></td>
+                <td>
+                  <div class="pr-progress-bar">
+                    <div class="pr-progress-track"><div class="pr-progress-fill" style="width:0%; background:#F59E0B;"></div></div>
+                    <span style="font-size:var(--fs-xs);color:#F59E0B;">Correction</span>
+                  </div>
+                </td>
+                <td><span class="badge warning">Sent for Correction</span></td>
+                <td>
+                  <button class="btn btn-secondary btn-sm" onclick="window.location.href='pr-detail-correction.html'">View</button>
+                </td>
+              </tr>
+              <tr data-href="pr-detail-onhold.html">
+                <td><span class="id-cell">PR-2026-013</span></td>
+                <td>
+                  <div style="font-weight:var(--fw-medium);">Instrumentation — Analyzers</div>
+                  <div style="font-size:var(--fs-xs); color:var(--fg-subtle); margin-top:2px;">Process analyzers &amp; sample conditioning</div>
+                </td>
+                <td><span class="muted">Arjun Mehta</span></td>
+                <td><span class="muted">28 Apr 2026</span></td>
+                <td><span class="mono">5</span></td>
+                <td>
+                  <div class="pr-progress-bar">
+                    <div class="pr-progress-track"><div class="pr-progress-fill" style="width:0%; background:#71717a;"></div></div>
+                    <span style="font-size:var(--fs-xs);color:#71717a;">On Hold</span>
+                  </div>
+                </td>
+                <td><span class="badge" style="background:rgba(113,113,122,0.15);color:#a1a1aa;border:1px solid rgba(113,113,122,0.30);">On Hold</span></td>
+                <td>
+                  <button class="btn btn-secondary btn-sm" onclick="window.location.href='pr-detail-onhold.html'">View</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="md-table-footer">
+            <span>Showing 6 of 18 requisitions</span>
+            <div class="pager">
+              <button class="icon-btn"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 4L6 8l4 4"/></svg></button>
+              <span style="padding:0 6px; font-family:var(--font-mono); font-size:var(--fs-sm);">1 / 3</span>
+              <button class="icon-btn"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- ── VIEW 2: NEW PR FORM ───────────────────────────────── -->
+    <div id="view-new" style="flex:1; overflow-y:auto; display:none; flex-direction:column;">
+      <main class="main" style="padding-bottom: 80px;">
+
+        <!-- Breadcrumb + title -->
+        <div style="margin-bottom:var(--s-5);">
+          <div class="breadcrumb">
+            <a href="#" onclick="showList();return false;">Purchase Requisitions</a>
+            <span class="breadcrumb-sep">/</span>
+            <span>New Requisition</span>
+          </div>
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s-4);">
+            <div>
+              <div class="page-title">New Purchase Requisition</div>
+              <div class="page-subtitle">Wellhead Platform Phase II · Engineering</div>
+            </div>
+            <div style="display:flex; gap:var(--s-2); align-items:center;">
+              <span class="badge muted">Draft</span>
+              <button class="btn btn-secondary btn-sm" onclick="showList()">Discard</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SECTION 1: Request Header ─────────────────────── -->
+        <div class="form-section">
+          <div class="form-section-head">
+            <div class="form-section-head-icon">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="14" height="10" rx="1"/><path d="M4 7h8M4 10h5"/></svg>
+            </div>
+            <div>
+              <div class="form-section-title">Request Header</div>
+              <div class="form-section-sub">Basic information about this requisition</div>
+            </div>
+          </div>
+          <div class="form-body">
+            <div class="form-grid" style="margin-bottom:var(--s-4);">
+              <div class="field">
+                <label class="field-label">Client</label>
+                <select class="field-input select-input">
+                  <option>Aker Solutions Ltd</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">Project</label>
+                <select class="field-input select-input">
+                  <option>Wellhead Platform Phase II</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">Category</label>
+                <select class="field-input select-input">
+                  <option>Instrumentation &amp; Control</option>
+                  <option>Mechanical — Piping</option>
+                  <option>Electrical</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid" style="margin-bottom:var(--s-4);">
+              <div class="field col-span-3">
+                <label class="field-label">PR Title / Summary</label>
+                <input class="field-input" value="Wellhead Safety Sensors &amp; Transmitter Package" />
+              </div>
+            </div>
+            <div class="form-grid" style="margin-bottom:var(--s-4);">
+              <div class="field col-span-3">
+                <label class="field-label">Technical Notes / Scope Remarks</label>
+                <textarea class="field-input" style="min-height:60px;">All instruments to comply with ATEX Zone 1 certification. Refer attached P&amp;ID Rev.3 and instrument datasheet package for detailed specifications.</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SECTION 2: Header Attachments ─────────────────── -->
+        <div class="form-section">
+          <div class="form-section-head">
+            <div class="form-section-head-icon">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4v8a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6.5L10 2H4a2 2 0 0 0-2 2z"/><path d="M10 2v4.5H14"/></svg>
+            </div>
+            <div>
+              <div class="form-section-title">Header Documents</div>
+              <div class="form-section-sub">Attach specifications, P&amp;IDs, datasheets and any supporting documents for this PR</div>
+            </div>
+          </div>
+          <div class="form-body">
+            <!-- Uploaded files -->
+            <div style="display:flex; flex-wrap:wrap; gap:var(--s-2); margin-bottom:var(--s-4);">
+              <div class="file-pill">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4v8a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6.5L10 2H4a2 2 0 0 0-2 2z"/></svg>
+                <span class="file-pill-name">Instrument_Datasheet_Package_Rev3.pdf</span>
+                <span class="file-pill-size">2.4 MB</span>
+                <span class="file-pill-remove">✕</span>
+              </div>
+              <div class="file-pill">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4v8a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6.5L10 2H4a2 2 0 0 0-2 2z"/></svg>
+                <span class="file-pill-name">P&amp;ID_WHP2_Rev3_Approved.pdf</span>
+                <span class="file-pill-size">5.1 MB</span>
+                <span class="file-pill-remove">✕</span>
+              </div>
+            </div>
+            <!-- Upload zone -->
+            <div class="upload-zone">
+              <div class="upload-zone-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <div class="upload-zone-text">Drop additional files or <span style="color:var(--accent);">browse</span></div>
+              <div class="upload-zone-hint">PDF, XLSX, DOCX · Max 50 MB per file</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SECTION 3: Line Items ──────────────────────────── -->
+        <div class="form-section">
+          <div class="form-section-head">
+            <div class="form-section-head-icon">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h5"/></svg>
+            </div>
+            <div style="flex:1;">
+              <div class="form-section-title">Line Items</div>
+              <div class="form-section-sub">Add the materials or services required for this requisition</div>
+            </div>
+          </div>
+          <!-- Line items table -->
+          <div class="line-table-wrap">
+            <table class="line-table">
+              <thead>
+                <tr>
+                  <th style="width:40px;">#</th>
+                  <th>Item Description</th>
+                  <th style="width:80px; text-align:right;">Qty</th>
+                  <th style="width:72px;">Unit</th>
+                  <th style="width:40px;"></th>
+                </tr>
+              </thead>
+              <tbody id="line-items-body">
+                <tr>
+                  <td class="line-no">01</td>
+                  <td>
+                    <div class="line-desc">Pressure Transmitter — Differential</div>
+                    <div class="line-spec">4–20 mA HART, 0–100 mbar range, SS 316L wetted parts, ATEX Zone 1, IP67</div>
+                  </td>
+                  <td style="text-align:right;"><input class="qty-input" value="12" /></td>
+                  <td><span class="unit-tag">Nos</span></td>
+                  <td><button class="row-action" title="Remove" onclick="this.closest('tr').remove(); reNumberRows();"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td class="line-no">02</td>
+                  <td>
+                    <div class="line-desc">Temperature Transmitter</div>
+                    <div class="line-spec">4–20 mA HART, Pt100 RTD input, -50 to +400°C, ATEX Zone 1, IP66/67</div>
+                  </td>
+                  <td style="text-align:right;"><input class="qty-input" value="8" /></td>
+                  <td><span class="unit-tag">Nos</span></td>
+                  <td><button class="row-action" title="Remove" onclick="this.closest('tr').remove(); reNumberRows();"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td class="line-no">03</td>
+                  <td>
+                    <div class="line-desc">Flow Transmitter — Coriolis</div>
+                    <div class="line-spec">Mass flow, 4–20 mA + HART + Modbus, SS 316L, 2" flange ends, ATEX Zone 1</div>
+                  </td>
+                  <td style="text-align:right;"><input class="qty-input" value="4" /></td>
+                  <td><span class="unit-tag">Nos</span></td>
+                  <td><button class="row-action" title="Remove" onclick="this.closest('tr').remove(); reNumberRows();"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td class="line-no">04</td>
+                  <td>
+                    <div class="line-desc">Control Valve Assembly</div>
+                    <div class="line-spec">Globe type, pneumatic actuator, 2" Class 300, SS 316 body, positioner with HART</div>
+                  </td>
+                  <td style="text-align:right;"><input class="qty-input" value="6" /></td>
+                  <td><span class="unit-tag">Nos</span></td>
+                  <td><button class="row-action" title="Remove" onclick="this.closest('tr').remove(); reNumberRows();"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td class="line-no">05</td>
+                  <td>
+                    <div class="line-desc">Safety Relief Valve</div>
+                    <div class="line-spec">Full-lift, API 526, 1.5" inlet × 2" outlet, SS 316, ASME VIII certified</div>
+                  </td>
+                  <td style="text-align:right;"><input class="qty-input" value="3" /></td>
+                  <td><span class="unit-tag">Nos</span></td>
+                  <td><button class="row-action" title="Remove" onclick="this.closest('tr').remove(); reNumberRows();"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg></button></td>
+                </tr>
+                <!-- Add row -->
+                <tr class="add-line-row" id="add-line-row" style="display:none;">
+                  <td class="line-no" style="color:var(--fg-subtle);">—</td>
+                  <td>
+                    <input class="add-line-input" id="new-item-desc" placeholder="Item description or specification…" />
+                  </td>
+                  <td style="text-align:right;">
+                    <input class="qty-input add-line-input" id="new-item-qty" placeholder="1" style="width:56px;" />
+                  </td>
+                  <td>
+                    <select class="qty-input add-line-input" id="new-item-unit" style="width:64px; cursor:pointer;">
+                      <option>Nos</option>
+                      <option>Mtrs</option>
+                      <option>Kgs</option>
+                      <option>Sets</option>
+                      <option>Lots</option>
+                    </select>
+                  </td>
+                  <td style="display:flex; gap:4px; padding-top:10px;">
+                    <button class="btn btn-primary btn-sm" onclick="addLineItem()" style="padding:4px 10px; font-size:11px;">Add</button>
+                    <button class="btn btn-ghost btn-sm" onclick="hideAddRow()" style="padding:4px 8px; font-size:11px;">✕</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="line-table-footer">
+              <button class="btn btn-ghost btn-sm" onclick="showAddRow()">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/></svg>
+                Add Line Item
+              </button>
+              <div style="font-size:var(--fs-xs); color:var(--fg-subtle); font-family:var(--font-mono);" id="line-count">5 items</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SECTION 4: Comments ────────────────────────────── -->
+        <div class="form-section">
+          <div class="form-section-head">
+            <div class="form-section-head-icon">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5l-3 3V4a1 1 0 0 1 1-1Z"/></svg>
+            </div>
+            <div>
+              <div class="form-section-title">Internal Comments</div>
+              <div class="form-section-sub">Notes visible only to internal team — not shown to vendors</div>
+            </div>
+          </div>
+          <div class="form-body">
+            <!-- Existing comments -->
+            <div class="comment-list">
+              <div class="comment-item">
+                <div class="comment-avatar">RS</div>
+                <div class="comment-bubble">
+                  <div class="comment-meta">
+                    <span class="comment-author">Rahul Singh</span>
+                    <span class="comment-time">22 May 2026, 11:43 AM</span>
+                  </div>
+                  <div class="comment-text">Priority instruments for wellhead safety system. Delivery timeline is critical — please ensure vendors confirm lead times before commercial evaluation.</div>
+                </div>
+              </div>
+              <div class="comment-item">
+                <div class="comment-avatar">AM</div>
+                <div class="comment-bubble">
+                  <div class="comment-meta">
+                    <span class="comment-author">Arjun Mehta</span>
+                    <span class="comment-time">22 May 2026, 2:15 PM</span>
+                  </div>
+                  <div class="comment-text">Datasheet package Rev.3 attached. Note: item 01 spec change from 0–60 mbar to 0–100 mbar per latest P&amp;ID revision.</div>
+                </div>
+              </div>
+            </div>
+            <!-- Compose new comment -->
+            <div class="comment-compose">
+              <div class="comment-avatar" style="margin-top:2px;">RS</div>
+              <div style="flex:1; display:flex; flex-direction:column; gap:var(--s-2);">
+                <textarea class="comment-textarea" placeholder="Add an internal note…"></textarea>
+                <div style="display:flex; justify-content:flex-end;">
+                  <button class="btn btn-secondary btn-sm">Post Comment</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- Sticky action bar -->
+      <div class="action-bar">
+        <div style="display:flex; align-items:center; gap:var(--s-3);">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--fg-subtle)" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3M8 11v.5"/></svg>
+          <span style="font-size:var(--fs-sm); color:var(--fg-muted);">Auto-saved as Draft · <span style="font-family:var(--font-mono);">PR-2026-019</span></span>
+        </div>
+        <div style="display:flex; gap:var(--s-2);">
+          <button class="btn btn-secondary" onclick="showList()">Save Draft</button>
+          <button class="btn btn-primary" onclick="showList()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M8 3l5 5-5 5"/></svg>
+            Submit for Approval
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.main-area -->
+
+</div><!-- /.app -->
+
+
+<script>
+  let currentView = 'list';
+
+  function showNewPR() {
+    currentView = 'new';
+    document.getElementById('view-list').style.display = 'none';
+    document.getElementById('view-new').style.display = 'flex';
+    document.getElementById('topbar-title').textContent = 'New Requisition';
+    document.getElementById('demo-nav-toggle').textContent = '← PR List';
+  }
+
+  function showList() {
+    currentView = 'list';
+    document.getElementById('view-list').style.display = 'flex';
+    document.getElementById('view-new').style.display = 'none';
+    document.getElementById('topbar-title').textContent = 'Purchase Requisitions';
+    document.getElementById('demo-nav-toggle').textContent = 'New PR →';
+  }
+
+  // PR row click → detail (reads destination from data-href attribute)
+  document.querySelectorAll('.pr-table-wrap tbody tr').forEach(row => {
+    row.addEventListener('click', function(e) {
+      if (e.target.closest('button')) return;
+      var dest = this.getAttribute('data-href') || 'pr-detail.html';
+      window.location.href = dest;
+    });
+  });
+
+  // Nav group toggle
+  document.querySelectorAll('.nav-group-header').forEach(header => {
+    header.addEventListener('click', function(e) {
+      if (e.target.closest('a') && !e.target.closest('.chevron')) return;
+      this.classList.toggle('expanded');
+    });
+  });
+
+  // Chip filter toggle
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // Line item helpers
+  function showAddRow() {
+    document.getElementById('add-line-row').style.display = '';
+    document.getElementById('new-item-desc').focus();
+  }
+  function hideAddRow() {
+    document.getElementById('add-line-row').style.display = 'none';
+    document.getElementById('new-item-desc').value = '';
+    document.getElementById('new-item-qty').value = '';
+  }
+  function addLineItem() {
+    const desc = document.getElementById('new-item-desc').value.trim();
+    if (!desc) { document.getElementById('new-item-desc').focus(); return; }
+    const qty = document.getElementById('new-item-qty').value || '1';
+    const unit = document.getElementById('new-item-unit').value;
+    const tbody = document.getElementById('line-items-body');
+    const addRow = document.getElementById('add-line-row');
+    const rowCount = tbody.querySelectorAll('tr:not(#add-line-row)').length + 1;
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+      <td class="line-no">${String(rowCount).padStart(2,'0')}</td>
+      <td><div class="line-desc">${desc}</div></td>
+      <td style="text-align:right;"><input class="qty-input" value="${qty}" /></td>
+      <td><span class="unit-tag">${unit}</span></td>
+      <td><button class="row-action" title="Remove" onclick="this.closest('tr').remove(); reNumberRows();">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button></td>`;
+    tbody.insertBefore(newRow, addRow);
+    hideAddRow();
+    updateLineCount();
+  }
+  function reNumberRows() {
+    const rows = document.querySelectorAll('#line-items-body tr:not(#add-line-row)');
+    rows.forEach((r, i) => { const el = r.querySelector('.line-no'); if (el) el.textContent = String(i+1).padStart(2,'0'); });
+    updateLineCount();
+  }
+  function updateLineCount() {
+    const n = document.querySelectorAll('#line-items-body tr:not(#add-line-row)').length;
+    document.getElementById('line-count').textContent = n + ' item' + (n!==1?'s':'');
+  }
+</script>
+
+
+<div class="nav-backdrop" id="nav-backdrop" onclick="closeNav()"></div>
+
+<script>
+  function toggleNav() {
+    const nav = document.querySelector('.nav');
+    const backdrop = document.getElementById('nav-backdrop');
+    const isOpen = nav.classList.toggle('open');
+    backdrop.classList.toggle('visible', isOpen);
+  }
+  function closeNav() {
+    document.querySelector('.nav').classList.remove('open');
+    document.getElementById('nav-backdrop').classList.remove('visible');
+  }
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 700) closeNav();
+  });
+</script>
+</body>
+</html>
